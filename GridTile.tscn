@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://GFX/UI/grid.png" type="Texture" id=1]
+[ext_resource path="res://GFX/UI/GridCyan.png" type="Texture" id=2]
+[ext_resource path="res://GridTileMain.gd" type="Script" id=3]
+
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 32, 32 )
+
+[node name="GridTile" type="Node2D" groups=[
+"grid_tile",
+]]
+script = ExtResource( 3 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+centered = false
+
+[node name="TextureButton" type="TextureButton" parent="."]
+modulate = Color( 1, 1, 1, 0.294118 )
+margin_right = 40.0
+margin_bottom = 40.0
+texture_hover = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="."]
+visible = false
+modulate = Color( 1, 1, 1, 0.490196 )
+margin_right = 40.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 64, 64 )
+mouse_filter = 2
+texture = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2( 32, 32 )
+collision_layer = 2
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource( 1 )
+
+[node name="RayCastDown" type="RayCast2D" parent="Area2D"]
+enabled = true
+collision_mask = 2
+collide_with_areas = true
+collide_with_bodies = false
+
+[node name="RayCastRight" type="RayCast2D" parent="Area2D"]
+enabled = true
+cast_to = Vector2( 50, 0 )
+collision_mask = 2
+collide_with_areas = true
+collide_with_bodies = false
+
+[node name="RayCastUp" type="RayCast2D" parent="Area2D"]
+enabled = true
+cast_to = Vector2( 0, -50 )
+collision_mask = 2
+collide_with_areas = true
+collide_with_bodies = false
+
+[node name="RayCastLeft" type="RayCast2D" parent="Area2D"]
+enabled = true
+cast_to = Vector2( -50, 0 )
+collision_mask = 2
+collide_with_areas = true
+collide_with_bodies = false
+[connection signal="mouse_entered" from="TextureButton" to="." method="_on_TextureButton_mouse_entered"]
+[connection signal="pressed" from="TextureButton" to="." method="_on_TextureButton_pressed"]
