@@ -3,7 +3,9 @@ extends "res://Actor.gd"
 var nearest_player
 var current_target
 
-#signal enemy_unit_done
+func _ready():
+	yield(get_tree(), "idle_frame")
+	get_current_tile().tile_unoccupied = false
 
 func start_turn():
 	globals.current_actor = self

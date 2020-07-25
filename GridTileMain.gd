@@ -119,18 +119,11 @@ func do_cell_action():
 			else:
 				deselect()
 
-			
+ # show option menu when unit selected			
 func select_actor(actor):
 		get_tree().call_group("field_menu", "show_menu")
-		 # show option menu when unit selected
-		### BUG: failing to detect player when player is too low on the screen?
+		gamestate.state = gamestate.PLAYER_SELECTION
 
-
-#func player_pathfind(move_range):
-#	reset_pathing()
-#	globals.actor_move_range = move_range
-#	start_move_path()
-	
 
 func start_move_path():
 	reset_pathing()
@@ -192,7 +185,7 @@ func reset_pathing():
 	tile_valid = false
 	distance_from_origin = 0
 	unchecked_tiles.clear()
-	$TextureRect.visible = false
+	$SelectionRect.visible = false
 	if is_in_group("checked_tiles"):
 		remove_from_group("checked_tiles")
 	
@@ -204,10 +197,6 @@ func deselect():
 	globals.selection = false
 	gamestate.state = gamestate.NO_SELECTION
 	
-	
-	
-	
-	##### mostly works? need to find a way to "toggle" which skill is active... global var?
 	
 	
 

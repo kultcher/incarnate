@@ -11,7 +11,7 @@ func start_turn():
 		enemy.start_turn()
 	enemy_turn_order.clear()
 	print("Enemy turn finished")
-	gamestate.start_player_turn()
+	gamestate.end_enemy_turn()
 
 func determine_turn_order():
 	for enemy in self.get_children():

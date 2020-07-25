@@ -60,9 +60,6 @@ func unoccupy_start_tile():
 	get_current_tile().tile_unoccupied = true
 	
 	
-func actor_action():
-	pass
-	
 
 func face_target(target_position):
 	if target_position.x > self.position.x:

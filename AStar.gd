@@ -1,6 +1,6 @@
 extends Node2D
 
-onready var globals = get_node("/root/GlobalVars")
+#onready var globals = get_node("/root/GlobalVars")
 
 onready var astar = AStar2D.new()
 onready var tilemap = get_parent().get_child(0)

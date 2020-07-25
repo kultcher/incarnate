@@ -552,6 +552,7 @@ __meta__ = {
 [node name="Bloodthane" parent="World/Actors" groups=[
 "all_player_units",
 ] instance=ExtResource( 3 )]
+position = Vector2( 128, 128 )
 
 [node name="Bloodthane2" parent="World/Actors" groups=[
 "all_player_units",
