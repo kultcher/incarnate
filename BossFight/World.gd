@@ -15,14 +15,14 @@ onready var gamestate = get_node("..")
 
 
 func _ready():
-#	gamestate.hello()
-#	astar.hello()
 	create_map()
 	create_grid()
 	create_obstacles()
 	get_tree().call_group("grid_tile", "get_neighbors")
 	check_obstacles()
-	spawn_actor()
+	$GridTile.remove_from_group("grid_tile")
+	get_parent().start_player_turn()
+	print("world _ready done")
 	
 	
 func create_map():
@@ -88,14 +88,6 @@ func check_obstacles():
 			if check_object[0]["collider"] is TileMap:
 				tiles.tile_passable = false
 
-
-func spawn_actor():
-	yield(get_tree(), "idle_frame")
-	$Actors/Player.position = $GroundTileMap.map_to_world(Vector2(4,2), false)
-	globals.current_actor = $Actors/Player
-	globals.actor_tile = globals.current_actor.get_current_tile()
-	globals.actor_tile.tile_unoccupied = false
-	
 
 func update_debug(current_cell, position, distance_from_origin):
 	$UI/DebugLabel.text = str(current_cell) + str(position) + " " + str(distance_from_origin) + " "\

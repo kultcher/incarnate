@@ -1,11 +1,12 @@
 extends Node2D
 
-onready var globals = get_node("/root/GlobalVars")
+#onready var globals = get_node("/root/GlobalVars")
 
 onready var astar = AStar2D.new()
 onready var tilemap = get_parent().get_child(0)
 
 func astar_import(valid_tiles):
+	astar_reset()
 	var points = 0
 	for tile in valid_tiles:
 		astar.add_point(points, tile.position + Vector2(0,0))
@@ -46,11 +47,11 @@ func astar_connect(points):
 func astar_path(origin_tile, destination_tile):
 	var origin = astar.get_closest_point(origin_tile) # origin POINT
 	var destination = astar.get_closest_point(destination_tile)
-	print("points: ", origin, " ", destination)
+#	print("points: ", origin, " ", destination)
 	var path = astar.get_point_path(origin, destination)
 	return(path)
 	
-# resets astar points after move completed
+# resets astar points after move completed or before new move
 func astar_reset():
 	astar.clear()
 	

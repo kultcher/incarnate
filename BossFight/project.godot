@@ -29,10 +29,17 @@ config/icon="res://icon.png"
 GlobalVars="*res://GlobalVars.gd"
 GameController="*res://GameController.gd"
 
+[display]
+
+window/size/width=1280
+window/size/height=720
+
 [layer_names]
 
 2d_physics/layer_1="Actors"
 2d_physics/layer_2="Tilemap"
+2d_physics/layer_3="Friendly"
+2d_physics/layer_4="Enemy"
 
 [rendering]
 

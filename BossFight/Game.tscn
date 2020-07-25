@@ -1,14 +1,16 @@
-[gd_scene load_steps=61 format=2]
+[gd_scene load_steps=63 format=2]
 
 [ext_resource path="res://RandomLevelGenTileset.png" type="Texture" id=1]
 [ext_resource path="res://World.gd" type="Script" id=2]
-[ext_resource path="res://Player.tscn" type="PackedScene" id=3]
-[ext_resource path="res://tilesheet_complete.png" type="Texture" id=4]
+[ext_resource path="res://Bloodthane.tscn" type="PackedScene" id=3]
+[ext_resource path="res://GFX/Tilesets/tilesheet_complete.png" type="Texture" id=4]
 [ext_resource path="res://GridTile.tscn" type="PackedScene" id=5]
 [ext_resource path="res://FieldMenu.tscn" type="PackedScene" id=6]
 [ext_resource path="res://Actor.tscn" type="PackedScene" id=7]
 [ext_resource path="res://GameController.gd" type="Script" id=8]
 [ext_resource path="res://AStar.gd" type="Script" id=9]
+[ext_resource path="res://Enemy.tscn" type="PackedScene" id=10]
+[ext_resource path="res://EncounterAI.gd" type="Script" id=11]
 
 [sub_resource type="ConvexPolygonShape2D" id=1]
 points = PoolVector2Array( 0, 0, 32, 0, 32, 32, 0, 32 )
@@ -501,6 +503,9 @@ points = PoolVector2Array( 16, 16, 48, 16, 48, 48, 16, 48 )
 [node name="Game" type="Node"]
 script = ExtResource( 8 )
 
+[node name="TurnTimer" type="Timer" parent="."]
+one_shot = true
+
 [node name="World" type="Node2D" parent="." groups=[
 "debug",
 ]]
@@ -516,7 +521,6 @@ tile_data = PoolIntArray( 65546, 3, 0, 131075, 3, 0, 131076, 3, 0, 131077, 3, 0,
 z_index = -1
 tile_set = SubResource( 51 )
 format = 1
-tile_data = PoolIntArray( 131074, 0, 0, 196615, 0, 0, 262148, 0, 0 )
 
 [node name="GridTile" parent="World" instance=ExtResource( 5 )]
 visible = false
@@ -536,7 +540,6 @@ margin_left = 3.42944
 margin_top = 2.57214
 margin_right = 43.4294
 margin_bottom = 16.5721
-custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "Test"
 __meta__ = {
 "_edit_use_anchors_": false
@@ -546,11 +549,23 @@ __meta__ = {
 
 [node name="Actors" type="Node" parent="World"]
 
-[node name="Actor" parent="World/Actors" instance=ExtResource( 7 )]
+[node name="Bloodthane" parent="World/Actors" groups=[
+"all_player_units",
+] instance=ExtResource( 3 )]
+position = Vector2( 128, 128 )
+
+[node name="Bloodthane2" parent="World/Actors" groups=[
+"all_player_units",
+] instance=ExtResource( 3 )]
+position = Vector2( 768, 448 )
+max_health = 40
+
+[node name="Encounter" type="Node" parent="World"]
+script = ExtResource( 11 )
+
+[node name="Enemy" parent="World/Encounter" instance=ExtResource( 10 )]
+position = Vector2( 384, 320 )
+move_range = 3
+
+[node name="Actor" parent="World" instance=ExtResource( 7 )]
 visible = false
-move_range = 4
-
-[node name="Player" parent="World/Actors" instance=ExtResource( 3 )]
-move_range = 4
-
-[node name="Node3" type="Node" parent="World"]
