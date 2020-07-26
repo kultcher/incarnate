@@ -3,15 +3,14 @@ extends "res://Actor.gd"
 var nearest_player
 var current_target
 
+
 func _ready():
+	base_move_range = 3
 	yield(get_tree(), "idle_frame")
 	get_current_tile().tile_unoccupied = false
 
 func start_turn():
-	globals.current_actor = self
-	globals.actor_origin_tile = self.get_current_tile()
-	globals.actor_move_range = move_range
-
+	gamestate.current_actor = self
 	nearest_player = find_nearest_player()
 	move_to_target(nearest_player)
 	yield(self, "actor_move_completed")
@@ -31,7 +30,8 @@ func find_nearest_player():
 	return target.position
 
 func move_to_target(target):
-	globals.actor_origin_tile.start_move_path()
+	self.movestate = MOVE
+	self.start_move_path(base_move_range)
 	actor_move(target)
 
 
@@ -40,4 +40,5 @@ func basic_melee():
 	if position.distance_to(current_target.position) <= tilesize:
 		var facing = face_target(current_target.position)
 		melee_animation(facing, current_target)
+		yield(get_tree(), "idle_frame")
 		current_target.take_damage(5)

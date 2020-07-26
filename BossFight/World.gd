@@ -91,9 +91,9 @@ func check_obstacles():
 
 func update_debug(current_cell, position, distance_from_origin):
 	$UI/DebugLabel.text = str(current_cell) + str(position) + " " + str(distance_from_origin) + " "\
-							+ "Pass" + str(globals.hovered_tile.tile_passable) + "Unocc" + str(globals.hovered_tile.tile_unoccupied)\
-							+ " Checked " + str(globals.hovered_tile.checked_tile) + \
-							str(globals.hovered_tile.is_in_group("checked_tiles")) + str(globals.hovered_tile.tile_valid) \
+							+ "Pass" + str(gamestate.hovered_tile.tile_passable) + "Unocc" + str(gamestate.hovered_tile.tile_unoccupied)\
+							+ " Checked " + str(gamestate.hovered_tile.checked_tile) + \
+							str(gamestate.hovered_tile.is_in_group("checked_tiles")) + str(gamestate.hovered_tile.tile_valid) \
 							+ str(get_global_mouse_position())
 
 func _input(event):
@@ -105,4 +105,5 @@ func get_cell_id():
 	var grid_tile = check_cell[0]["collider"].get_parent()
 	var tilemap_cell = $GroundTileMap.world_to_map(grid_tile.position)
 	print(grid_tile, tilemap_cell)
+	print(get_global_mouse_position())
 	return grid_tile

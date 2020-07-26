@@ -70,7 +70,7 @@ margin_right = 1246.0
 margin_bottom = 712.0
 rect_min_size = Vector2( 200, 200 )
 custom_fonts/font = SubResource( 1 )
-items = [ "Blade Fury", null, false ]
+items = [ "Blade Fury", null, false, "Bloody Rush", null, false ]
 allow_reselect = true
 __meta__ = {
 "_edit_use_anchors_": false

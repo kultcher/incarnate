@@ -504,6 +504,7 @@ points = PoolVector2Array( 16, 16, 48, 16, 48, 48, 16, 48 )
 script = ExtResource( 8 )
 
 [node name="TurnTimer" type="Timer" parent="."]
+wait_time = 0.5
 one_shot = true
 
 [node name="World" type="Node2D" parent="." groups=[
@@ -565,7 +566,6 @@ script = ExtResource( 11 )
 
 [node name="Enemy" parent="World/Encounter" instance=ExtResource( 10 )]
 position = Vector2( 384, 320 )
-move_range = 3
 
 [node name="Actor" parent="World" instance=ExtResource( 7 )]
 visible = false

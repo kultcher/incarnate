@@ -38,10 +38,23 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="SubSelRect" type="TextureRect" parent="."]
+visible = false
+modulate = Color( 1, 1, 1, 0.490196 )
+self_modulate = Color( 0, 1, 0, 0.784314 )
+margin_right = 40.0
+margin_bottom = 40.0
+rect_min_size = Vector2( 64, 64 )
+mouse_filter = 2
+texture = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="ConfirmRect" type="TextureRect" parent="."]
 visible = false
 modulate = Color( 1, 1, 1, 0.490196 )
-self_modulate = Color( 1, 0.160156, 0.160156, 0.490196 )
+self_modulate = Color( 1, 0, 0, 0.784314 )
 margin_right = 40.0
 margin_bottom = 40.0
 rect_min_size = Vector2( 64, 64 )
@@ -66,6 +79,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="RayCastRight" type="RayCast2D" parent="Area2D"]
+visible = false
 enabled = true
 cast_to = Vector2( 50, 0 )
 collision_mask = 2
@@ -73,6 +87,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="RayCastUp" type="RayCast2D" parent="Area2D"]
+visible = false
 enabled = true
 cast_to = Vector2( 0, -50 )
 collision_mask = 2
@@ -80,6 +95,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="RayCastLeft" type="RayCast2D" parent="Area2D"]
+visible = false
 enabled = true
 cast_to = Vector2( -50, 0 )
 collision_mask = 2

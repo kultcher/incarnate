@@ -26,16 +26,20 @@ var tile_unoccupied = true
 var tile_unobstructed = true
 
 	#distance variables
-var origin_tile = null
+#var origin_tile = null
 var distance_from_origin = 0
 var neighbors = []
 var unchecked_tiles = []
+var target_tiles = []
 
 	# flag variables
 var distance_cycle
 var checked_tile = false
 var tile_valid = false
-var valid_tiles
+var segment_valid = false
+
+onready var current_actor
+
 
 # on ready, add neighbors to list
 func get_neighbors():
@@ -58,14 +62,14 @@ func get_neighbors():
 
 func _on_TextureButton_mouse_entered():
 	get_tree().call_group("debug", "update_debug", self, position, distance_from_origin)
-	globals.hovered_tile = self
+	gamestate.hovered_tile = self
 	
 	
 func _on_TextureButton_pressed():
 	if gamestate.state == gamestate.NO_SELECTION:
 		get_cell_contents()
 	if gamestate.state != gamestate.NO_SELECTION:
-		do_cell_action()	
+		do_cell_action(self)	
 
 
 
@@ -88,166 +92,104 @@ func get_cell_contents():
 				if check_object:
 					# if the first object in the first dictionary's collider is body and is a player unit
 					if check_object[0]["collider"] is StaticBody2D and check_object[0]["collider"].get_parent().is_in_group("all_player_units"): 
-						var actor = check_object.front()["collider"].get_parent()
-						# assign actor and tile to global vars
-						actor.add_to_group("current_player_unit")
-						globals.current_actor = actor
-						globals.actor_origin_tile = self
-						globals.actor_move_range = actor.move_range
-						select_actor(globals.current_actor)
+						gamestate.current_actor = check_object.front()["collider"].get_parent()
+						gamestate.current_actor.add_to_group("current_player_unit")
+						select_actor()
 						check_object.clear()
 					elif check_object[0]["collider"] is TileMap:
 						deselect()
 				else:
 					deselect()
 
-func do_cell_action():
+func do_cell_action(current_cell):
+
 	match gamestate.state:
 		gamestate.NO_SELECTION:
 			deselect()
-					
+
+
 		gamestate.PLAYER_MOVE:
 			if tile_valid:
-				globals.current_actor.actor_move(position)
+				gamestate.current_actor.actor_move(position)
 				deselect()
-			else:
-				deselect()
-				
-		gamestate.PLAYER_ACTION:
-			if tile_valid:
-				globals.current_actor.find_node("Skills").execute_skill(self)
 			else:
 				deselect()
 
- # show option menu when unit selected			
-func select_actor(actor):
+
+		gamestate.PLAYER_ACTION:
+			if gamestate.current_actor.targstate == gamestate.current_actor.STANDARD:
+				if tile_valid:
+					gamestate.current_actor.find_node("Skills").execute_skill(self)
+				else:
+					deselect()
+					
+			elif gamestate.current_actor.targstate == gamestate.current_actor.SEGMENTED:
+				var last_cell
+				if gamestate.current_actor.segments > 0:
+					if tile_valid and segment_valid == true:
+						gamestate.current_actor.skill_origin.target_tiles.append(current_cell) ##### YIKES
+						$ConfirmRect.visible = true
+						segment_valid = true
+						gamestate.current_actor.skill_origin.segment_deselect()
+						last_cell = current_cell
+						segment_highlight()
+						gamestate.current_actor.segments -= 1
+						print(gamestate.current_actor.segments)
+						yield(get_tree(), "idle_frame")
+						if gamestate.current_actor.segments == 0:
+							yield(get_tree(), "idle_frame")
+							gamestate.current_actor.find_node("Skills").execute_skill(gamestate.current_actor.skill_origin.target_tiles)
+							yield(get_tree(), "idle_frame")
+
+							##### TODO: attach target_tiles to actor instead of grid tiles
+							##### ALSO: this should make it easier to clear segmented highlights properly
+							##### maybe add a confirmation dialog here...
+							
+					elif tile_valid and segment_valid == false:
+						pass # if you click within range but invalid tile, don't deselect
+					else:
+						target_tiles.clear()
+						deselect()
+
+						
+# show option menu when unit selected			
+func select_actor():
 		get_tree().call_group("field_menu", "show_menu")
 		gamestate.state = gamestate.PLAYER_SELECTION
 
 
-func start_move_path():
-	reset_pathing()
-	distance_cycle = 0
-	checked_tile = true
-	add_to_group("checked_tiles")
-	for neighbor in neighbors:
-		neighbor.origin_tile = self
-		neighbor.distance_from_origin = distance_from_origin + distance_cycle
-		if neighbor.tile_passable == true and neighbor.tile_unoccupied == true:
-			unchecked_tiles.append(neighbor)
-
-	next_move_distance(unchecked_tiles) # increments distance marker
-
-func next_move_distance(unchecked_tiles):
-	distance_cycle += 1
-	if distance_cycle <= globals.actor_move_range:
-		next_move_set(unchecked_tiles)
-	else:
-		get_valid_move_tiles()
-		
-func next_move_set(unchecked_tiles):
-	pass
-	var new_unchecked = []
-	for tiles in unchecked_tiles:
-		
-		# if tile is within move range and not already checked, set distance
-		if tiles.distance_from_origin < distance_cycle and tiles.checked_tile == false:
-			tiles.distance_from_origin = distance_cycle + tiles.move_cost
-		
-		# if tile exceeds move range and not already checked, re-add to list
-		if tiles.distance_from_origin > distance_cycle and tiles.checked_tile == false:
-			new_unchecked.append(tiles)
-		else:			
-			tiles.checked_tile = true
-			tiles.add_to_group("checked_tiles")
-			for neighbor in tiles.neighbors:
-				neighbor.origin_tile = self
-				if neighbor.tile_passable == true and neighbor.tile_unoccupied == true:
-					new_unchecked.append(neighbor)
-
-	next_move_distance(new_unchecked)
-
-
-# for each checked tile, highlights and flags it as valid, then exports for AStar to use
-func get_valid_move_tiles():
-	print("getting valid")
-	valid_tiles = get_tree().get_nodes_in_group("checked_tiles")
-	astar_node.astar_import(valid_tiles)
-	for tiles in valid_tiles:
-		tiles.get_child(2).visible = true
-		tiles.tile_valid = true
-		globals.selection = true
-
-
 func reset_pathing():
-	origin_tile = null
+#	origin_tile = null
 	checked_tile = false
 	tile_valid = false
+	segment_valid = false
 	distance_from_origin = 0
 	unchecked_tiles.clear()
-	$SelectionRect.visible = false
+	$SelectionRect.hide()
+	$ConfirmRect.hide()
+	$SubSelRect.hide()
 	if is_in_group("checked_tiles"):
 		remove_from_group("checked_tiles")
+
 	
 		
 func deselect():
 	get_tree().call_group("field_menu", "hide_menu")
 	get_tree().call_group("grid_tile", "reset_pathing")
-	globals.current_actor.remove_from_group("current_player_unit")
-	globals.selection = false
 	gamestate.state = gamestate.NO_SELECTION
-	
-	
-	
-
-func start_range_path(skill_range):
-	reset_pathing()
-	distance_cycle = 0
-	checked_tile = true
-	add_to_group("checked_tiles")
+#	gamestate.current_actor.skill_origin.target_tiles.clear() ##### YIIIKES
+	if gamestate.current_actor:
+		gamestate.current_actor.remove_from_group("current_player_unit")
+		
+func segment_highlight():
 	for neighbor in neighbors:
-		neighbor.origin_tile = self
-		neighbor.distance_from_origin = distance_from_origin + distance_cycle
-		if neighbor.tile_unobstructed == true:
-			unchecked_tiles.append(neighbor)
+		if neighbor.tile_passable == true and neighbor.checked_tile == true:
+			neighbor.segment_valid = true
+			neighbor.add_to_group("segment_tile")
+			neighbor.find_node("SubSelRect").show()
 
-	next_range_distance(unchecked_tiles, skill_range) # increments distance marker
-
-func next_range_distance(unchecked_tiles, skill_range):
-	print(distance_cycle, skill_range)
-	distance_cycle += 1
-	if distance_cycle <= skill_range:
-		next_range_set(unchecked_tiles, skill_range)
-	else:
-		get_valid_target_tiles()
-		
-func next_range_set(unchecked_tiles, skill_range):
-	pass
-	var new_unchecked = []
-	for tiles in unchecked_tiles:
-		
-		# if tile is within move range and not already checked, set distance
-		if tiles.distance_from_origin < distance_cycle and tiles.checked_tile == false:
-			tiles.distance_from_origin = distance_cycle
-		
-		# if tile exceeds move range and not already checked, re-add to list
-		if tiles.distance_from_origin > distance_cycle and tiles.checked_tile == false:
-			new_unchecked.append(tiles)
-		else:			
-			tiles.checked_tile = true
-			tiles.add_to_group("checked_tiles")
-			for neighbor in tiles.neighbors:
-				neighbor.origin_tile = self
-				if neighbor.tile_passable == true and neighbor.tile_unoccupied == true:
-					new_unchecked.append(neighbor)
-
-	next_range_distance(new_unchecked, skill_range)
-
-func get_valid_target_tiles():
-	print("getting valid")
-	valid_tiles = get_tree().get_nodes_in_group("checked_tiles")
-#	astar_node.astar_import(valid_tiles)
-	for tiles in valid_tiles:
-		tiles.get_child(2).visible = true
-		tiles.tile_valid = true
-		globals.selection = true
+func segment_deselect():
+	for neighbor in neighbors:
+		neighbor.add_to_group("segment_tile")
+		neighbor.find_node("SubSelRect").hide()
+		neighbor.segment_valid = false

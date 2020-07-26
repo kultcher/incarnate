@@ -7,6 +7,8 @@ enum {MOVE, SHIFT, FLY, TELEPORT}
 var turn
 var state = NO_SELECTION
 var movestate
+var current_actor
+var hovered_tile
 
 
 
