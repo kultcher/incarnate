@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3 uid="uid://dodqo6l5ob1u8"]
+
+[ext_resource type="Script" uid="uid://bdt6ctxpr5ir3" path="res://defs/statuses/behaviors/tactical_distortion.gd" id="1_54ab4"]
+[ext_resource type="Texture2D" uid="uid://bk4a3m73jqvpr" path="res://art/icons/tactical_distortion.png" id="2_phoce"]
+[ext_resource type="Script" uid="uid://d2wmkbwlnpga2" path="res://defs/statuses/status_def.gd" id="3_wlrq5"]
+
+[sub_resource type="Resource" id="Resource_0dnwb"]
+script = ExtResource("1_54ab4")
+
+[resource]
+script = ExtResource("3_wlrq5")
+id = &"distorted"
+display_name = "Distorted"
+icon = ExtResource("2_phoce")
+description = "Once this turn, the Traceless may change the target of one of its skills."
+duration = 1
+clock = 1
+tags = Array[StringName]([&"debuff"])
+behavior = SubResource("Resource_0dnwb")

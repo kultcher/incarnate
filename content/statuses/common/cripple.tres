@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/cripple.png" id="1_6nthj"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_wul88"]
+
+[resource]
+script = ExtResource("2_wul88")
+id = &"cripple"
+display_name = "Crippled"
+icon = ExtResource("1_6nthj")
+description = "-2 move until it next moves (or until end of turn)."
+duration = 1
+clock = 1
+stat_mods = Dictionary[StringName, int]({
+&"move": -2
+})
+tags = Array[StringName]([&"debuff", &"end_on_move"])

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://dbubtltlfvxsu"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_lc5vg"]
+[ext_resource type="Script" uid="uid://cgjwh6kfscd25" path="res://defs/effects/transfusion_effect.gd" id="2_3xejx"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="3_2bqq7"]
+[ext_resource type="Texture2D" uid="uid://ou4wltgd781e" path="res://art/icons/violent_transfusion.png" id="4_1lfjq"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="5_m3ta5"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="6_mygkp"]
+
+[sub_resource type="Resource" id="Resource_b4sl4"]
+script = ExtResource("2_3xejx")
+
+[sub_resource type="Resource" id="Resource_ceq54"]
+script = ExtResource("6_mygkp")
+shape = 2
+range_max = 5
+prompt = "Pick a foe within 5"
+
+[sub_resource type="Resource" id="Resource_767mi"]
+script = ExtResource("6_mygkp")
+shape = 2
+filter = 5
+range_min = 0
+range_max = 5
+highlight = 3
+prompt = "Pick who heals (within 5, you included)"
+
+[resource]
+script = ExtResource("5_m3ta5")
+id = &"violent_transfusion"
+display_name = "Violent Transfusion"
+icon = ExtResource("4_1lfjq")
+description = "A foe within 5 squares loses {loss} health. An ally within 5 (you included) heals that much, +{kill_bonus} if the foe died."
+slot = 7
+tags = Array[StringName]([&"recovery"])
+targets = Array[ExtResource("6_mygkp")]([SubResource("Resource_ceq54"), SubResource("Resource_767mi")])
+effects = Array[ExtResource("1_lc5vg")]([SubResource("Resource_b4sl4")])
+hit_sound = ExtResource("3_2bqq7")

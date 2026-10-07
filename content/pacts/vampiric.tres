@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PactDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/vampiric_pact.png" id="1_wb376"]
+[ext_resource type="Script" path="res://defs/statuses/pact_def.gd" id="2_gxafp"]
+
+[resource]
+script = ExtResource("2_gxafp")
+display_name = "Vampiric Pact"
+icon = ExtResource("1_wb376")
+description = "The foe loses 1 health and you heal 1."
+foe_health_loss = 1
+self_heal = 1

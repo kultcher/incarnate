@@ -1,0 +1,36 @@
+[gd_resource type="TileSet" format=3 uid="uid://bpy66wsq8regb"]
+
+[ext_resource type="Texture2D" uid="uid://b7k0f15p3hw0c" path="res://art/tiles/terrain_sheet.png" id="1_fqu8k"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_26kv5"]
+texture = ExtResource("1_fqu8k")
+texture_region_size = Vector2i(64, 64)
+21:13/0 = 0
+21:13/0/custom_data_1 = 1
+21:14/0 = 0
+21:14/0/custom_data_1 = 1
+21:15/0 = 0
+21:15/0/custom_data_1 = 1
+22:13/0 = 0
+22:13/0/custom_data_1 = 1
+22:14/0 = 0
+22:14/0/custom_data_1 = 1
+22:15/0 = 0
+22:15/0/custom_data_1 = 1
+23:13/0 = 0
+23:13/0/custom_data_1 = 1
+23:14/0 = 0
+23:14/0/custom_data_1 = 1
+23:15/0 = 0
+23:15/0/custom_data_1 = 1
+20:6/0 = 0
+20:6/0/custom_data_0 = true
+20:6/0/custom_data_1 = 1
+
+[resource]
+tile_size = Vector2i(64, 64)
+custom_data_layer_0/name = "blocks_move"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "move_cost"
+custom_data_layer_1/type = 2
+sources/0 = SubResource("TileSetAtlasSource_26kv5")

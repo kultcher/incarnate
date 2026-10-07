@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3 uid="uid://xxvn5kor01v6"]
+
+[ext_resource type="Script" uid="uid://ck82ckrx8hko2" path="res://defs/statuses/behaviors/illusive_shadows.gd" id="1_1sir3"]
+[ext_resource type="Texture2D" uid="uid://cn7qn5tkqqetb" path="res://art/icons/illusive_shadows.png" id="2_umd8y"]
+[ext_resource type="Script" uid="uid://d2wmkbwlnpga2" path="res://defs/statuses/status_def.gd" id="3_fd52s"]
+
+[sub_resource type="Resource" id="Resource_1mv18"]
+script = ExtResource("1_1sir3")
+
+[resource]
+script = ExtResource("3_fd52s")
+id = &"illusive_shadows"
+display_name = "Illusive Shadows"
+icon = ExtResource("2_umd8y")
+description = "Passive. Shifting out of a square leaves a Shadow there (at most {max}; a new one replaces the oldest). Shadows don't block anything and can't be struck.
+Shadowstrike: after you use an attack, one Shadow may copy it, then fades.
+Probability Armor: +1 Evasion (a dodge per round) for each Shadow."
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_1mv18")

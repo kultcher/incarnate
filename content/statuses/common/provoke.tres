@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/provoke.png" id="1_cm5qj"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_bf2ty"]
+
+[resource]
+script = ExtResource("2_bf2ty")
+id = &"provoke"
+display_name = "Provoked"
+icon = ExtResource("1_cm5qj")
+description = "Drawn to attack the unit that Provoked it, until end of turn."
+duration = 1
+clock = 1
+tags = Array[StringName]([&"taunt", &"debuff"])

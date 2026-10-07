@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://y5mmtkcmdk0l"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_ruu44"]
+[ext_resource type="Script" uid="uid://ckt7njg7r6ns5" path="res://defs/effects/path_strike_effect.gd" id="2_sph7q"]
+[ext_resource type="Texture2D" uid="uid://bpfr18ivbeke5" path="res://art/fx/shadow_strike.png" id="3_hawvq"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="4_tl4m5"]
+[ext_resource type="Texture2D" uid="uid://b5nyuq42u7g2x" path="res://art/icons/phantom_dash.png" id="5_yoayg"]
+[ext_resource type="Script" uid="uid://dol6omgx4j77k" path="res://defs/path_spec.gd" id="6_2do5i"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="7_2whdn"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="8_pc4e0"]
+
+[sub_resource type="Resource" id="Resource_51hqj"]
+script = ExtResource("2_sph7q")
+
+[sub_resource type="Resource" id="Resource_c4m05"]
+script = ExtResource("6_2do5i")
+budget = 2
+extend_per_foe = 2
+prompt = "Click out the dash (each foe you pass through adds 2 squares)"
+
+[resource]
+script = ExtResource("7_2whdn")
+id = &"phantom_dash"
+display_name = "Phantom Dash"
+icon = ExtResource("5_yoayg")
+description = "Shift 2 squares, plus 2 more for each foe you shift through. Then strike each foe you shifted through for {damage}."
+slot = 2
+cooldown = 3
+tags = Array[StringName]([&"attack", &"area"])
+path = SubResource("Resource_c4m05")
+effects = Array[ExtResource("1_ruu44")]([SubResource("Resource_51hqj")])
+copy_range = 3
+copy_tiers = Array[int]([1])
+hit_fx = ExtResource("3_hawvq")
+hit_sound = ExtResource("4_tl4m5")

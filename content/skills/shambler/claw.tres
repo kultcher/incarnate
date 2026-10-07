@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://bdpva5l74gyqe"]
+
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="1_skill"]
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_t6mk8"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="2_step"]
+[ext_resource type="Script" uid="uid://demotymp37ee6" path="res://defs/effects/damage_effect.gd" id="3_damage"]
+[ext_resource type="Texture2D" uid="uid://dx3s68erak8f7" path="res://art/icons/claw.png" id="4_icon"]
+[ext_resource type="Texture2D" uid="uid://cgqyo5rbhfmse" path="res://art/fx/blood_strike.png" id="5_fx"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="6_sound"]
+
+[sub_resource type="Resource" id="Resource_t6mk8"]
+script = ExtResource("3_damage")
+
+[sub_resource type="Resource" id="step_foe"]
+script = ExtResource("2_step")
+prompt = "Pick an adjacent foe"
+
+[resource]
+script = ExtResource("1_skill")
+id = &"claw"
+display_name = "Claw"
+icon = ExtResource("4_icon")
+description = "Rake an adjacent foe for {damage}."
+tags = Array[StringName]([&"attack", &"melee"])
+targets = Array[ExtResource("2_step")]([SubResource("step_foe")])
+effects = Array[ExtResource("1_t6mk8")]([SubResource("Resource_t6mk8")])
+hit_fx = ExtResource("5_fx")
+hit_sound = ExtResource("6_sound")

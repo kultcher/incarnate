@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://b0ggyur7ahs15"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_p6ab2"]
+[ext_resource type="Script" uid="uid://cobhe6yfvbra4" path="res://defs/effects/shadow_jump_effect.gd" id="2_dotpx"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="3_8gk7g"]
+[ext_resource type="Texture2D" uid="uid://m56voayit4nk" path="res://art/icons/shadow_swap.png" id="4_7hx6m"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="5_yjh16"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="6_whd1q"]
+
+[sub_resource type="Resource" id="Resource_qtsbj"]
+script = ExtResource("2_dotpx")
+consume = false
+
+[sub_resource type="Resource" id="Resource_jaivw"]
+script = ExtResource("6_whd1q")
+shape = 2
+filter = 6
+range_max = 99
+highlight = 4
+prompt = "Pick a Shadow to swap with"
+
+[resource]
+script = ExtResource("5_yjh16")
+id = &"shadow_swap"
+display_name = "Shadow Swap"
+icon = ExtResource("4_7hx6m")
+description = "Free, after Mirage Shift this turn. Swap places with one of your Shadows. The Shadow stays."
+slot = 4
+cost = 2
+tags = Array[StringName]([&"teleport"])
+targets = Array[ExtResource("6_whd1q")]([SubResource("Resource_jaivw")])
+effects = Array[ExtResource("1_p6ab2")]([SubResource("Resource_qtsbj")])
+requires_status = &"mirage"
+hit_sound = ExtResource("3_8gk7g")

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://dbsxim7dogmea"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_2eojx"]
+[ext_resource type="Script" uid="uid://cgh1621dx7ilk" path="res://defs/effects/verve_magnet_effect.gd" id="2_xxr82"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="3_5s30q"]
+[ext_resource type="Texture2D" uid="uid://btep2lpwk3tdp" path="res://art/icons/verve_magnet.png" id="4_1lfdy"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="5_us5ar"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="6_hrabq"]
+
+[sub_resource type="Resource" id="Resource_t03vv"]
+script = ExtResource("2_xxr82")
+
+[sub_resource type="Resource" id="Resource_0ctpe"]
+script = ExtResource("6_hrabq")
+shape = 2
+filter = 2
+range_max = 5
+highlight = 4
+prompt = "Pick a unit within 5"
+
+[resource]
+script = ExtResource("5_us5ar")
+id = &"verve_magnet"
+display_name = "Verve Magnet"
+icon = ExtResource("4_1lfdy")
+description = "Maneuver. You and a unit within 5 squares are each forced {squares} squares toward or away from each other. Each forced ally heals {amount}; each forced foe loses {amount} health."
+slot = 4
+cost = 0
+cooldown = 3
+tags = Array[StringName]([&"maneuver"])
+targets = Array[ExtResource("6_hrabq")]([SubResource("Resource_0ctpe")])
+effects = Array[ExtResource("1_2eojx")]([SubResource("Resource_t03vv")])
+hit_sound = ExtResource("3_5s30q")

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3 uid="uid://cdyn7qlmuof7t"]
+
+[ext_resource type="Script" uid="uid://c87kdjb8c73ie" path="res://defs/statuses/behaviors/perfect_decoy.gd" id="1_556xp"]
+[ext_resource type="Texture2D" uid="uid://bav4jw6q77loy" path="res://art/icons/perfect_decoy.png" id="2_ntca1"]
+[ext_resource type="Script" uid="uid://d2wmkbwlnpga2" path="res://defs/statuses/status_def.gd" id="3_7j4gu"]
+
+[sub_resource type="Resource" id="Resource_kknd0"]
+script = ExtResource("1_556xp")
+
+[resource]
+script = ExtResource("3_7j4gu")
+id = &"perfect_decoy"
+display_name = "Perfect Decoy"
+icon = ExtResource("2_ntca1")
+description = "The first time this turn a foe's strike would bring a protected ally below 1 health, it's prevented and the ally heals {heal}."
+duration = 1
+clock = 1
+behavior = SubResource("Resource_kknd0")

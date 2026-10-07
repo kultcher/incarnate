@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PactDef" format=3]
+
+[ext_resource type="Resource" path="res://content/statuses/common/cripple.tres" id="1_chss6"]
+[ext_resource type="Texture2D" path="res://art/icons/predation_pact.png" id="2_cmqug"]
+[ext_resource type="Script" path="res://defs/statuses/pact_def.gd" id="3_iycpw"]
+
+[resource]
+script = ExtResource("3_iycpw")
+display_name = "Predation Pact"
+icon = ExtResource("2_cmqug")
+description = "Cripple the foe (-2 move until it next moves). Then you may shift 1 square."
+foe_status = ExtResource("1_chss6")
+self_shift = 1

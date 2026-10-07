@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://fnji7onhjppl"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_kna5e"]
+[ext_resource type="Script" uid="uid://crnn114n22tur" path="res://defs/effects/place_shadow_effect.gd" id="2_ga3y6"]
+[ext_resource type="Script" uid="uid://b8fwvparky7i5" path="res://defs/effects/apply_status_effect.gd" id="3_thq4y"]
+[ext_resource type="Resource" path="res://content/statuses/traceless/mirage.tres" id="4_acbbl"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="5_8bo3d"]
+[ext_resource type="Texture2D" uid="uid://cqqukux3cvcla" path="res://art/icons/mirage_shift.png" id="6_wytfn"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="7_emokg"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="8_ju5bk"]
+
+[sub_resource type="Resource" id="Resource_hxeh3"]
+script = ExtResource("2_ga3y6")
+
+[sub_resource type="Resource" id="Resource_8sh2m"]
+script = ExtResource("3_thq4y")
+status = ExtResource("4_acbbl")
+
+[sub_resource type="Resource" id="Resource_0t8um"]
+script = ExtResource("8_ju5bk")
+shape = 2
+filter = 1
+range_max = 6
+highlight = 4
+prompt = "Pick an empty square within 6"
+
+[resource]
+script = ExtResource("7_emokg")
+id = &"mirage_shift"
+display_name = "Mirage Shift"
+icon = ExtResource("6_wytfn")
+description = "Maneuver. Put a Shadow on an empty square within 6. Until end of turn, you may swap places with a Shadow as a free action (Shadow Swap)."
+slot = 4
+cost = 0
+cooldown = 3
+tags = Array[StringName]([&"maneuver"])
+targets = Array[ExtResource("8_ju5bk")]([SubResource("Resource_0t8um")])
+effects = Array[ExtResource("1_kna5e")]([SubResource("Resource_hxeh3"), SubResource("Resource_8sh2m")])
+hit_sound = ExtResource("5_8bo3d")

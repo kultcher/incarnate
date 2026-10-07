@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://ypp27nrp0uv2"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_l4xaa"]
+[ext_resource type="Script" uid="uid://0iw0207yph1p" path="res://defs/effects/power/damage_dealt_bonus.gd" id="2_twgoe"]
+[ext_resource type="Script" uid="uid://demotymp37ee6" path="res://defs/effects/damage_effect.gd" id="3_27gmn"]
+[ext_resource type="Texture2D" uid="uid://cgqyo5rbhfmse" path="res://art/fx/blood_strike.png" id="4_2mpwj"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="5_pvapv"]
+[ext_resource type="Texture2D" uid="uid://bppne1gr5enbc" path="res://art/icons/rending_claws.png" id="6_v4w12"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="7_1d6xw"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="8_msi7j"]
+
+[sub_resource type="Resource" id="Resource_pluhl"]
+script = ExtResource("2_twgoe")
+
+[sub_resource type="Resource" id="Resource_n7ddy"]
+script = ExtResource("3_27gmn")
+tiers = Array[int]([1, 1])
+power_bonus = SubResource("Resource_pluhl")
+
+[sub_resource type="Resource" id="Resource_xwbd2"]
+script = ExtResource("8_msi7j")
+prompt = "Pick an adjacent foe"
+
+[resource]
+script = ExtResource("7_1d6xw")
+id = &"rending_claws"
+display_name = "Rending Claws"
+icon = ExtResource("6_v4w12")
+description = "Strike an adjacent foe for {damage}, with +1 Power for every {per_damage} damage you've already dealt this turn."
+slot = 1
+cooldown = 2
+tags = Array[StringName]([&"attack", &"melee"])
+targets = Array[ExtResource("8_msi7j")]([SubResource("Resource_xwbd2")])
+effects = Array[ExtResource("1_l4xaa")]([SubResource("Resource_n7ddy")])
+hit_fx = ExtResource("4_2mpwj")
+hit_sound = ExtResource("5_pvapv")

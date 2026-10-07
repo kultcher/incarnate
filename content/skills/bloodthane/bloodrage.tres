@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://bh1xudby8xo8r"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_k3np6"]
+[ext_resource type="Script" uid="uid://dmkl2vj8y2goo" path="res://defs/effects/bloodrage_effect.gd" id="2_kreo8"]
+[ext_resource type="Resource" path="res://content/statuses/bloodthane/bloodrage.tres" id="3_uc66v"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="4_snips"]
+[ext_resource type="Texture2D" uid="uid://cemyklmbedfa4" path="res://art/icons/bloodrage.png" id="5_dgbfh"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="6_mcqks"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="7_ump7g"]
+
+[sub_resource type="Resource" id="Resource_kk85o"]
+script = ExtResource("2_kreo8")
+status = ExtResource("3_uc66v")
+
+[resource]
+script = ExtResource("6_mcqks")
+id = &"bloodrage"
+display_name = "Bloodrage"
+icon = ExtResource("5_dgbfh")
+description = "Ultimate. Gain a skill action. Until end of turn, your strikes get +X Power, where X is the damage you've dealt so far this turn."
+slot = 6
+cost = 2
+tags = Array[StringName]([&"ultimate"])
+effects = Array[ExtResource("1_k3np6")]([SubResource("Resource_kk85o")])
+uses_per_battle = 1
+hit_sound = ExtResource("4_snips")

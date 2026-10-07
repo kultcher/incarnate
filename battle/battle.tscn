@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://c5t2ebl2tekcy"]
+
+[ext_resource type="Script" uid="uid://c3doyk6i4mu4g" path="res://battle/battle.gd" id="1_battle"]
+[ext_resource type="PackedScene" path="res://levels/test_arena.tscn" id="2_arena"]
+[ext_resource type="Script" uid="uid://dahdfstakfn67" path="res://core/resolve/action_resolver.gd" id="3_resolver"]
+[ext_resource type="Script" uid="uid://xkplq2qf37b1" path="res://view/presenter.gd" id="4_presenter"]
+[ext_resource type="Script" uid="uid://b2qy1kufh7flq" path="res://battle/player_controller.gd" id="5_controller"]
+[ext_resource type="Script" uid="uid://dmvkxu46xgam8" path="res://ui/hud.gd" id="6_hud"]
+[ext_resource type="Script" uid="uid://dck8xhxi8d10t" path="res://battle/battle_controller.gd" id="7_battle_controller"]
+[ext_resource type="Script" uid="uid://d1h1njxq2txq1" path="res://battle/enemy_ai.gd" id="8_enemy_ai"]
+
+[node name="Battle" type="Node2D" unique_id=762165862]
+script = ExtResource("1_battle")
+
+[node name="Arena" parent="." unique_id=1470279414 instance=ExtResource("2_arena")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=386678964]
+
+[node name="BattleController" type="Node" parent="." unique_id=294657739]
+script = ExtResource("7_battle_controller")
+
+[node name="ActionResolver" type="Node" parent="." unique_id=175601721]
+script = ExtResource("3_resolver")
+
+[node name="Presenter" type="Node" parent="." unique_id=1635253118]
+script = ExtResource("4_presenter")
+
+[node name="PlayerController" type="Node" parent="." unique_id=529616919]
+script = ExtResource("5_controller")
+
+[node name="EnemyAI" type="Node" parent="." unique_id=1333417889]
+script = ExtResource("8_enemy_ai")
+
+[node name="Hud" type="CanvasLayer" parent="." unique_id=1389534070]
+script = ExtResource("6_hud")

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://d3qfjm1cxi4gc"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_rk4c8"]
+[ext_resource type="Script" uid="uid://b8cd01thes8y3" path="res://defs/effects/refresh_skill_effect.gd" id="2_5r8cw"]
+[ext_resource type="Script" uid="uid://bp727hsy40dr5" path="res://defs/effects/gain_action_effect.gd" id="3_4pe3s"]
+[ext_resource type="Script" uid="uid://b8fwvparky7i5" path="res://defs/effects/apply_status_effect.gd" id="4_g45uf"]
+[ext_resource type="Resource" path="res://content/statuses/bloodthane/adrenal.tres" id="5_1ieqt"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="6_sagyi"]
+[ext_resource type="Texture2D" uid="uid://cb88dwx74wfcc" path="res://art/icons/adrenal_surge.png" id="7_nh6dt"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="8_x7e6s"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="9_hr1bp"]
+
+[sub_resource type="Resource" id="Resource_rxlvo"]
+script = ExtResource("2_5r8cw")
+
+[sub_resource type="Resource" id="Resource_63vwy"]
+script = ExtResource("3_4pe3s")
+target_step = 0
+
+[sub_resource type="Resource" id="Resource_b0604"]
+script = ExtResource("4_g45uf")
+status = ExtResource("5_1ieqt")
+target_step = 0
+
+[sub_resource type="Resource" id="Resource_ss0op"]
+script = ExtResource("9_hr1bp")
+shape = 2
+filter = 4
+range_max = 4
+highlight = 3
+prompt = "Pick an ally within 4"
+
+[resource]
+script = ExtResource("8_x7e6s")
+id = &"adrenal_surge"
+display_name = "Adrenal Surge"
+icon = ExtResource("7_nh6dt")
+description = "An ally within 4 squares refreshes a skill and gains a skill action. The next standard skill they use this turn isn't exhausted."
+slot = 5
+cooldown = 4
+tags = Array[StringName]([&"utility"])
+targets = Array[ExtResource("9_hr1bp")]([SubResource("Resource_ss0op")])
+effects = Array[ExtResource("1_rk4c8")]([SubResource("Resource_rxlvo"), SubResource("Resource_63vwy"), SubResource("Resource_b0604")])
+hit_sound = ExtResource("6_sagyi")

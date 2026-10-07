@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://cbns518b1ek1j"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_yqlqe"]
+[ext_resource type="Script" uid="uid://demotymp37ee6" path="res://defs/effects/damage_effect.gd" id="2_c6k10"]
+[ext_resource type="Texture2D" uid="uid://cgqyo5rbhfmse" path="res://art/fx/blood_strike.png" id="3_robue"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="4_exoeq"]
+[ext_resource type="Texture2D" uid="uid://c03s2w5kb4ysm" path="res://art/icons/rage_strike.png" id="5_xunga"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="6_nu028"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="7_1akc4"]
+
+[sub_resource type="Resource" id="Resource_ftdch"]
+script = ExtResource("2_c6k10")
+tiers = Array[int]([2, 1])
+
+[sub_resource type="Resource" id="Resource_3uqjq"]
+script = ExtResource("7_1akc4")
+prompt = "Pick an adjacent foe"
+
+[resource]
+script = ExtResource("6_nu028")
+id = &"rage_strike"
+display_name = "Rage Strike"
+icon = ExtResource("5_xunga")
+description = "Strike an adjacent foe for {damage}. Whenever a foe strikes you, Rage Strike recharges by 1."
+slot = 1
+cooldown = 3
+tags = Array[StringName]([&"attack", &"melee"])
+targets = Array[ExtResource("7_1akc4")]([SubResource("Resource_3uqjq")])
+effects = Array[ExtResource("1_yqlqe")]([SubResource("Resource_ftdch")])
+recharge_when_struck = true
+hit_fx = ExtResource("3_robue")
+hit_sound = ExtResource("4_exoeq")

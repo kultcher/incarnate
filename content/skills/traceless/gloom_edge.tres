@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://cjnnewlqky4nc"]
+
+[ext_resource type="Resource" path="res://content/statuses/common/blind.tres" id="1_acyfv"]
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="2_j810a"]
+[ext_resource type="Script" uid="uid://demotymp37ee6" path="res://defs/effects/damage_effect.gd" id="3_5piad"]
+[ext_resource type="Texture2D" uid="uid://bpfr18ivbeke5" path="res://art/fx/shadow_strike.png" id="4_0ypvo"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="5_7eca7"]
+[ext_resource type="Texture2D" uid="uid://cusx0wkfv2omu" path="res://art/icons/gloom_edge.png" id="6_5upma"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="7_vxdm4"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="8_avacu"]
+
+[sub_resource type="Resource" id="Resource_1craa"]
+script = ExtResource("3_5piad")
+tiers = Array[int]([1, 1])
+
+[sub_resource type="Resource" id="Resource_wj2fb"]
+script = ExtResource("8_avacu")
+prompt = "Pick an adjacent foe"
+
+[resource]
+script = ExtResource("7_vxdm4")
+id = &"gloom_edge"
+display_name = "Gloom Edge"
+icon = ExtResource("6_5upma")
+description = "Strike an adjacent foe for {damage}. A foe struck by a Shadow copying this is Blinded (its next strike counts as dodged)."
+slot = 1
+cooldown = 2
+tags = Array[StringName]([&"attack", &"melee"])
+targets = Array[ExtResource("8_avacu")]([SubResource("Resource_wj2fb")])
+effects = Array[ExtResource("2_j810a")]([SubResource("Resource_1craa")])
+copy_range = 1
+copy_tiers = Array[int]([1, 1])
+copy_status = ExtResource("1_acyfv")
+hit_fx = ExtResource("4_0ypvo")
+hit_sound = ExtResource("5_7eca7")

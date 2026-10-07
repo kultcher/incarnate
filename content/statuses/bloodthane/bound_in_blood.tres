@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3 uid="uid://7c2b4twnea7u"]
+
+[ext_resource type="Script" uid="uid://dd3a45iatbwua" path="res://defs/statuses/pact_def.gd" id="1_i2xyr"]
+[ext_resource type="Resource" path="res://content/pacts/dominance.tres" id="2_mr4ru"]
+[ext_resource type="Resource" path="res://content/pacts/vampiric.tres" id="3_ipq2l"]
+[ext_resource type="Resource" path="res://content/pacts/predation.tres" id="4_avune"]
+[ext_resource type="Script" uid="uid://056qf1ds0uyr" path="res://defs/statuses/behaviors/bound_in_blood.gd" id="5_e2vbq"]
+[ext_resource type="Texture2D" uid="uid://b7n3m1q5o4am4" path="res://art/icons/bound_in_blood.png" id="6_57i05"]
+[ext_resource type="Script" uid="uid://d2wmkbwlnpga2" path="res://defs/statuses/status_def.gd" id="7_hsg1c"]
+
+[sub_resource type="Resource" id="Resource_h5gmq"]
+script = ExtResource("5_e2vbq")
+pacts = Array[ExtResource("1_i2xyr")]([ExtResource("2_mr4ru"), ExtResource("3_ipq2l"), ExtResource("4_avune")])
+
+[resource]
+script = ExtResource("7_hsg1c")
+id = &"bound_in_blood"
+display_name = "Bound in Blood"
+icon = ExtResource("6_57i05")
+description = "Passive. When you strike a foe you've already struck this turn, you may bind a Pact to it. Each Pact can be bound once per turn. (Stands in for the 2014 trigger, a Blade card unveiled on the strike, until the Soulstream has suits.)"
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_h5gmq")

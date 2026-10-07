@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/adrenal_surge.png" id="1_ox4vk"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_njqgs"]
+
+[resource]
+script = ExtResource("2_njqgs")
+id = &"adrenal"
+display_name = "Adrenal Surge"
+icon = ExtResource("1_ox4vk")
+description = "The next standard skill used this turn isn't exhausted."
+duration = 1
+clock = 1
+tags = Array[StringName]([&"no_cooldown_next"])

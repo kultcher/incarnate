@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/mirage_shift.png" id="1_j3dvr"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_dsqg5"]
+
+[resource]
+script = ExtResource("2_dsqg5")
+id = &"mirage"
+display_name = "Mirage"
+icon = ExtResource("1_j3dvr")
+description = "Until end of turn, you may swap places with a Shadow as a free action."
+duration = 1
+clock = 1

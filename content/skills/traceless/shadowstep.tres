@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://w6sjvewxljwt"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_oob6l"]
+[ext_resource type="Script" uid="uid://cobhe6yfvbra4" path="res://defs/effects/shadow_jump_effect.gd" id="2_0d253"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="3_jej38"]
+[ext_resource type="Texture2D" uid="uid://dna5fy6j2kmx1" path="res://art/icons/shadowstep.png" id="4_8x7f4"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="5_5nwry"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="6_wn3ko"]
+
+[sub_resource type="Resource" id="Resource_6ggqg"]
+script = ExtResource("2_0d253")
+
+[sub_resource type="Resource" id="Resource_j8n4i"]
+script = ExtResource("6_wn3ko")
+shape = 2
+filter = 6
+range_max = 99
+highlight = 4
+prompt = "Pick one of your Shadows"
+
+[resource]
+script = ExtResource("5_5nwry")
+id = &"shadowstep"
+display_name = "Shadowstep"
+icon = ExtResource("4_8x7f4")
+description = "Free. Teleport to one of your Shadows. The Shadow is used up."
+cost = 2
+tags = Array[StringName]([&"teleport"])
+targets = Array[ExtResource("6_wn3ko")]([SubResource("Resource_j8n4i")])
+effects = Array[ExtResource("1_oob6l")]([SubResource("Resource_6ggqg")])
+hit_sound = ExtResource("3_jej38")

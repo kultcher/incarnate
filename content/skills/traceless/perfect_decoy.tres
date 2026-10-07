@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://d4nsrf04xq6la"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_x3cwn"]
+[ext_resource type="Script" uid="uid://cm4vr5f1uikox" path="res://defs/effects/status_to_allies_effect.gd" id="2_wsiqs"]
+[ext_resource type="Resource" uid="uid://cdyn7qlmuof7t" path="res://content/statuses/traceless/perfect_decoy.tres" id="3_y3wyy"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="4_rxgc4"]
+[ext_resource type="Texture2D" uid="uid://bav4jw6q77loy" path="res://art/icons/perfect_decoy.png" id="5_n5njp"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="6_mgce7"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="7_aw352"]
+
+[sub_resource type="Resource" id="Resource_gtw3o"]
+script = ExtResource("2_wsiqs")
+status = ExtResource("3_y3wyy")
+
+[resource]
+script = ExtResource("6_mgce7")
+id = &"perfect_decoy"
+display_name = "Perfect Decoy"
+icon = ExtResource("5_n5njp")
+description = "Free. Until end of turn, the first time a foe's strike would bring an ally (you included) below 1 health, it's prevented and they heal {heal}. (The 4-square teleport isn't in yet.)"
+slot = 7
+cost = 2
+tags = Array[StringName]([&"recovery"])
+effects = Array[ExtResource("1_x3cwn")]([SubResource("Resource_gtw3o")])
+hit_sound = ExtResource("4_rxgc4")

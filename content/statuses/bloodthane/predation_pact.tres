@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/predation_pact.png" id="1_bugn8"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_8pee6"]
+
+[resource]
+script = ExtResource("2_8pee6")
+id = &"predation_pact"
+display_name = "Predation Pact"
+icon = ExtResource("1_bugn8")
+description = "Bound to the Bloodthane: -1 move."
+stacking = 2
+stat_mods = Dictionary[StringName, int]({
+&"move": -1
+})
+tags = Array[StringName]([&"pact"])

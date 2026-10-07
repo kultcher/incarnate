@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/shadowstorm.png" id="1_guybj"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_v1xth"]
+
+[resource]
+script = ExtResource("2_v1xth")
+id = &"shadowstorm"
+display_name = "Shadowstorm"
+icon = ExtResource("1_guybj")
+description = "Any number of Shadows can copy each attack until end of turn."
+duration = 1
+clock = 1

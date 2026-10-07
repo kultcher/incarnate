@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://debiuv833uujk"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_c23x4"]
+[ext_resource type="Resource" path="res://content/statuses/bloodthane/bloody_rush_armor.tres" id="2_av36j"]
+[ext_resource type="Script" uid="uid://ckt7njg7r6ns5" path="res://defs/effects/path_strike_effect.gd" id="3_q57yy"]
+[ext_resource type="Texture2D" uid="uid://cgqyo5rbhfmse" path="res://art/fx/blood_strike.png" id="4_a8wad"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="5_17jaf"]
+[ext_resource type="Texture2D" uid="uid://4sk6wpqtb2k1" path="res://art/icons/bloody_rush.png" id="6_5whyc"]
+[ext_resource type="Script" uid="uid://dol6omgx4j77k" path="res://defs/path_spec.gd" id="7_kutxa"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="8_kanlp"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="9_tcqy7"]
+
+[sub_resource type="Resource" id="Resource_m0iyd"]
+script = ExtResource("3_q57yy")
+include_adjacent = true
+reward_threshold = 3
+reward_status = ExtResource("2_av36j")
+
+[sub_resource type="Resource" id="Resource_1bdtv"]
+script = ExtResource("7_kutxa")
+prompt = "Click out up to 3 squares"
+
+[resource]
+script = ExtResource("8_kanlp")
+id = &"bloody_rush"
+display_name = "Bloody Rush"
+icon = ExtResource("6_5whyc")
+description = "Shift up to 3 squares, through foes if you like. Strike each foe you shift through or next to for {damage}. If you strike at least {threshold}, +1 Armor until end of turn."
+slot = 2
+cooldown = 3
+tags = Array[StringName]([&"attack", &"area"])
+path = SubResource("Resource_1bdtv")
+effects = Array[ExtResource("1_c23x4")]([SubResource("Resource_m0iyd")])
+hit_fx = ExtResource("4_a8wad")
+hit_sound = ExtResource("5_17jaf")

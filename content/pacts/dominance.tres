@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PactDef" format=3]
+
+[ext_resource type="Resource" path="res://content/statuses/common/provoke.tres" id="1_6g4yv"]
+[ext_resource type="Texture2D" path="res://art/icons/dominance_pact.png" id="2_gaw42"]
+[ext_resource type="Script" path="res://defs/statuses/pact_def.gd" id="3_328f0"]
+[ext_resource type="Resource" path="res://content/statuses/bloodthane/dominance_armor.tres" id="4_uduel"]
+
+[resource]
+script = ExtResource("3_328f0")
+display_name = "Dominance Pact"
+icon = ExtResource("2_gaw42")
+description = "Provoke the foe until end of turn. You gain +1 Armor until end of turn."
+foe_status = ExtResource("1_6g4yv")
+self_status = ExtResource("4_uduel")

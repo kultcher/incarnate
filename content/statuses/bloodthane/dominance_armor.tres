@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/armor_up.png" id="1_6mato"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_xwk5k"]
+
+[resource]
+script = ExtResource("2_xwk5k")
+id = &"dominance_armor"
+display_name = "Dominance"
+icon = ExtResource("1_6mato")
+description = "+1 Armor until end of turn."
+duration = 1
+clock = 1
+stat_mods = Dictionary[StringName, int]({
+&"armor": 1
+})

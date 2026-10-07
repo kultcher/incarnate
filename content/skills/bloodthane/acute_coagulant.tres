@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://11em4o24qab4"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_otw7v"]
+[ext_resource type="Script" uid="uid://s6hetg3igh6n" path="res://defs/effects/heal_effect.gd" id="2_qrnym"]
+[ext_resource type="Script" uid="uid://b8fwvparky7i5" path="res://defs/effects/apply_status_effect.gd" id="3_yq2y1"]
+[ext_resource type="Resource" uid="uid://c2diqff5r13el" path="res://content/statuses/bloodthane/acute_coagulant.tres" id="4_y0m4d"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="5_rhu7y"]
+[ext_resource type="Texture2D" uid="uid://crbkl2rolr3oj" path="res://art/icons/acute_coagulant.png" id="6_g7wjy"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="7_2740l"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="8_vpb5m"]
+
+[sub_resource type="Resource" id="Resource_gkkxk"]
+script = ExtResource("2_qrnym")
+
+[sub_resource type="Resource" id="Resource_n41lq"]
+script = ExtResource("3_yq2y1")
+status = ExtResource("4_y0m4d")
+
+[resource]
+script = ExtResource("7_2740l")
+id = &"acute_coagulant"
+display_name = "Acute Coagulant"
+icon = ExtResource("6_g7wjy")
+description = "Heal yourself for {heal}. For 2 turns, heal {tick} at the end of each turn and whenever you're struck for {threshold} or more."
+slot = 3
+cooldown = 1
+tags = Array[StringName]([&"heal"])
+effects = Array[ExtResource("1_otw7v")]([SubResource("Resource_gkkxk"), SubResource("Resource_n41lq")])
+hit_sound = ExtResource("5_rhu7y")

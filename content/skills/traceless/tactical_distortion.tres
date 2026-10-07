@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3 uid="uid://q5moiedgyjkn"]
+
+[ext_resource type="Script" uid="uid://r6peouftkxq5" path="res://defs/effects/effect_def.gd" id="1_xj0a1"]
+[ext_resource type="Script" uid="uid://b8fwvparky7i5" path="res://defs/effects/apply_status_effect.gd" id="2_njf84"]
+[ext_resource type="Resource" uid="uid://dodqo6l5ob1u8" path="res://content/statuses/traceless/distorted.tres" id="3_yqkkm"]
+[ext_resource type="AudioStream" uid="uid://c66t5fw2saq8l" path="res://audio/strike_hit.wav" id="4_knqxe"]
+[ext_resource type="Texture2D" uid="uid://bk4a3m73jqvpr" path="res://art/icons/tactical_distortion.png" id="5_6ggfv"]
+[ext_resource type="Script" uid="uid://h12lmu7j3xkj" path="res://defs/skill_def.gd" id="6_bevbq"]
+[ext_resource type="Script" uid="uid://dhvjfmf2q5ku4" path="res://defs/target_step.gd" id="7_4pm8a"]
+
+[sub_resource type="Resource" id="Resource_i6dvg"]
+script = ExtResource("2_njf84")
+status = ExtResource("3_yqkkm")
+target_step = 0
+link_caster = true
+
+[sub_resource type="Resource" id="Resource_rco2c"]
+script = ExtResource("7_4pm8a")
+shape = 2
+range_max = 4
+highlight = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("6_bevbq")
+id = &"tactical_distortion"
+display_name = "Tactical Distortion"
+icon = ExtResource("5_6ggfv")
+description = "Free. Choose a foe within 4. Once this turn, when it uses a skill, you may change its target to another valid target."
+slot = 5
+cost = 2
+cooldown = 3
+tags = Array[StringName]([&"utility"])
+targets = Array[ExtResource("7_4pm8a")]([SubResource("Resource_rco2c")])
+effects = Array[ExtResource("1_xj0a1")]([SubResource("Resource_i6dvg")])
+hit_sound = ExtResource("4_knqxe")

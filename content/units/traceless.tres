@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="UnitDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_3cym5"]
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="1_def"]
+[ext_resource type="Resource" path="res://content/statuses/traceless/illusive_shadows.tres" id="2_qgcw2"]
+[ext_resource type="Texture2D" path="res://art/units/traceless.png" id="2_sheet"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="3_skill_def"]
+[ext_resource type="Resource" path="res://content/skills/traceless/displacer_strike.tres" id="6_rmsyw"]
+[ext_resource type="Resource" path="res://content/skills/traceless/shadowstep.tres" id="7_s2dy7"]
+[ext_resource type="Resource" path="res://content/skills/traceless/gloom_edge.tres" id="8_g52po"]
+[ext_resource type="Resource" path="res://content/skills/traceless/phantom_dash.tres" id="9_4olx6"]
+[ext_resource type="Resource" path="res://content/skills/traceless/chimeric_cloak.tres" id="10_gov67"]
+[ext_resource type="Resource" path="res://content/skills/traceless/mirage_shift.tres" id="11_jgn22"]
+[ext_resource type="Resource" path="res://content/skills/traceless/shadow_swap.tres" id="12_nv1xr"]
+[ext_resource type="Resource" path="res://content/skills/traceless/tactical_distortion.tres" id="13_cx8vf"]
+[ext_resource type="Resource" path="res://content/skills/traceless/perfect_decoy.tres" id="14_tk1to"]
+[ext_resource type="Resource" path="res://content/skills/traceless/shadowstorm.tres" id="15_xcyit"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"traceless"
+display_name = "Traceless"
+skills = Array[ExtResource("3_skill_def")]([ExtResource("6_rmsyw"), ExtResource("7_s2dy7"), ExtResource("8_g52po"), ExtResource("9_4olx6"), ExtResource("10_gov67"), ExtResource("11_jgn22"), ExtResource("12_nv1xr"), ExtResource("13_cx8vf"), ExtResource("14_tk1to"), ExtResource("15_xcyit")])
+passives = Array[ExtResource("1_3cym5")]([ExtResource("2_qgcw2")])
+sheet = ExtResource("2_sheet")

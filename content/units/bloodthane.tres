@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="UnitDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_6rbws"]
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="1_def"]
+[ext_resource type="Resource" path="res://content/statuses/bloodthane/bound_in_blood.tres" id="2_qw84c"]
+[ext_resource type="Texture2D" path="res://art/units/bloodthane.png" id="2_sheet"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_skill_def"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/blade_fury.tres" id="6_gwyhw"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/rending_claws.tres" id="7_b85gt"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/rage_strike.tres" id="8_1bxis"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/bloody_rush.tres" id="9_fva7t"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/acute_coagulant.tres" id="10_dje20"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/verve_magnet.tres" id="11_qw77l"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/adrenal_surge.tres" id="12_1qkyw"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/violent_transfusion.tres" id="13_ua217"]
+[ext_resource type="Resource" path="res://content/skills/bloodthane/bloodrage.tres" id="14_5m6ws"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"bloodthane"
+display_name = "Bloodthane"
+skills = Array[ExtResource("5_skill_def")]([ExtResource("6_gwyhw"), ExtResource("7_b85gt"), ExtResource("8_1bxis"), ExtResource("9_fva7t"), ExtResource("10_dje20"), ExtResource("11_qw77l"), ExtResource("12_1qkyw"), ExtResource("13_ua217"), ExtResource("14_5m6ws")])
+passives = Array[ExtResource("1_6rbws")]([ExtResource("2_qw84c")])
+sheet = ExtResource("2_sheet")
+display_height = 76.0

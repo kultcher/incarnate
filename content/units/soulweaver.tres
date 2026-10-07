@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UnitDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="1_def"]
+[ext_resource type="Texture2D" path="res://art/units/soulweaver.png" id="2_sheet"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="3_skill_def"]
+[ext_resource type="Resource" path="res://content/skills/common/strike.tres" id="4_skill"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"soulweaver"
+display_name = "Soulweaver"
+max_hp = 12
+skills = Array[ExtResource("3_skill_def")]([ExtResource("4_skill")])
+move = 4
+sheet = ExtResource("2_sheet")
+sheet_columns = 4
+idle_column = 0
+display_height = 72.0

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3 uid="uid://c1iqjxcgvcttt"]
+
+[ext_resource type="Script" uid="uid://buyhoa2fut5qy" path="res://defs/statuses/behaviors/chimeric_cloak.gd" id="1_lneme"]
+[ext_resource type="Texture2D" uid="uid://eeqmkquqn6h" path="res://art/icons/chimeric_cloak.png" id="2_uy7xf"]
+[ext_resource type="Script" uid="uid://d2wmkbwlnpga2" path="res://defs/statuses/status_def.gd" id="3_bikkw"]
+
+[sub_resource type="Resource" id="Resource_mpryu"]
+script = ExtResource("1_lneme")
+
+[resource]
+script = ExtResource("3_bikkw")
+id = &"chimeric_cloak"
+display_name = "Chimeric Cloak"
+icon = ExtResource("2_uy7xf")
+description = "Prepared. You may negate the next strike or harmful status from a foe this turn."
+duration = 1
+clock = 1
+behavior = SubResource("Resource_mpryu")
