@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_tons0"]
+[ext_resource type="Script" path="res://defs/effects/flickerstep_effect.gd" id="2_e5dt4"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/flicker.tres" id="3_hdnoc"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_hah84"]
+[ext_resource type="Texture2D" path="res://art/icons/flickerstep.png" id="5_njqd4"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_1fky4"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_kbl3n"]
+
+[sub_resource type="Resource" id="Resource_20qd2"]
+script = ExtResource("2_e5dt4")
+status = ExtResource("3_hdnoc")
+
+[resource]
+script = ExtResource("6_1fky4")
+id = &"flickerstep"
+display_name = "Flickerstep"
+icon = ExtResource("5_njqd4")
+description = "Maneuver. Unveil {reach}: this turn you may teleport up to that many squares (Flicker, free). Whenever you Ignite, Flickerstep recharges by 1."
+slot = 4
+cost = 0
+cooldown = 4
+tags = Array[StringName]([&"maneuver", &"recharge_on_ignite"])
+effects = Array[ExtResource("1_tons0")]([SubResource("Resource_20qd2")])
+hit_sound = ExtResource("4_hah84")

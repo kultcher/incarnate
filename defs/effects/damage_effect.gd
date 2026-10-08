@@ -24,7 +24,7 @@ func apply(ctx: ActionContext) -> void:
 	var spec := StrikeSpec.cards(tiers, ctx.skill, melee)
 	spec.bonus = bonus
 	if power_bonus != null:
-		spec.power = power_bonus.power(ctx.caster, target)
+		spec.power = power_bonus.power(ctx.caster, target, ctx.resolver)
 	await ctx.resolver.strike(ctx.caster, target, spec)
 
 

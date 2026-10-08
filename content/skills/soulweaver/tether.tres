@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_qcjap"]
+[ext_resource type="Script" path="res://defs/effects/tether_effect.gd" id="2_a0d17"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/tether.tres" id="3_7clxm"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/tethered.tres" id="4_1ghau"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="5_qjhd8"]
+[ext_resource type="Texture2D" path="res://art/icons/fates_intertwined.png" id="6_jgmao"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="7_qffqs"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="8_3ww4d"]
+
+[sub_resource type="Resource" id="Resource_exxhs"]
+script = ExtResource("2_a0d17")
+tether_status = ExtResource("3_7clxm")
+tethered_status = ExtResource("4_1ghau")
+
+[sub_resource type="Resource" id="Resource_2nx0c"]
+script = ExtResource("8_3ww4d")
+shape = 2
+filter = 4
+range_max = 5
+highlight = 3
+prompt = "Pick an ally within 5"
+
+[resource]
+script = ExtResource("7_qffqs")
+id = &"tether"
+display_name = "Tether"
+icon = ExtResource("6_jgmao")
+description = "Free, once per turn. Tether yourself to an ally within 5, ending any other Tether. Your Infusions and several of your skills reach your Tethered ally too."
+cost = 2
+cooldown = 1
+tags = Array[StringName]([&"utility"])
+targets = Array[ExtResource("8_3ww4d")]([SubResource("Resource_2nx0c")])
+effects = Array[ExtResource("1_qcjap")]([SubResource("Resource_exxhs")])
+hit_sound = ExtResource("5_qjhd8")

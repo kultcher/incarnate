@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="InfusionDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/stalwart_infusion.png" id="1_7eip5"]
+[ext_resource type="Script" path="res://defs/statuses/infusion_def.gd" id="2_8cwlg"]
+[ext_resource type="Resource" path="res://content/statuses/common/shield.tres" id="3_trx3h"]
+
+[resource]
+script = ExtResource("2_8cwlg")
+display_name = "Stalwart Infusion"
+icon = ExtResource("1_7eip5")
+description = "You and your Tethered ally are each shielded against 1 damage this turn."
+shield = 1
+shield_status = ExtResource("3_trx3h")

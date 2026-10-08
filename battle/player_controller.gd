@@ -349,5 +349,10 @@ func _update_hover(cell: Vector2i, force: bool = false) -> void:
 		return
 	if state == State.UNIT_SELECTED and _reach != null and _reach.can_reach(cell):
 		board_view.show_path(_reach.path_to(cell), cell)
+	elif state == State.TARGETING and skill.area != null and _valid.has(cell):
+		# Preview the squares the skill would hit (Cinder Wave).
+		var hovered: Array[Vector2i] = picks.duplicate()
+		hovered.append(cell)
+		board_view.show_path(skill.area.cells(board, selected, hovered), cell)
 	else:
 		board_view.show_hover(cell)

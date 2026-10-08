@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_v20rk"]
+[ext_resource type="Script" path="res://defs/effects/damage_effect.gd" id="2_4hovq"]
+[ext_resource type="Script" path="res://defs/effects/recharge_if_ignited_effect.gd" id="3_u1tc0"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_rw1xv"]
+[ext_resource type="Texture2D" path="res://art/icons/stoking_blast.png" id="5_bble1"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_qeee8"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_bhwf6"]
+
+[sub_resource type="Resource" id="Resource_olcco"]
+script = ExtResource("2_4hovq")
+tiers = Array[int]([1, 1])
+melee = false
+
+[sub_resource type="Resource" id="Resource_c24jr"]
+script = ExtResource("3_u1tc0")
+
+[sub_resource type="Resource" id="Resource_vlc1a"]
+script = ExtResource("7_bhwf6")
+shape = 2
+range_max = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("6_qeee8")
+id = &"stoking_blast"
+display_name = "Stoking Blast"
+icon = ExtResource("5_bble1")
+description = "Strike a foe within 4 for {damage}. If you Ignited Stoking Blast, it recharges by 1."
+slot = 1
+cooldown = 2
+tags = Array[StringName]([&"attack", &"ranged"])
+targets = Array[ExtResource("7_bhwf6")]([SubResource("Resource_vlc1a")])
+effects = Array[ExtResource("1_v20rk")]([SubResource("Resource_olcco"), SubResource("Resource_c24jr")])
+hit_sound = ExtResource("4_rw1xv")

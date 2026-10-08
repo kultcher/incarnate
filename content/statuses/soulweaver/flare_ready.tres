@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/spirit_flare.png" id="1_2i2dl"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_psqum"]
+
+[resource]
+script = ExtResource("2_psqum")
+id = &"flare_ready"
+display_name = "Spirit Flare ready"
+icon = ExtResource("1_2i2dl")
+description = "Your next Spirit Flare this turn is a free action."
+duration = 1
+clock = 1
+tags = Array[StringName]([&"free_basic"])

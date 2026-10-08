@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_f7at7"]
+[ext_resource type="Script" path="res://defs/effects/apply_status_effect.gd" id="2_c4870"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/cauterizing_brand.tres" id="3_41kck"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_17mip"]
+[ext_resource type="Texture2D" path="res://art/icons/cauterizing_brand.png" id="5_m8roe"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_3duae"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_by6mo"]
+
+[sub_resource type="Resource" id="Resource_8wfk0"]
+script = ExtResource("2_c4870")
+status = ExtResource("3_41kck")
+target_step = 0
+
+[sub_resource type="Resource" id="Resource_vnjrr"]
+script = ExtResource("7_by6mo")
+shape = 2
+filter = 5
+range_min = 0
+range_max = 5
+highlight = 3
+prompt = "Pick an ally within 5 (you included)"
+
+[resource]
+script = ExtResource("6_3duae")
+id = &"cauterizing_brand"
+display_name = "Cauterizing Brand"
+icon = ExtResource("5_m8roe")
+description = "An ally within 5 (you included) loses {loss} more health each time a strike damages them this turn. At end of turn, they heal {heal}."
+slot = 7
+tags = Array[StringName]([&"recovery", &"heal"])
+targets = Array[ExtResource("7_by6mo")]([SubResource("Resource_vnjrr")])
+effects = Array[ExtResource("1_f7at7")]([SubResource("Resource_8wfk0")])
+hit_sound = ExtResource("4_17mip")

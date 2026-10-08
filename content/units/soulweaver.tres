@@ -1,18 +1,27 @@
-[gd_resource type="Resource" script_class="UnitDef" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="UnitDef" format=3]
 
 [ext_resource type="Script" path="res://defs/unit_def.gd" id="1_def"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_y70is"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/fates_intertwined.tres" id="2_mu3r4"]
 [ext_resource type="Texture2D" path="res://art/units/soulweaver.png" id="2_sheet"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/spirit_flare_replay.tres" id="3_dd6yn"]
 [ext_resource type="Script" path="res://defs/skill_def.gd" id="3_skill_def"]
-[ext_resource type="Resource" path="res://content/skills/common/strike.tres" id="4_skill"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/spirit_flare.tres" id="7_di48i"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/tether.tres" id="8_5gp0n"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/soul_echo.tres" id="9_4gdi0"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/dread_diffusion.tres" id="10_hl2ck"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/strength_in_unity.tres" id="11_a5xil"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/essence_shift.tres" id="12_14upf"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/well_of_souls.tres" id="13_xhas4"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/conveyance.tres" id="14_0lkey"]
+[ext_resource type="Resource" path="res://content/skills/soulweaver/anima_nexus.tres" id="15_0tvbw"]
 
 [resource]
 script = ExtResource("1_def")
 id = &"soulweaver"
 display_name = "Soulweaver"
-max_hp = 12
-skills = Array[ExtResource("3_skill_def")]([ExtResource("4_skill")])
-move = 4
+skills = Array[ExtResource("3_skill_def")]([ExtResource("7_di48i"), ExtResource("8_5gp0n"), ExtResource("9_4gdi0"), ExtResource("10_hl2ck"), ExtResource("11_a5xil"), ExtResource("12_14upf"), ExtResource("13_xhas4"), ExtResource("14_0lkey"), ExtResource("15_0tvbw")])
+passives = Array[ExtResource("1_y70is")]([ExtResource("2_mu3r4"), ExtResource("3_dd6yn")])
 sheet = ExtResource("2_sheet")
 sheet_columns = 4
 idle_column = 0
-display_height = 72.0

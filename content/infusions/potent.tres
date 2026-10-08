@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="InfusionDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/potent_infusion.png" id="1_ofbm1"]
+[ext_resource type="Script" path="res://defs/statuses/infusion_def.gd" id="2_q6kn7"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/potent.tres" id="3_bp64s"]
+
+[resource]
+script = ExtResource("2_q6kn7")
+display_name = "Potent Infusion"
+icon = ExtResource("1_ofbm1")
+description = "You and your Tethered ally may each make a basic attack as a free action this turn."
+status = ExtResource("3_bp64s")

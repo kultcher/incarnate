@@ -40,6 +40,12 @@ var soulstreams: Dictionary[int, Soulstream] = {
 var recoveries_used: Dictionary[int, int] = {}
 
 var _followups: Array[Callable] = []
+## Counts skill uses this battle; 0 while none is resolving. Shadows
+## remember the use that made them.
+var action_number: int = 0
+## The skill being resolved is a Burnout replay (its cards can't become Heat).
+var action_is_copy: bool = false
+var _uses_so_far: int = 0
 
 
 func _ready() -> void:
@@ -77,14 +83,50 @@ func can_move(unit: UnitState) -> bool:
 
 ## True if [param caster] could start [param skill] now (ignores targets).
 func can_use(caster: UnitState, skill: SkillDef) -> bool:
-	return caster.actions.can_pay(skill.cost) and can_use_ignoring_points(caster, skill)
+	return caster.actions.can_pay(cost_of(caster, skill)) and can_use_ignoring_points(caster, skill)
+
+
+## What [param skill] costs [param unit] now: free while a status makes it
+## free (see _free_source), else the skill's own cost.
+func cost_of(unit: UnitState, skill: SkillDef) -> Enums.Cost:
+	if _free_source(unit, skill) != null:
+		return Enums.Cost.FREE
+	return skill.cost
+
+
+## The status that would make [param skill] free for [param unit], used up
+## when the skill is: a Burnout replay of that skill (tag echo), a free
+## basic attack (tag free_basic: Potent Infusion, Spirit Flare), or Ignite
+## (tag ignite: the next skill that costs an action).
+func _free_source(unit: UnitState, skill: SkillDef) -> StatusInstance:
+	if skill.cost == Enums.Cost.FREE:
+		return null
+	var echo := _echo_for(unit, skill)
+	if echo != null:
+		return echo
+	if skill.slot == Enums.Slot.BASIC and skill.has_tag(&"attack"):
+		var basic := unit.find_status_tag(&"free_basic")
+		if basic != null:
+			return basic
+	return unit.find_status_tag(&"ignite")
+
+
+## A Burnout replay of [param skill] waiting on [param unit] (free, and it
+## ignores the skill's recharge).
+func _echo_for(unit: UnitState, skill: SkillDef) -> StatusInstance:
+	for inst in unit.statuses:
+		if inst.def.has_tag(&"echo") and inst.data.get("skill", &"") == skill.id:
+			return inst
+	return null
 
 
 ## Every rule of can_use except action points (the AI plans a move first).
 func can_use_ignoring_points(caster: UnitState, skill: SkillDef) -> bool:
 	if not caster.is_alive() or not caster.skills().has(skill):
 		return false
-	if caster.cooldown_left(skill) > 0:
+	if caster.cooldown_left(skill) > 0 and _echo_for(caster, skill) == null:
+		return false
+	if skill.condition != null and not skill.condition.allows(caster, self):
 		return false
 	if skill.requires_status != &"" and not caster.has_status(skill.requires_status):
 		return false
@@ -122,11 +164,18 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	if not cards.is_empty():
 		stream.ready_cards(caster, cards)
 		_emit(GameEvent.cards_changed(caster.team))
-	caster.actions.pay(skill.cost)
-	await _start_cooldown(caster, skill)
-	caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
-	if skill.slot == Enums.Slot.RECOVERY:
-		recoveries_used[caster.team] = recoveries_used.get(caster.team, 0) + 1
+	var free := _free_source(caster, skill)
+	var ignited := free != null and free.def.has_tag(&"ignite")
+	var copied := free != null and free.def.has_tag(&"echo")
+	if free != null:
+		await remove_status(free)
+	else:
+		caster.actions.pay(skill.cost)
+	if not copied:
+		await _start_cooldown(caster, skill)
+		caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
+		if skill.slot == Enums.Slot.RECOVERY:
+			recoveries_used[caster.team] = recoveries_used.get(caster.team, 0) + 1
 
 	# Statuses on the caster may change its targets (Tactical Distortion).
 	for inst: StatusInstance in caster.statuses.duplicate():
@@ -139,8 +188,15 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	_emit(GameEvent.actions_changed(caster))
 
 	var ctx := ActionContext.new(caster, skill, picks, board, self)
+	ctx.ignited = ignited
+	ctx.copied = copied
+	_uses_so_far += 1
+	action_number = _uses_so_far
+	action_is_copy = copied
 	for effect in skill.effects:
 		await effect.apply(ctx)
+	if skill.has_tag(&"attack"):
+		caster.turn_attacks += 1
 	# After the effects, so Blade Fury can see the move right before it.
 	caster.last_action_was_move = false
 
@@ -151,6 +207,8 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 
 	# Shadow copies (follow-ups) may still use readied cards.
 	await _drain_followups()
+	action_number = 0
+	action_is_copy = false
 	if stream.release() > 0:
 		_emit(GameEvent.cards_changed(caster.team))
 	await _finish_action()
@@ -209,6 +267,7 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 		hit.cancelled = true
 		return hit
 	hit.cards = _stream_of(attacker, target).draw_for(spec.tiers)
+	_unveiled(attacker, hit.cards)
 	if attacker != null:
 		hit.power = spec.power + attacker.get_stat(&"power") + attacker.get_stat(&"strike_power")
 	else:
@@ -284,8 +343,9 @@ func lose_health(target: UnitState, amount: int, skill: SkillDef = null) -> int:
 	return dealt
 
 
-## Returns the HP actually restored (capped at max HP).
-func heal(target: UnitState, amount: int) -> int:
+## Returns the HP actually restored (capped at max HP). [param healer]'s
+## statuses hear about it (after_heal_given).
+func heal(target: UnitState, amount: int, healer: UnitState = null) -> int:
 	if not target.is_alive() or amount <= 0:
 		return 0
 	var healed := mini(amount, target.get_stat(&"max_hp") - target.hp)
@@ -293,13 +353,17 @@ func heal(target: UnitState, amount: int) -> int:
 		return 0
 	target.hp += healed
 	_emit(GameEvent.healed(target, healed, target.hp))
+	if healer != null:
+		for inst: StatusInstance in healer.statuses.duplicate():
+			if inst.def.behavior != null and healer.statuses.has(inst):
+				inst.def.behavior.after_heal_given(inst, target, healed, self)
 	return healed
 
 
 ## Heals for Soulstream cards. The healer's Power raises the cards.
 func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 		bonus: int = 0) -> int:
-	return heal(target, card_value(healer, tiers, bonus))
+	return heal(target, card_value(healer, tiers, bonus), healer)
 
 
 ## The value of a set of cards drawn now from [param user]'s Soulstream,
@@ -307,11 +371,22 @@ func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
 		with_power: bool = true) -> int:
 	var total := bonus
-	for card in _stream_of(user, null).draw_for(tiers):
+	var cards := _stream_of(user, null).draw_for(tiers)
+	_unveiled(user, cards)
+	for card in cards:
 		total += card.value
 	if user != null and with_power and not tiers.is_empty():
 		total += user.get_stat(&"power")
 	return total
+
+
+## Lets [param user]'s statuses react to the cards it just unveiled.
+func _unveiled(user: UnitState, cards: Array[Card]) -> void:
+	if user == null or cards.is_empty():
+		return
+	for inst: StatusInstance in user.statuses.duplicate():
+		if inst.def.behavior != null and user.statuses.has(inst):
+			inst.def.behavior.on_cards_unveiled(inst, cards, self)
 
 
 ## The Soulstream [param team] draws from.
@@ -325,6 +400,11 @@ func use_decks(seed_value: int) -> void:
 	soulstream(Enums.Team.ENEMY).use_decks(seed_value + 1)
 
 
+## Tells the HUD that [param team]'s hands, row or Heat changed.
+func cards_changed(team: Enums.Team) -> void:
+	_emit(GameEvent.cards_changed(team))
+
+
 ## Hand income: one card for [param unit] if its hand has room.
 func deal_card(unit: UnitState) -> void:
 	if unit.is_alive() and soulstream(unit.team).deal_to(unit) != null:
@@ -335,6 +415,18 @@ func deal_card(unit: UnitState) -> void:
 func refill_row(team: Enums.Team) -> void:
 	if soulstream(team).refill_row() != null:
 		_emit(GameEvent.cards_changed(team))
+
+
+## [param unit] takes [param card] from its side's shared row into its hand
+## (Well of Souls). The hand limit only stops income, not this.
+func claim_row_card(unit: UnitState, card: Card) -> bool:
+	var stream := soulstream(unit.team)
+	if not unit.is_alive() or not stream.row.has(card):
+		return false
+	stream.row.erase(card)
+	unit.hand.append(card)
+	_emit(GameEvent.cards_changed(unit.team))
+	return true
 
 
 ## A strike with no attacker (none yet) draws from the side opposing its target.
@@ -358,6 +450,7 @@ func _kill(unit: UnitState) -> void:
 		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()
+		unit.shadow_made_in.clear()
 		_emit(GameEvent.shadows_changed(unit))
 	_emit(GameEvent.died(unit))
 	# Linked statuses end with their link: a dead Bloodthane's Provoke leaves
@@ -397,9 +490,15 @@ func teleport_unit(unit: UnitState, to: Vector2i) -> void:
 ## [param reference], one square at a time, stopping at anything in the way.
 ## Returns the squares actually moved.
 func force_unit(unit: UnitState, reference: Vector2i, squares: int, toward: bool) -> int:
-	if not unit.is_alive():
-		return 0
+	return (await force_unit_path(unit, reference, squares, toward)).size()
+
+
+## force_unit, returning the squares the unit was forced through, in order.
+func force_unit_path(unit: UnitState, reference: Vector2i, squares: int,
+		toward: bool) -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
+	if not unit.is_alive():
+		return path
 	var at := unit.cell
 	var last_dir := Vector2i.ZERO
 	for i in squares:
@@ -430,12 +529,12 @@ func force_unit(unit: UnitState, reference: Vector2i, squares: int, toward: bool
 		at = best
 		path.append(at)
 	if path.is_empty():
-		return 0
+		return path
 	var from := unit.cell
 	board.move_unit(unit, path[-1])
 	_emit(GameEvent.unit_moved(unit, path))
 	await _after_moved(unit, Enums.MoveKind.FORCED, from, path)
-	return path.size()
+	return path
 
 
 func _after_moved(unit: UnitState, kind: Enums.MoveKind, from: Vector2i,
@@ -453,36 +552,54 @@ func _after_moved(unit: UnitState, kind: Enums.MoveKind, from: Vector2i,
 #region Shadows
 
 ## Puts one of [param owner]'s Shadows on [param cell]. Past
-## [param max_count], the oldest fades.
+## [param max_count], the oldest fades. The Shadow remembers the skill use
+## being resolved (if any) as the one that made it.
 func place_shadow(owner: UnitState, cell: Vector2i, max_count: int = 3) -> void:
 	if owner.shadows.has(cell):
 		return
 	owner.shadows.append(cell)
+	_set_source(owner, cell)
 	while owner.shadows.size() > max_count:
-		owner.shadows.pop_front()
+		owner.shadow_made_in.erase(owner.shadows.pop_front())
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func remove_shadow(owner: UnitState, cell: Vector2i) -> void:
 	if owner.shadows.has(cell):
 		owner.shadows.erase(cell)
+		owner.shadow_made_in.erase(cell)
 		_emit(GameEvent.shadows_changed(owner))
 
 
+## The Shadow keeps the use that made it.
 func move_shadow(owner: UnitState, from: Vector2i, to: Vector2i) -> void:
 	var i := owner.shadows.find(from)
 	if i < 0:
 		return
+	var made_in: int = owner.shadow_made_in.get(from, 0)
+	owner.shadow_made_in.erase(from)
 	if owner.shadows.has(to):
 		owner.shadows.remove_at(i)  # Already a Shadow there: the two merge.
 	else:
 		owner.shadows[i] = to
+		if made_in != 0:
+			owner.shadow_made_in[to] = made_in
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func set_shadows(owner: UnitState, cells: Array[Vector2i]) -> void:
 	owner.shadows = cells.duplicate()
+	owner.shadow_made_in.clear()
+	for cell in cells:
+		_set_source(owner, cell)
 	_emit(GameEvent.shadows_changed(owner))
+
+
+func _set_source(owner: UnitState, cell: Vector2i) -> void:
+	if action_number != 0:
+		owner.shadow_made_in[cell] = action_number
+	else:
+		owner.shadow_made_in.erase(cell)
 
 #endregion
 

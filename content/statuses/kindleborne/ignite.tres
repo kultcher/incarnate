@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/rising_heat.png" id="1_a4bo3"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_dlwqt"]
+
+[resource]
+script = ExtResource("2_dlwqt")
+id = &"ignite"
+display_name = "Ignited"
+icon = ExtResource("1_a4bo3")
+description = "Your next skill this turn that costs an action is free."
+duration = 1
+clock = 1
+tags = Array[StringName]([&"ignite"])

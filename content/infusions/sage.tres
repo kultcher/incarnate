@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="InfusionDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/well_of_souls.png" id="1_b7mri"]
+[ext_resource type="Script" path="res://defs/statuses/infusion_def.gd" id="2_8xbgv"]
+
+[resource]
+script = ExtResource("2_8xbgv")
+display_name = "Sage Infusion"
+icon = ExtResource("1_b7mri")
+description = "You and your Tethered ally may each recharge a skill by 1."
+recharge = true

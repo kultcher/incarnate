@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_5x7t7"]
+[ext_resource type="Script" path="res://defs/effects/teleport_effect.gd" id="2_3t5fk"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_rhrad"]
+[ext_resource type="Texture2D" path="res://art/icons/essence_shift.png" id="4_c5466"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_eyjkg"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_msbvj"]
+[ext_resource type="Script" path="res://defs/targeting/essence_shift_rule.gd" id="7_5lqb4"]
+
+[sub_resource type="Resource" id="Resource_3i4hn"]
+script = ExtResource("2_3t5fk")
+
+[sub_resource type="Resource" id="Resource_1smvr"]
+script = ExtResource("7_5lqb4")
+
+[sub_resource type="Resource" id="Resource_eaywi"]
+script = ExtResource("6_msbvj")
+highlight = 3
+rule = SubResource("Resource_1smvr")
+prompt = "Pick who teleports: you or your Tethered ally"
+
+[sub_resource type="Resource" id="Resource_68a87"]
+script = ExtResource("6_msbvj")
+highlight = 1
+rule = SubResource("Resource_1smvr")
+prompt = "Pick a square next to the other one"
+
+[resource]
+script = ExtResource("5_eyjkg")
+id = &"essence_shift"
+display_name = "Essence Shift"
+icon = ExtResource("4_c5466")
+description = "Maneuver. Teleport to a square next to your Tethered ally, or your Tethered ally teleports to a square next to you."
+slot = 4
+cost = 0
+cooldown = 3
+tags = Array[StringName]([&"maneuver", &"teleport"])
+targets = Array[ExtResource("6_msbvj")]([SubResource("Resource_eaywi"), SubResource("Resource_68a87")])
+effects = Array[ExtResource("1_5x7t7")]([SubResource("Resource_3i4hn")])
+hit_sound = ExtResource("3_rhrad")

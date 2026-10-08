@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="InfusionDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/essence_shift.png" id="1_2pose"]
+[ext_resource type="Script" path="res://defs/statuses/infusion_def.gd" id="2_aqokh"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/elusive.tres" id="3_y6koa"]
+
+[resource]
+script = ExtResource("2_aqokh")
+display_name = "Elusive Infusion"
+icon = ExtResource("1_2pose")
+description = "You and your Tethered ally may each shift 2 squares as a free action this turn."
+status = ExtResource("3_y6koa")

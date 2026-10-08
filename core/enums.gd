@@ -51,6 +51,7 @@ enum TargetFilter {
 	ALLY,          ## A unit on the caster's team, not the caster.
 	ALLY_OR_SELF,  ## A unit on the caster's team, the caster included.
 	OWN_SHADOW,    ## One of the caster's Shadows, with no unit standing on it.
+	OTHER_UNIT,    ## Any unit but the caster (Spirit Flare: a foe or an ally).
 }
 
 ## Soulstream card tiers. Ranges: Bronze 1-3, Silver 2-4, Gold 3-5, so one

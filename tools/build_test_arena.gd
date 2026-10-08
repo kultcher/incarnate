@@ -120,6 +120,7 @@ func _build_arena(terrain: TileSet, highlight: TileSet) -> void:
 	_spawn(spawns, arena, "Bloodthane", "res://content/units/bloodthane.tres", Vector2i(2, 7), Enums.Team.PLAYER)
 	_spawn(spawns, arena, "Traceless", "res://content/units/traceless.tres", Vector2i(3, 8), Enums.Team.PLAYER)
 	_spawn(spawns, arena, "Soulweaver", "res://content/units/soulweaver.tres", Vector2i(1, 8), Enums.Team.PLAYER)
+	_spawn(spawns, arena, "Kindleborne", "res://content/units/kindleborne.tres", Vector2i(1, 7), Enums.Team.PLAYER)
 	_spawn(spawns, arena, "Shambler1", "res://content/units/monster_a.tres", Vector2i(6, 6), Enums.Team.ENEMY)
 	_spawn(spawns, arena, "Shambler2", "res://content/units/monster_a.tres", Vector2i(6, 8), Enums.Team.ENEMY)
 	_spawn(spawns, arena, "Shambler3", "res://content/units/monster_a.tres", Vector2i(9, 4), Enums.Team.ENEMY)

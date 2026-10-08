@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/fates_intertwined.png" id="1_xrknk"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_vrojg"]
+
+[resource]
+script = ExtResource("2_vrojg")
+id = &"tether"
+display_name = "Tether"
+icon = ExtResource("1_xrknk")
+description = "Tethered to an ally: your Infusions and several of your skills reach them too."
+show_on_unit = false

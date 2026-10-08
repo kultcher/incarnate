@@ -65,6 +65,20 @@ func after_skill(_inst: StatusInstance, _ctx: ActionContext, _r: ActionResolver)
 	pass
 
 
+## The owner's skill just drew [param cards] (blind, or readied from a hand
+## or the shared row): it unveiled them. Must not await; queue follow-ups on
+## [param r] instead (Fates Intertwined's Infusion).
+func on_cards_unveiled(_inst: StatusInstance, _cards: Array[Card], _r: ActionResolver) -> void:
+	pass
+
+
+## The owner just healed [param target] for [param amount]. Must not await
+## (Spirit Flare's free replay).
+func after_heal_given(_inst: StatusInstance, _target: UnitState, _amount: int,
+		_r: ActionResolver) -> void:
+	pass
+
+
 ## Added to the owner's [param stat] (Probability Armor: Evasion per Shadow).
 ## Must not await.
 func stat_bonus(_inst: StatusInstance, _stat: StringName) -> int:

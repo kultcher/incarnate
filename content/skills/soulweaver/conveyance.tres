@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_0ksxa"]
+[ext_resource type="Script" path="res://defs/effects/conveyance_effect.gd" id="2_ksw3v"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_2p200"]
+[ext_resource type="Texture2D" path="res://art/icons/conveyance.png" id="4_h8m25"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_cy8aq"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_0w2ah"]
+
+[sub_resource type="Resource" id="Resource_yel1x"]
+script = ExtResource("2_ksw3v")
+
+[sub_resource type="Resource" id="Resource_7lp56"]
+script = ExtResource("6_0w2ah")
+shape = 2
+filter = 4
+range_max = 5
+highlight = 3
+prompt = "Pick an ally within 5"
+
+[resource]
+script = ExtResource("5_cy8aq")
+id = &"conveyance"
+display_name = "Conveyance"
+icon = ExtResource("4_h8m25")
+description = "Choose an ally within 5. Each other ally (you included) may lose 1 health. Then the chosen ally heals {heal} for each health lost this way."
+slot = 7
+tags = Array[StringName]([&"recovery", &"heal"])
+targets = Array[ExtResource("6_0w2ah")]([SubResource("Resource_7lp56")])
+effects = Array[ExtResource("1_0ksxa")]([SubResource("Resource_yel1x")])
+hit_sound = ExtResource("3_2p200")

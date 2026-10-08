@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/flare_ready.tres" id="1_gvh4j"]
+[ext_resource type="Script" path="res://defs/statuses/behaviors/spirit_flare_replay.gd" id="2_xap0b"]
+[ext_resource type="Texture2D" path="res://art/icons/spirit_flare.png" id="3_ubgii"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="4_poh2u"]
+
+[sub_resource type="Resource" id="Resource_yk3qu"]
+script = ExtResource("2_xap0b")
+ready_status = ExtResource("1_gvh4j")
+
+[resource]
+script = ExtResource("4_poh2u")
+id = &"spirit_flare_replay"
+display_name = "Spirit Flare"
+icon = ExtResource("3_ubgii")
+description = "Passive. Once per turn, when you slay a foe or heal an ally to full health, your next Spirit Flare this turn is a free action."
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_yk3qu")

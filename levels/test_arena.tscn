@@ -8,6 +8,7 @@
 [ext_resource type="Resource" path="res://content/units/traceless.tres" id="6_vemog"]
 [ext_resource type="Resource" path="res://content/units/soulweaver.tres" id="7_7bvml"]
 [ext_resource type="Resource" path="res://content/units/monster_a.tres" id="8_ofp7g"]
+[ext_resource type="Resource" path="res://content/units/kindleborne.tres" id="9_kindl"]
 
 [node name="Arena" type="Node2D" unique_id=637412436]
 script = ExtResource("1_bmym3")
@@ -50,6 +51,11 @@ def = ExtResource("6_vemog")
 position = Vector2(96, 544)
 script = ExtResource("4_pmjgx")
 def = ExtResource("7_7bvml")
+
+[node name="Kindleborne" type="Marker2D" parent="Spawns" unique_id=1584203317]
+position = Vector2(96, 480)
+script = ExtResource("4_pmjgx")
+def = ExtResource("9_kindl")
 
 [node name="Shambler1" type="Marker2D" parent="Spawns" unique_id=1742032586]
 position = Vector2(416, 416)

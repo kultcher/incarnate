@@ -11,6 +11,53 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (Kindleborne kit, milestone 8; Claude's calls, provisional)
+
+Source: the Master sheet (newest), with the 2014 cards where the sheet is silent. Alpha-only sheet skills are left out. The squad is now four Incarnates; the Kindleborne starts at (1, 7) in the test arena with a recolored Soulweaver sprite as a placeholder.
+
+- **Rising Heat stores automatically.** Every card a Kindleborne skill unveils goes into Heat (the "may" never mattered, since storing costs nothing); past 5, the lowest drop back to the discards. Heat cards are held, so they leave the discard pile. This includes Dissipate's heal, Ember Shield's strike-backs and Cauterizing Brand's draws.
+- **Stoke** is a free skill that spends Heat: you pick Ignite or Dissipate, and the cheapest set of your lowest cards that covers the cost is discarded (this keeps your best card for Wracking Flame). Ignite and Dissipate each cost 5; Ignite costs 1 more for each Ignite this turn.
+- **Ignite** makes the next skill that costs an action free (move actions included). "Ignited" skills get their bonus (Stoking Blast recharges by 1). Every Ignite recharges Flickerstep by 1.
+- **Dissipate:** heal 3 (Si) and **Feint = +1 Evasion** until end of turn.
+- **Heat chains:** each attack refills some Heat, so with a full store the AI can Ignite several times in one turn (the rising cost ends it). The designer note's "less snowbally alternative" (store only the highest card per skill, max 3, discard 3) is available if this proves too strong.
+- **Tinderbolt** counts attack skills used earlier this turn.
+- **Cinder Wave:** a "wave 4" is 3 squares wide and 4 deep, starting next to the Kindleborne in a direction you pick (click a neighbouring square). Hovering shows the area. It ignores obstacles.
+- **Ember Shield** shields at once (like Strength in Unity) and strikes back after the foe's action, for each strike that lands.
+- **Flickerstep** (sheet: (G)+2) unveils a Gold card when used; Flicker, a free one-use teleport with that range, appears on the bar for the rest of the turn.
+- **Ash Augur:** Bronze becomes Silver and Silver becomes Gold (the old card is discarded, the new one comes off the top of the next deck); Gold stays.
+- **Cauterizing Brand** can target the Kindleborne too. The extra loss triggers on strikes that deal damage, not on health loss.
+- **Burnout** (sheet version): after each of the next 3 Ignited skills, that skill can be used once more this turn, free and ignoring its recharge, with new targets. Replays don't count as Ignited and their cards don't become Heat.
+- **The AI** Ignites when it's out of actions with an attack ready, Dissipates when hurt, and uses the attacks and Cinder Wave. It doesn't use Ember Shield, Flickerstep, Ash Augur, Cauterizing Brand or Burnout yet.
+- **Skill bars** can now hold more than 10 skills (the 11th has no hotkey).
+
+## 2026-10-08 (Soulweaver kit, milestone 7; Claude's calls, provisional)
+
+Source: the 2014 cards where they exist (Soul Echo, Dread Diffusion, Strength in Unity, Essence Shift, Well of Souls, Conveyance, Anima Nexus; their recharges), the Master sheet otherwise (Fates Intertwined, the Infusions, Spirit Flare). Alpha-only sheet skills are left out, as for the other kits.
+
+- **Tether is a free skill, once per turn** (Tether, range 5), rather than a prompt at the start of every turn. This matches the 2013 version ("once per turn as a free action") and keeps turn starts free of prompts. It lasts until you Tether someone else or either of you dies.
+- **Infusions:** the prompt comes once the skill's strikes have played. Declining doesn't use up the once-per-turn trigger.
+  - **Potent:** each gets a free basic attack this turn (a basic attack skill costs no action, once). A free skill such as Shadowstep doesn't count.
+  - **Stalwart:** a shield of 1 each.
+  - **Sage:** each recharges one skill by 1; you pick which when there's a choice.
+  - **Elusive:** each gets a one-use free **Elusive Shift** (up to 2 squares, through units) on their bar this turn. A Traceless shifting this way leaves a Shadow.
+- **Shields** absorb damage from strikes (not health loss), after Armor; they can bring a strike to 0. More shielding adds up. They last until used up or until the next round starts. Shield values from cards (Strength in Unity's Gold) are drawn when cast and get the caster's Power, like heals.
+- **Strength in Unity** shields at once instead of being Prepared and triggered later. With side-based turns the shields still cover the enemy phase; what's lost is choosing who to shield after seeing the enemy move. It targets another ally (not yourself) and recharges by 1 if that ally is Tethered.
+- **Spirit Flare** targets any other unit within 4: foes are struck, allies healed. Its free replay (after a kill or healing an ally to full) makes the next basic attack free, once per turn.
+- **Soul Echo** uses the card text: +2 Power per Blade card in the shared row. This is the first suit rule in the game. The AI doesn't count the bonus yet.
+- **Dread Diffusion:** the target is forced away from the Soulweaver. Forced movement stops at units, so "moved through" can't happen; foes next to any square it was forced through are struck and forced 1 square away from the target.
+- **Essence Shift:** pick who teleports (you or your Tethered ally), then a square next to the other one.
+- **Well of Souls:** "attune a card from the Soulstream" becomes "take a card from the shared row into your hand", since the Attunement grid is out of scope. The hand limit (2) only stops income, so this can go past it.
+- **Conveyance:** targets another ally. Each other ally on your side, the Soulweaver included, is asked whether to give 1 health (not offered at 1 health). The AI gives from allies above 3 health, and only uses Conveyance when the ally is missing at least 12.
+- **Anima Nexus:** until the next round starts, "your Tethered ally" means every ally: Infusions, Strength in Unity's recharge, Essence Shift and Well of Souls.
+- **The AI** Tethers first thing (to the nearest ally), always picks Potent, and uses Spirit Flare, Soul Echo, Dread Diffusion and Conveyance. It doesn't use Strength in Unity, Essence Shift, Well of Souls or Anima Nexus yet.
+- **Icons** come from the 2014 icon art and card art in the references folder.
+
+## 2026-10-08 (Traceless rules note)
+
+- **A Shadow can't copy the same use of the skill that made it** (Michael). For example, the Shadow a Displacer Strike's shift leaves behind can't copy that Displacer Strike, but it can copy the next one, or any other attack.
+  - Shadows made outside a skill (none in the current kits) can copy anything. Shadow Swap keeps the use that made a Shadow.
+- **Unveiling a card** (for Soulweaver's Infusions and Kindleborne's Heat) means **any card a skill uses**: blind draws and readied hand or row cards alike (Michael, for now).
+
 ## 2026-10-08 (Soulstream baseline, milestone 6)
 
 ### Michael's calls

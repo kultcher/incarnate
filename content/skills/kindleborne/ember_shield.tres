@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_pac1u"]
+[ext_resource type="Script" path="res://defs/effects/shield_effect.gd" id="2_4cqjo"]
+[ext_resource type="Resource" path="res://content/statuses/common/shield.tres" id="3_vsii0"]
+[ext_resource type="Script" path="res://defs/effects/apply_status_effect.gd" id="4_ktxfo"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/ember_shield.tres" id="5_0lusn"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="6_balx7"]
+[ext_resource type="Texture2D" path="res://art/icons/ember_shield.png" id="7_h146f"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="8_yxqqy"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="9_u6hjk"]
+
+[sub_resource type="Resource" id="Resource_w85oy"]
+script = ExtResource("2_4cqjo")
+shield_status = ExtResource("3_vsii0")
+target_step = -1
+
+[sub_resource type="Resource" id="Resource_ewt38"]
+script = ExtResource("4_ktxfo")
+status = ExtResource("5_0lusn")
+
+[resource]
+script = ExtResource("8_yxqqy")
+id = &"ember_shield"
+display_name = "Ember Shield"
+icon = ExtResource("7_h146f")
+description = "Shield yourself against {shield} damage. This turn, whenever a foe strikes you, you strike it back for {retaliate}."
+slot = 3
+cooldown = 3
+tags = Array[StringName]([&"shield"])
+effects = Array[ExtResource("1_pac1u")]([SubResource("Resource_w85oy"), SubResource("Resource_ewt38")])
+hit_sound = ExtResource("6_balx7")

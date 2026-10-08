@@ -21,9 +21,15 @@ var statuses: Array[StatusInstance] = []
 ## can't be targeted; they belong to the unit that made them. Change them
 ## only through the resolver.
 var shadows: Array[Vector2i] = []
+## The action (ActionResolver.action_number) each Shadow was made in,
+## missing if none. A Shadow can't copy the same use of a skill that made it.
+var shadow_made_in: Dictionary[Vector2i, int] = {}
 ## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
 ## Change it only through the resolver.
 var hand: Array[Card] = []
+## Kindleborne's stored Heat cards (Rising Heat). Change it only through the
+## resolver or the Rising Heat behavior.
+var heat: Array[Card] = []
 
 #region This turn
 ## Reset at the start of the unit's turn.
@@ -38,6 +44,8 @@ var turn_strikes: Dictionary[int, int] = {}
 var last_action_was_move: bool = false
 ## Dodges spent since the unit's turn started.
 var dodges_used: int = 0
+## Attack skills used this turn (Tinderbolt).
+var turn_attacks: int = 0
 #endregion
 
 
@@ -125,8 +133,18 @@ func is_foe(other: UnitState) -> bool:
 	return other != null and other.team != team
 
 
+## The unit's own skills, then any its statuses grant (Elusive Infusion).
 func skills() -> Array[SkillDef]:
-	return def.skills
+	var granted: Array[SkillDef] = []
+	for inst in statuses:
+		var extra := inst.def.grants_skill
+		if extra != null and not def.skills.has(extra) and not granted.has(extra):
+			granted.append(extra)
+	if granted.is_empty():
+		return def.skills
+	var all := def.skills.duplicate()
+	all.append_array(granted)
+	return all
 
 
 func cooldown_left(skill: SkillDef) -> int:
@@ -148,6 +166,7 @@ func start_turn() -> void:
 	turn_strikes.clear()
 	last_action_was_move = false
 	dodges_used = 0
+	turn_attacks = 0
 
 
 func _to_string() -> String:

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Resource" path="res://content/skills/soulweaver/elusive_shift.tres" id="1_gyy1b"]
+[ext_resource type="Texture2D" path="res://art/icons/essence_shift.png" id="2_1kpgh"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="3_rpygj"]
+
+[resource]
+script = ExtResource("3_rpygj")
+id = &"elusive"
+display_name = "Elusive"
+icon = ExtResource("2_1kpgh")
+description = "You may shift up to 2 squares as a free action this turn (Elusive Shift on your bar)."
+duration = 1
+clock = 1
+grants_skill = ExtResource("1_gyy1b")

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/anima_nexus.png" id="1_ame7w"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_80ym4"]
+
+[resource]
+script = ExtResource("2_80ym4")
+id = &"anima_nexus"
+display_name = "Anima Nexus"
+icon = ExtResource("1_ame7w")
+description = "Until end of turn, everything that reaches your Tethered ally reaches every ally."
+duration = 1
+clock = 1

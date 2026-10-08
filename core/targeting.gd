@@ -70,6 +70,8 @@ static func passes_filter(board: BoardState, caster: UnitState,
 			return unit != null and unit.team == caster.team
 		Enums.TargetFilter.OWN_SHADOW:
 			return unit == null and caster.shadows.has(cell)
+		Enums.TargetFilter.OTHER_UNIT:
+			return unit != null and unit != caster
 	return false
 
 

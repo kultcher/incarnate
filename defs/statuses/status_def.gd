@@ -27,9 +27,14 @@ extends Resource
 ##   blind        the owner's next strike counts as dodged, then it ends
 ##   end_on_move  ends after the owner's next walk (Cripple)
 ##   no_cooldown_next  the owner's next standard skill isn't exhausted (Adrenal Surge)
+##   free_basic   the owner's next basic attack is a free action, then it ends
+##                (Potent Infusion, Spirit Flare's replay)
 @export var tags: Array[StringName] = []
 ## Draw the icon over the unit on the board (passives usually don't).
 @export var show_on_unit: bool = true
+## A skill the owner can use while it has this status, shown on its bar
+## (Elusive Infusion's shift).
+@export var grants_skill: SkillDef
 ## What it does when things happen. Optional: a status with only stat_mods
 ## needs no behavior.
 @export var behavior: StatusBehavior

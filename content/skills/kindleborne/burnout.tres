@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_6byqj"]
+[ext_resource type="Script" path="res://defs/effects/apply_status_effect.gd" id="2_c12wp"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/burnout.tres" id="3_nl31m"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_3y3ma"]
+[ext_resource type="Texture2D" path="res://art/icons/burnout.png" id="5_yuooi"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_3405n"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_fwejl"]
+
+[sub_resource type="Resource" id="Resource_gx48o"]
+script = ExtResource("2_c12wp")
+status = ExtResource("3_nl31m")
+stacks = 3
+
+[resource]
+script = ExtResource("6_3405n")
+id = &"burnout"
+display_name = "Burnout"
+icon = ExtResource("5_yuooi")
+description = "Ultimate. Free. The next 3 times you Ignite a skill this turn, you may use it once more for free (ignoring its recharge). Cards those replays unveil don't become Heat."
+slot = 6
+cost = 2
+tags = Array[StringName]([&"ultimate"])
+effects = Array[ExtResource("1_6byqj")]([SubResource("Resource_gx48o")])
+uses_per_battle = 1
+hit_sound = ExtResource("4_3y3ma")

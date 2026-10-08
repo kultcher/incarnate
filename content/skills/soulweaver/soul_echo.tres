@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_ik74e"]
+[ext_resource type="Script" path="res://defs/effects/power/row_suit_bonus.gd" id="2_3ca7m"]
+[ext_resource type="Script" path="res://defs/effects/damage_effect.gd" id="3_g0dqv"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_dejmq"]
+[ext_resource type="Texture2D" path="res://art/icons/soul_echo.png" id="5_0hcyo"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_diwn0"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_5qp07"]
+
+[sub_resource type="Resource" id="Resource_l1218"]
+script = ExtResource("2_3ca7m")
+
+[sub_resource type="Resource" id="Resource_wau4n"]
+script = ExtResource("3_g0dqv")
+tiers = Array[int]([1, 1])
+melee = false
+power_bonus = SubResource("Resource_l1218")
+
+[sub_resource type="Resource" id="Resource_il5xd"]
+script = ExtResource("7_5qp07")
+shape = 2
+range_max = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("6_diwn0")
+id = &"soul_echo"
+display_name = "Soul Echo"
+icon = ExtResource("5_0hcyo")
+description = "Strike a foe within 4 for {damage}, with +{per_suit} Power for each {suit} card in the shared Soulstream row."
+slot = 1
+cooldown = 2
+tags = Array[StringName]([&"attack", &"ranged"])
+targets = Array[ExtResource("7_5qp07")]([SubResource("Resource_il5xd")])
+effects = Array[ExtResource("1_ik74e")]([SubResource("Resource_wau4n")])
+hit_sound = ExtResource("4_dejmq")

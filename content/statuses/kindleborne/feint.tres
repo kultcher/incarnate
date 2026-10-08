@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/rising_heat.png" id="1_0kxx3"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_657ol"]
+
+[resource]
+script = ExtResource("2_657ol")
+id = &"feint"
+display_name = "Feint"
+icon = ExtResource("1_0kxx3")
+description = "+1 Evasion (a dodge) until end of turn."
+duration = 1
+clock = 1
+stacking = 1
+max_stacks = 9
+stat_mods = Dictionary[StringName, int]({
+&"evasion": 1
+})

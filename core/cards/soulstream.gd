@@ -87,7 +87,7 @@ func draw_for(tiers: Array[Enums.Tier]) -> Array[Card]:
 func deal_to(unit: UnitState) -> Card:
 	if unit.hand.size() >= HAND_SIZE:
 		return null
-	var card := _take(HAND_TIER)
+	var card := take(HAND_TIER)
 	unit.hand.append(card)
 	return card
 
@@ -97,7 +97,7 @@ func refill_row() -> Card:
 	if row.size() >= ROW_SIZE:
 		return null
 	var tier: Enums.Tier = rng.randi_range(0, Enums.Tier.size() - 1) as Enums.Tier
-	var card := _take(tier)
+	var card := take(tier)
 	row.append(card)
 	return card
 
@@ -142,7 +142,7 @@ func readied_count() -> int:
 
 
 ## A card to hold: face up, kept out of the decks until it's spent.
-func _take(tier: Enums.Tier) -> Card:
+func take(tier: Enums.Tier) -> Card:
 	var card: Card
 	if mode == Mode.MEDIAN:
 		card = Card.new(tier, median(tier), _next_suit as Enums.Suit)

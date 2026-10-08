@@ -16,6 +16,10 @@ extends Node
 ##   traceless  the Traceless selected, its 10-skill bar and a tooltip
 ##   cards      Bloodthane selected with a hand card and a shared card readied
 ##   logged     after Blade Fury with a readied card: the strike log
+##   soulweaver the Soulweaver Tethered to the Bloodthane, its bar and a tooltip
+##   infusion   the Fates Intertwined prompt after Spirit Flare
+##   wave       the Kindleborne aiming Cinder Wave (area preview), Heat shown
+##   stoke      the Kindleborne's Stoke prompt (Ignite or Dissipate)
 
 
 func _ready() -> void:
@@ -86,10 +90,14 @@ func _ready() -> void:
 			if shot == "traceless":
 				battle.hud._tooltip.text = battle.hud._skill_text(tl.skills()[3])
 			else:
+				battle.board.unit_at(Vector2i(6, 8)).hp = 20
 				await c.click_cell(Vector2i(5, 8))
 				c.begin_targeting_index(_index(tl, &"displacer_strike"))
 				await c.click_cell(Vector2i(6, 8))
-				c.click_cell(Vector2i(7, 8))
+				await c.click_cell(Vector2i(7, 8))
+				# Its own Shadow can't copy Displacer Strike; Gloom Edge it can.
+				c.begin_targeting_index(_index(tl, &"gloom_edge"))
+				c.click_cell(Vector2i(6, 8))
 				while not battle.hud.prompt.is_open():
 					await get_tree().process_frame
 				await get_tree().create_timer(0.4).timeout
@@ -102,6 +110,34 @@ func _ready() -> void:
 				c.begin_targeting_index(_index(bt, &"blade_fury"))
 				await c.click_cell(Vector2i(6, 8))
 				await get_tree().create_timer(0.6).timeout
+		"soulweaver", "infusion":
+			var sw := _find(battle, &"soulweaver")
+			await c.click_cell(sw.cell)
+			c.begin_targeting_index(_index(sw, &"tether"))
+			await c.click_cell(bt.cell)
+			if shot == "soulweaver":
+				battle.hud._tooltip.text = battle.hud._skill_text(sw.skills()[_index(sw, &"dread_diffusion")])
+			else:
+				await c.click_cell(Vector2i(2, 8))
+				c.begin_targeting_index(_index(sw, &"spirit_flare"))
+				c.click_cell(Vector2i(6, 8))
+				while not battle.hud.prompt.is_open():
+					await get_tree().process_frame
+				await get_tree().create_timer(0.4).timeout
+		"wave", "stoke":
+			var kb := _find(battle, &"kindleborne")
+			for v: int in [5, 3, 2]:
+				kb.heat.append(Card.new(Enums.Tier.SILVER if v < 5 else Enums.Tier.GOLD, v))
+			await c.click_cell(kb.cell)
+			await c.click_cell(Vector2i(3, 7))
+			if shot == "wave":
+				c.begin_targeting_index(_index(kb, &"cinder_wave"))
+				c._update_hover(Vector2i(4, 7), true)
+			else:
+				c.begin_targeting_index(_index(kb, &"stoke"))
+				while not battle.hud.prompt.is_open():
+					await get_tree().process_frame
+				await get_tree().create_timer(0.3).timeout
 		"enemy":
 			# Walk Bloodthane forward, then hand over to the enemies.
 			await c.click_cell(Vector2i(4, 7))

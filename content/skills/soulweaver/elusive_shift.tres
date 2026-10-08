@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_o5mfw"]
+[ext_resource type="Script" path="res://defs/effects/shift_effect.gd" id="2_85gmv"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_4pspx"]
+[ext_resource type="Texture2D" path="res://art/icons/essence_shift.png" id="4_c64xj"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_xkeku"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_81kmu"]
+[ext_resource type="Script" path="res://defs/targeting/shift_rule.gd" id="7_mkv8l"]
+
+[sub_resource type="Resource" id="Resource_vttng"]
+script = ExtResource("2_85gmv")
+consume_status = &"elusive"
+
+[sub_resource type="Resource" id="Resource_7cwlm"]
+script = ExtResource("7_mkv8l")
+
+[sub_resource type="Resource" id="Resource_13ntm"]
+script = ExtResource("6_81kmu")
+highlight = 1
+rule = SubResource("Resource_7cwlm")
+prompt = "Pick a square to shift to"
+
+[resource]
+script = ExtResource("5_xkeku")
+id = &"elusive_shift"
+display_name = "Elusive Shift"
+icon = ExtResource("4_c64xj")
+description = "Free, once (Elusive Infusion). Shift up to {shift} squares, through any unit."
+slot = 4
+cost = 2
+tags = Array[StringName]([&"shift"])
+targets = Array[ExtResource("6_81kmu")]([SubResource("Resource_13ntm")])
+effects = Array[ExtResource("1_o5mfw")]([SubResource("Resource_vttng")])
+requires_status = &"elusive"
+hit_sound = ExtResource("3_4pspx")

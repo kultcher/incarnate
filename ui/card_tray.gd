@@ -23,6 +23,8 @@ var _hand_label: Label
 var _hand_row: HBoxContainer
 var _row_label: Label
 var _row_row: HBoxContainer
+var _heat_label: Label
+var _heat_row: HBoxContainer
 
 
 func _ready() -> void:
@@ -44,6 +46,10 @@ func _ready() -> void:
 	box.add_child(_hand_label)
 	_hand_row = _card_row()
 	box.add_child(_hand_row)
+	_heat_label = _caption("Heat")
+	box.add_child(_heat_label)
+	_heat_row = _card_row()
+	box.add_child(_heat_row)
 
 
 ## Shows [param row] and, if [param holder] isn't null, its hand.
@@ -56,6 +62,16 @@ func show_cards(holder: UnitState, row: Array[Card], readied: Array[Card],
 	if holder != null:
 		_hand_label.text = "%s's hand" % holder.def.display_name
 		_fill(_hand_row, holder.hand, readied, interactive, "your hand")
+	# Heat (Kindleborne): shown, not clickable; spend it with Stoke.
+	var shows_heat := holder != null and holder.has_status(&"rising_heat")
+	_heat_label.visible = shows_heat
+	_heat_row.visible = shows_heat
+	if shows_heat:
+		var total := 0
+		for card in holder.heat:
+			total += card.value
+		_heat_label.text = "Heat (%d)" % total
+		_fill(_heat_row, holder.heat, [] as Array[Card], false, "your Heat")
 
 
 func _fill(container: HBoxContainer, cards: Array[Card], readied: Array[Card],
@@ -86,7 +102,9 @@ func card_button(card: Card, is_readied: bool, interactive: bool, where: String)
 		b.add_theme_stylebox_override(state, style)
 	# Readied cards sit higher in their row.
 	b.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if is_readied else Control.SIZE_SHRINK_END
-	if is_readied:
+	if where == "your Heat":
+		b.tooltip_text = "%s in your Heat. Spend Heat with Stoke." % card
+	elif is_readied:
 		b.tooltip_text = "%s (readied). Click to put it back." % card
 	else:
 		b.tooltip_text = "%s from %s. Click to ready it: your next skill uses it in place of one of its draws." \

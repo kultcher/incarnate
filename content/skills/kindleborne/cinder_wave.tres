@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/targeting/wave_area.gd" id="1_qsw2l"]
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="2_c0wmf"]
+[ext_resource type="Script" path="res://defs/effects/area_strike_effect.gd" id="3_13j54"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_dnudj"]
+[ext_resource type="Texture2D" path="res://art/icons/cinder_wave.png" id="5_wny22"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_8hrvy"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_xkpdh"]
+[ext_resource type="Script" path="res://defs/targeting/direction_rule.gd" id="8_xbmog"]
+
+[sub_resource type="Resource" id="Resource_iufb1"]
+script = ExtResource("1_qsw2l")
+
+[sub_resource type="Resource" id="Resource_witf5"]
+script = ExtResource("3_13j54")
+area = SubResource("Resource_iufb1")
+
+[sub_resource type="Resource" id="Resource_mdlm5"]
+script = ExtResource("8_xbmog")
+
+[sub_resource type="Resource" id="Resource_aeakg"]
+script = ExtResource("7_xkpdh")
+rule = SubResource("Resource_mdlm5")
+prompt = "Pick a direction (a square next to you)"
+
+[resource]
+script = ExtResource("6_8hrvy")
+id = &"cinder_wave"
+display_name = "Cinder Wave"
+icon = ExtResource("5_wny22")
+description = "Strike each foe in a wave {width} squares wide and {depth} deep, in a direction you pick, for {damage}."
+slot = 2
+cooldown = 2
+tags = Array[StringName]([&"attack", &"area", &"ranged"])
+targets = Array[ExtResource("7_xkpdh")]([SubResource("Resource_aeakg")])
+area = SubResource("Resource_iufb1")
+effects = Array[ExtResource("2_c0wmf")]([SubResource("Resource_witf5")])
+hit_sound = ExtResource("4_dnudj")
