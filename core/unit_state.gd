@@ -21,9 +21,9 @@ var statuses: Array[StatusInstance] = []
 ## can't be targeted; they belong to the unit that made them. Change them
 ## only through the resolver.
 var shadows: Array[Vector2i] = []
-## The id of the skill that made each Shadow (missing if none did). A Shadow
-## can't copy the skill that made it.
-var shadow_sources: Dictionary[Vector2i, StringName] = {}
+## The action (ActionResolver.action_number) each Shadow was made in,
+## missing if none. A Shadow can't copy the same use of a skill that made it.
+var shadow_made_in: Dictionary[Vector2i, int] = {}
 ## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
 ## Change it only through the resolver.
 var hand: Array[Card] = []

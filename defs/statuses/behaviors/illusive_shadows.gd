@@ -8,7 +8,8 @@ extends StatusBehavior
 ##                      copy it: it strikes one foe within the skill's
 ##                      copy_range of the Shadow, then is used up. Under
 ##                      Shadowstorm, any number of Shadows may copy. A
-##                      Shadow can't copy the skill that made it.
+##                      Shadow can't copy the same use of a skill that
+##                      made it (Displacer Strike's own Shadow).
 ##   Probability Armor  +1 Evasion (a dodge per round) per Shadow.
 ## (Shadowstep, the teleport, is its own free skill.)
 
@@ -33,7 +34,7 @@ func after_skill(inst: StatusInstance, ctx: ActionContext, r: ActionResolver) ->
 	var skill := ctx.skill
 	if not skill.has_tag(&"attack") or skill.copy_range <= 0 or inst.owner.shadows.is_empty():
 		return
-	if copy_choices(r.board, inst.owner, skill).is_empty():
+	if copy_choices(r.board, inst.owner, skill, [], r.action_number).is_empty():
 		return
 	r.queue_followup(_offer_copies.bind(inst, skill, r))
 
@@ -42,9 +43,10 @@ func after_skill(inst: StatusInstance, ctx: ActionContext, r: ActionResolver) ->
 ## declines or (without Shadowstorm) one Shadow has copied.
 func _offer_copies(inst: StatusInstance, skill: SkillDef, r: ActionResolver) -> void:
 	var owner := inst.owner
+	var action := r.action_number
 	var used: Array[Vector2i] = []
 	while owner != null and owner.is_alive():
-		var choices := copy_choices(r.board, owner, skill, used)
+		var choices := copy_choices(r.board, owner, skill, used, action)
 		if choices.is_empty():
 			return
 		var request := DecisionRequest.new()
@@ -88,12 +90,13 @@ func _offer_copies(inst: StatusInstance, skill: SkillDef, r: ActionResolver) -> 
 
 
 ## Every [Shadow cell, foe] pair that could copy [param skill] now, Shadow
-## by Shadow, nearest foes first.
+## by Shadow, nearest foes first. Shadows made in [param action] (the use
+## being copied) can't copy it.
 static func copy_choices(board: BoardState, owner: UnitState, skill: SkillDef,
-		used: Array[Vector2i] = []) -> Array:
+		used: Array[Vector2i] = [], action: int = 0) -> Array:
 	var choices: Array = []
 	for shadow in owner.shadows:
-		if used.has(shadow) or owner.shadow_sources.get(shadow, &"") == skill.id:
+		if used.has(shadow) or (action != 0 and owner.shadow_made_in.get(shadow, 0) == action):
 			continue
 		var foes: Array[UnitState] = []
 		for unit in board.units():

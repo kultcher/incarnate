@@ -129,7 +129,7 @@ func test_no_offer_when_no_shadow_is_in_reach() -> void:
 	assert_eq(rig.answers.asked.size(), 0, "Gloom Edge copies reach 1 square")
 
 
-func test_a_shadow_cant_copy_the_skill_that_made_it() -> void:
+func test_a_shadow_cant_copy_the_use_that_made_it() -> void:
 	var rig := await _rig([
 		". . . . . .",
 		"P E . . . .",
@@ -139,18 +139,16 @@ func test_a_shadow_cant_copy_the_skill_that_made_it() -> void:
 	rig.answers.answers = [0]
 	# Strike, shift to the far side: the Shadow left behind can't copy it.
 	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(2, 1)]))
-	assert_eq(rig.answers.asked.size(), 0, "No offer: the only Shadow came from this skill")
+	assert_eq(rig.answers.asked.size(), 0, "No offer: the only Shadow came from this use")
 	assert_eq(rig.enemy().hp, 20 - 3)
-	assert_eq(tl.shadow_sources.get(Vector2i(0, 1)), &"displacer_strike")
 
-	# Not on a later use either; another attack it can copy.
-	tl.start_turn()
-	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(1, 0)]))
-	assert_eq(rig.answers.asked.size(), 0, "Neither Shadow can copy Displacer Strike")
+	# The next use of the same skill can be copied by it.
 	tl.start_turn()
 	rig.answers.answers = [0]
-	assert_true(await rig.use(tl, &"gloom_edge", [Vector2i(1, 1)]))
-	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "Gloom Edge can be copied")
+	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(1, 0)]))
+	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "The older Shadow copies")
+	assert_eq(rig.enemy().hp, 20 - 3 - 3 - 3)
+	assert_eq(tl.shadows, TestRig.cells([Vector2i(2, 1)]), "This use's own Shadow is left")
 
 
 func test_displacer_copies_reach_further() -> void:
