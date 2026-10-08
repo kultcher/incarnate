@@ -11,6 +11,28 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (Soulweaver kit, milestone 7; Claude's calls, provisional)
+
+Source: the 2014 cards where they exist (Soul Echo, Dread Diffusion, Strength in Unity, Essence Shift, Well of Souls, Conveyance, Anima Nexus; their recharges), the Master sheet otherwise (Fates Intertwined, the Infusions, Spirit Flare). Alpha-only sheet skills are left out, as for the other kits.
+
+- **Tether is a free skill, once per turn** (Tether, range 5), rather than a prompt at the start of every turn. This matches the 2013 version ("once per turn as a free action") and keeps turn starts free of prompts. It lasts until you Tether someone else or either of you dies.
+- **Infusions:** the prompt comes once the skill's strikes have played. Declining doesn't use up the once-per-turn trigger.
+  - **Potent:** each gets a free basic attack this turn (a basic attack skill costs no action, once). A free skill such as Shadowstep doesn't count.
+  - **Stalwart:** a shield of 1 each.
+  - **Sage:** each recharges one skill by 1; you pick which when there's a choice.
+  - **Elusive:** each gets a one-use free **Elusive Shift** (up to 2 squares, through units) on their bar this turn. A Traceless shifting this way leaves a Shadow.
+- **Shields** absorb damage from strikes (not health loss), after Armor; they can bring a strike to 0. More shielding adds up. They last until used up or until the next round starts. Shield values from cards (Strength in Unity's Gold) are drawn when cast and get the caster's Power, like heals.
+- **Strength in Unity** shields at once instead of being Prepared and triggered later. With side-based turns the shields still cover the enemy phase; what's lost is choosing who to shield after seeing the enemy move. It targets another ally (not yourself) and recharges by 1 if that ally is Tethered.
+- **Spirit Flare** targets any other unit within 4: foes are struck, allies healed. Its free replay (after a kill or healing an ally to full) makes the next basic attack free, once per turn.
+- **Soul Echo** uses the card text: +2 Power per Blade card in the shared row. This is the first suit rule in the game. The AI doesn't count the bonus yet.
+- **Dread Diffusion:** the target is forced away from the Soulweaver. Forced movement stops at units, so "moved through" can't happen; foes next to any square it was forced through are struck and forced 1 square away from the target.
+- **Essence Shift:** pick who teleports (you or your Tethered ally), then a square next to the other one.
+- **Well of Souls:** "attune a card from the Soulstream" becomes "take a card from the shared row into your hand", since the Attunement grid is out of scope. The hand limit (2) only stops income, so this can go past it.
+- **Conveyance:** targets another ally. Each other ally on your side, the Soulweaver included, is asked whether to give 1 health (not offered at 1 health). The AI gives from allies above 3 health, and only uses Conveyance when the ally is missing at least 12.
+- **Anima Nexus:** until the next round starts, "your Tethered ally" means every ally: Infusions, Strength in Unity's recharge, Essence Shift and Well of Souls.
+- **The AI** Tethers first thing (to the nearest ally), always picks Potent, and uses Spirit Flare, Soul Echo, Dread Diffusion and Conveyance. It doesn't use Strength in Unity, Essence Shift, Well of Souls or Anima Nexus yet.
+- **Icons** come from the 2014 icon art and card art in the references folder.
+
 ## 2026-10-08 (Traceless rules note)
 
 - **A Shadow can't copy the same use of the skill that made it** (Michael). For example, the Shadow a Displacer Strike's shift leaves behind can't copy that Displacer Strike, but it can copy the next one, or any other attack.

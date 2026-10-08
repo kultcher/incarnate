@@ -6,7 +6,7 @@ extends PowerBonus
 @export var squares: int = 2
 
 
-func power(caster: UnitState, target: UnitState) -> int:
+func power(caster: UnitState, target: UnitState, _r: ActionResolver = null) -> int:
 	if not caster.last_action_was_move:
 		return 0
 	var closed := BoardState.distance(caster.turn_start_cell, target.cell) \

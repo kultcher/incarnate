@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_mm8em"]
+[ext_resource type="Script" path="res://defs/effects/dread_diffusion_effect.gd" id="2_ara2f"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_4exw3"]
+[ext_resource type="Texture2D" path="res://art/icons/dread_diffusion.png" id="4_csats"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_nacow"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_ul18m"]
+
+[sub_resource type="Resource" id="Resource_qo6ug"]
+script = ExtResource("2_ara2f")
+
+[sub_resource type="Resource" id="Resource_l6hen"]
+script = ExtResource("6_ul18m")
+shape = 2
+range_max = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("5_nacow")
+id = &"dread_diffusion"
+display_name = "Dread Diffusion"
+icon = ExtResource("4_csats")
+description = "Strike a foe within 4 for {damage} and force it {force} squares away from you. Then strike each foe next to a square it was forced through for {splash}, and force each of them {splash_force} square away from it."
+slot = 2
+cooldown = 3
+tags = Array[StringName]([&"attack", &"area", &"ranged"])
+targets = Array[ExtResource("6_ul18m")]([SubResource("Resource_l6hen")])
+effects = Array[ExtResource("1_mm8em")]([SubResource("Resource_qo6ug")])
+hit_sound = ExtResource("3_4exw3")

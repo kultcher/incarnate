@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/behaviors/shield.gd" id="1_2b00s"]
+[ext_resource type="Texture2D" path="res://art/icons/strength_in_unity.png" id="2_k4kux"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="3_glmqo"]
+
+[sub_resource type="Resource" id="Resource_07qh2"]
+script = ExtResource("1_2b00s")
+
+[resource]
+script = ExtResource("3_glmqo")
+id = &"shield"
+display_name = "Shield"
+icon = ExtResource("2_k4kux")
+description = "Absorbs the next points of damage from strikes (one per stack), until end of turn."
+duration = 1
+clock = 1
+stacking = 1
+max_stacks = 99
+behavior = SubResource("Resource_07qh2")

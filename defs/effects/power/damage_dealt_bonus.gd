@@ -6,7 +6,7 @@ extends PowerBonus
 @export var per: int = 2
 
 
-func power(caster: UnitState, _target: UnitState) -> int:
+func power(caster: UnitState, _target: UnitState, _r: ActionResolver = null) -> int:
 	return caster.turn_damage / per
 
 

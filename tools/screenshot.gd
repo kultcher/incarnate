@@ -16,6 +16,8 @@ extends Node
 ##   traceless  the Traceless selected, its 10-skill bar and a tooltip
 ##   cards      Bloodthane selected with a hand card and a shared card readied
 ##   logged     after Blade Fury with a readied card: the strike log
+##   soulweaver the Soulweaver Tethered to the Bloodthane, its bar and a tooltip
+##   infusion   the Fates Intertwined prompt after Spirit Flare
 
 
 func _ready() -> void:
@@ -106,6 +108,20 @@ func _ready() -> void:
 				c.begin_targeting_index(_index(bt, &"blade_fury"))
 				await c.click_cell(Vector2i(6, 8))
 				await get_tree().create_timer(0.6).timeout
+		"soulweaver", "infusion":
+			var sw := _find(battle, &"soulweaver")
+			await c.click_cell(sw.cell)
+			c.begin_targeting_index(_index(sw, &"tether"))
+			await c.click_cell(bt.cell)
+			if shot == "soulweaver":
+				battle.hud._tooltip.text = battle.hud._skill_text(sw.skills()[_index(sw, &"dread_diffusion")])
+			else:
+				await c.click_cell(Vector2i(2, 8))
+				c.begin_targeting_index(_index(sw, &"spirit_flare"))
+				c.click_cell(Vector2i(6, 8))
+				while not battle.hud.prompt.is_open():
+					await get_tree().process_frame
+				await get_tree().create_timer(0.4).timeout
 		"enemy":
 			# Walk Bloodthane forward, then hand over to the enemies.
 			await c.click_cell(Vector2i(4, 7))

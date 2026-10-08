@@ -214,8 +214,9 @@ The two eras differ most here.
 
 ## 6. Other kits (not in M5; see the Master transcription)
 
-- **Soulweaver: Fates Intertwined.** At turn start, Tether to an ally within 5. Once per turn, when you unveil a card, activate an Infusion: Potent (both basic-attack free), Stalwart (both shielded 1), Sage (both recharge a skill), Elusive (both shift 2).
-  - The Infusion trigger is unveil-based and needs a flat-era rework, e.g. "when you weave a card".
+- **Soulweaver: built in M7 (2026-10-08).** See the decisions log for the calls made. Built: Fates Intertwined (Tether + the four Infusions), Spirit Flare, Soul Echo (card version), Dread Diffusion, Strength in Unity, Essence Shift, Well of Souls, Conveyance, Anima Nexus. Not built: the Alpha-only sheet skills (Steal Spirit, Essence Gyre, Renewing Glow, Astral Jump, the unnamed U2), Heroic versions and Talents.
+  - Fates Intertwined: at turn start, Tether to an ally within 5. Once per turn, when you unveil a card, activate an Infusion: Potent (both basic-attack free), Stalwart (both shielded 1), Sage (both recharge a skill), Elusive (both shift 2).
+  - The Infusion trigger now works on real unveils: any card a Soulweaver skill uses (Michael, 2026-10-08).
   - Basic: **Spirit Flare** (Alpha). Cards: Soul Echo/Cascade, Dread Diffusion/Expulsion, Strength in Unity/Unbreakable Union, Essence Shift/Meld, Well/Sea of Souls, Conveyance, Anima Nexus.
   - Some card names differ from the sheet (Soul Spike/Lance in the sheet, Soul Echo/Cascade on the cards).
 - **Kindleborne: Rising Heat.** Store unveiled cards as Heat (max 5); discard 5+ value to **Ignite** (next skill free) or **Dissipate** (heal (Si), +1 Feint).

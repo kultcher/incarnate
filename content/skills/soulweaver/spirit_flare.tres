@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_0y0xb"]
+[ext_resource type="Script" path="res://defs/effects/flare_effect.gd" id="2_onoee"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_gtvxv"]
+[ext_resource type="Texture2D" path="res://art/icons/spirit_flare.png" id="4_op8kn"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_va1vj"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_1mbui"]
+
+[sub_resource type="Resource" id="Resource_t0g7b"]
+script = ExtResource("2_onoee")
+
+[sub_resource type="Resource" id="Resource_87ggw"]
+script = ExtResource("6_1mbui")
+shape = 2
+filter = 7
+range_max = 4
+prompt = "Pick a foe to strike or an ally to heal (within 4)"
+
+[resource]
+script = ExtResource("5_va1vj")
+id = &"spirit_flare"
+display_name = "Spirit Flare"
+icon = ExtResource("4_op8kn")
+description = "Strike a foe within 4 for {flare}, or heal an ally within 4 for {flare}. Once per turn, when you slay a foe or heal an ally to full health, your next Spirit Flare this turn is a free action."
+tags = Array[StringName]([&"attack", &"heal", &"ranged"])
+targets = Array[ExtResource("6_1mbui")]([SubResource("Resource_87ggw")])
+effects = Array[ExtResource("1_0y0xb")]([SubResource("Resource_t0g7b")])
+hit_sound = ExtResource("3_gtvxv")

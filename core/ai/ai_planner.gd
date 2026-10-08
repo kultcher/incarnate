@@ -141,7 +141,7 @@ static func knows(skill: SkillDef) -> bool:
 static func _can_attack_after_move(resolver: ActionResolver, unit: UnitState) -> bool:
 	for skill in unit.skills():
 		if knows(skill) and resolver.can_use_ignoring_points(unit, skill) \
-				and unit.actions.can_pay_both(Enums.Cost.MOVE, skill.cost):
+				and unit.actions.can_pay_both(Enums.Cost.MOVE, resolver.cost_of(unit, skill)):
 			return true
 	return false
 

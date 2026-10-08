@@ -81,7 +81,22 @@ func can_move(unit: UnitState) -> bool:
 
 ## True if [param caster] could start [param skill] now (ignores targets).
 func can_use(caster: UnitState, skill: SkillDef) -> bool:
-	return caster.actions.can_pay(skill.cost) and can_use_ignoring_points(caster, skill)
+	return caster.actions.can_pay(cost_of(caster, skill)) and can_use_ignoring_points(caster, skill)
+
+
+## What [param skill] costs [param unit] now: free for a basic attack while
+## it has a free_basic status (Potent Infusion), else the skill's own cost.
+func cost_of(unit: UnitState, skill: SkillDef) -> Enums.Cost:
+	if _free_basic(unit, skill) != null:
+		return Enums.Cost.FREE
+	return skill.cost
+
+
+func _free_basic(unit: UnitState, skill: SkillDef) -> StatusInstance:
+	if skill.slot != Enums.Slot.BASIC or not skill.has_tag(&"attack") \
+			or skill.cost == Enums.Cost.FREE:
+		return null
+	return unit.find_status_tag(&"free_basic")
 
 
 ## Every rule of can_use except action points (the AI plans a move first).
@@ -126,7 +141,11 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	if not cards.is_empty():
 		stream.ready_cards(caster, cards)
 		_emit(GameEvent.cards_changed(caster.team))
-	caster.actions.pay(skill.cost)
+	var free := _free_basic(caster, skill)
+	if free != null:
+		await remove_status(free)
+	else:
+		caster.actions.pay(skill.cost)
 	await _start_cooldown(caster, skill)
 	caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
 	if skill.slot == Enums.Slot.RECOVERY:
@@ -216,6 +235,7 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 		hit.cancelled = true
 		return hit
 	hit.cards = _stream_of(attacker, target).draw_for(spec.tiers)
+	_unveiled(attacker, hit.cards)
 	if attacker != null:
 		hit.power = spec.power + attacker.get_stat(&"power") + attacker.get_stat(&"strike_power")
 	else:
@@ -291,8 +311,9 @@ func lose_health(target: UnitState, amount: int, skill: SkillDef = null) -> int:
 	return dealt
 
 
-## Returns the HP actually restored (capped at max HP).
-func heal(target: UnitState, amount: int) -> int:
+## Returns the HP actually restored (capped at max HP). [param healer]'s
+## statuses hear about it (after_heal_given).
+func heal(target: UnitState, amount: int, healer: UnitState = null) -> int:
 	if not target.is_alive() or amount <= 0:
 		return 0
 	var healed := mini(amount, target.get_stat(&"max_hp") - target.hp)
@@ -300,13 +321,17 @@ func heal(target: UnitState, amount: int) -> int:
 		return 0
 	target.hp += healed
 	_emit(GameEvent.healed(target, healed, target.hp))
+	if healer != null:
+		for inst: StatusInstance in healer.statuses.duplicate():
+			if inst.def.behavior != null and healer.statuses.has(inst):
+				inst.def.behavior.after_heal_given(inst, target, healed, self)
 	return healed
 
 
 ## Heals for Soulstream cards. The healer's Power raises the cards.
 func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 		bonus: int = 0) -> int:
-	return heal(target, card_value(healer, tiers, bonus))
+	return heal(target, card_value(healer, tiers, bonus), healer)
 
 
 ## The value of a set of cards drawn now from [param user]'s Soulstream,
@@ -314,11 +339,22 @@ func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
 		with_power: bool = true) -> int:
 	var total := bonus
-	for card in _stream_of(user, null).draw_for(tiers):
+	var cards := _stream_of(user, null).draw_for(tiers)
+	_unveiled(user, cards)
+	for card in cards:
 		total += card.value
 	if user != null and with_power and not tiers.is_empty():
 		total += user.get_stat(&"power")
 	return total
+
+
+## Lets [param user]'s statuses react to the cards it just unveiled.
+func _unveiled(user: UnitState, cards: Array[Card]) -> void:
+	if user == null or cards.is_empty():
+		return
+	for inst: StatusInstance in user.statuses.duplicate():
+		if inst.def.behavior != null and user.statuses.has(inst):
+			inst.def.behavior.on_cards_unveiled(inst, cards, self)
 
 
 ## The Soulstream [param team] draws from.
@@ -342,6 +378,18 @@ func deal_card(unit: UnitState) -> void:
 func refill_row(team: Enums.Team) -> void:
 	if soulstream(team).refill_row() != null:
 		_emit(GameEvent.cards_changed(team))
+
+
+## [param unit] takes [param card] from its side's shared row into its hand
+## (Well of Souls). The hand limit only stops income, not this.
+func claim_row_card(unit: UnitState, card: Card) -> bool:
+	var stream := soulstream(unit.team)
+	if not unit.is_alive() or not stream.row.has(card):
+		return false
+	stream.row.erase(card)
+	unit.hand.append(card)
+	_emit(GameEvent.cards_changed(unit.team))
+	return true
 
 
 ## A strike with no attacker (none yet) draws from the side opposing its target.
@@ -405,9 +453,15 @@ func teleport_unit(unit: UnitState, to: Vector2i) -> void:
 ## [param reference], one square at a time, stopping at anything in the way.
 ## Returns the squares actually moved.
 func force_unit(unit: UnitState, reference: Vector2i, squares: int, toward: bool) -> int:
-	if not unit.is_alive():
-		return 0
+	return (await force_unit_path(unit, reference, squares, toward)).size()
+
+
+## force_unit, returning the squares the unit was forced through, in order.
+func force_unit_path(unit: UnitState, reference: Vector2i, squares: int,
+		toward: bool) -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
+	if not unit.is_alive():
+		return path
 	var at := unit.cell
 	var last_dir := Vector2i.ZERO
 	for i in squares:
@@ -438,12 +492,12 @@ func force_unit(unit: UnitState, reference: Vector2i, squares: int, toward: bool
 		at = best
 		path.append(at)
 	if path.is_empty():
-		return 0
+		return path
 	var from := unit.cell
 	board.move_unit(unit, path[-1])
 	_emit(GameEvent.unit_moved(unit, path))
 	await _after_moved(unit, Enums.MoveKind.FORCED, from, path)
-	return path.size()
+	return path
 
 
 func _after_moved(unit: UnitState, kind: Enums.MoveKind, from: Vector2i,

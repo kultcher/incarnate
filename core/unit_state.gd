@@ -128,8 +128,18 @@ func is_foe(other: UnitState) -> bool:
 	return other != null and other.team != team
 
 
+## The unit's own skills, then any its statuses grant (Elusive Infusion).
 func skills() -> Array[SkillDef]:
-	return def.skills
+	var granted: Array[SkillDef] = []
+	for inst in statuses:
+		var extra := inst.def.grants_skill
+		if extra != null and not def.skills.has(extra) and not granted.has(extra):
+			granted.append(extra)
+	if granted.is_empty():
+		return def.skills
+	var all := def.skills.duplicate()
+	all.append_array(granted)
+	return all
 
 
 func cooldown_left(skill: SkillDef) -> int:

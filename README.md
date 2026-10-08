@@ -6,7 +6,7 @@ Godot 4.7, GDScript, Compatibility renderer.
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review: https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
 
-## Status: milestone 6 (the Soulstream: card decks, hands and the shared row)
+## Status: milestone 7 (the Soulweaver's kit, 2014 version)
 
 Run the project (F5) to open the test arena: your three Incarnates against
 three Shamblers.
@@ -104,9 +104,34 @@ Recovery skills: 2 per battle for the whole team. Statuses: **Provoked**
 (the AI goes for whoever provoked it), **Crippled** (-2 move until its next
 move), **Blinded** (its next strike counts as dodged).
 
-**Soulweaver:** placeholder Strike until its kit is ported. **Shamblers:**
-8 HP, move 3, Claw for 3 (Silver), one attack per turn. They're training
-dummies: the AI clears them in 2 rounds.
+### Soulweaver
+
+**Fates Intertwined** (passive): use **Tether** (free, once per turn) to
+Tether yourself to an ally within 5. Once per turn, when you **unveil** a card
+(any card one of your skills uses, blind or readied), you may activate an
+Infusion for yourself and your Tethered ally: **Potent** (a free basic attack
+this turn), **Stalwart** (shield 1), **Sage** (recharge a skill by 1) or
+**Elusive** (a free shift of 2: Elusive Shift appears on the bar). Declining
+saves it for a later unveil that turn.
+
+| Skill | Cost | Recharge | What it does |
+| --- | --- | --- | --- |
+| Spirit Flare | Skill | - | Strike a foe within 4 for 3 (Si), or heal an ally within 4 for 3. After a kill or healing an ally to full, the next one this turn is free (once per turn) |
+| Tether | Free | 1 | Tether to an ally within 5 |
+| Soul Echo | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +2 Power per Blade card in the shared row |
+| Dread Diffusion | Skill | 3 | Strike a foe within 4 for 5 (Si+Br), force it 3 away; foes next to its path take 2 (Br) and are forced 1 |
+| Strength in Unity | Skill | 3 | Shield you and an ally within 5 against 4 (G) each this turn; recharges by 1 if that ally is Tethered |
+| Essence Shift | Maneuver | 3 | Teleport next to your Tethered ally, or they teleport next to you |
+| Well of Souls | Skill | 3 | You and your Tethered ally may each take a card from the shared row into your hand |
+| Conveyance | Recovery | - | Choose an ally within 5; each other ally (you included) may lose 1; they heal 6 (Si+Si) per health lost |
+| Anima Nexus | Free, once | - | This turn, everything that reaches your Tethered ally reaches every ally |
+
+**Shields** absorb damage from strikes (not health loss) until used up or the
+turn ends; more shielding adds to the same shield.
+
+**Shamblers:** 8 HP, move 3, Claw for 3 (Silver), one attack per turn.
+They're training dummies: with the Soulweaver's kit the AI clears them in
+1-2 rounds.
 
 Not in yet: Heroic versions, Talents, suit bonuses, Perfect Decoy's
 teleport, and Titan Charge and the other Alpha-only skills. The AI uses

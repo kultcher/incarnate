@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_kmwld"]
+[ext_resource type="Script" path="res://defs/effects/apply_status_effect.gd" id="2_5yxvg"]
+[ext_resource type="Resource" path="res://content/statuses/soulweaver/anima_nexus.tres" id="3_lxtoa"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_i64xf"]
+[ext_resource type="Texture2D" path="res://art/icons/anima_nexus.png" id="5_i7wp1"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_ktfss"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_x52yh"]
+
+[sub_resource type="Resource" id="Resource_ahrn2"]
+script = ExtResource("2_5yxvg")
+status = ExtResource("3_lxtoa")
+
+[resource]
+script = ExtResource("6_ktfss")
+id = &"anima_nexus"
+display_name = "Anima Nexus"
+icon = ExtResource("5_i7wp1")
+description = "Ultimate. Free. This turn, everything that reaches your Tethered ally reaches every ally instead: Infusions, Strength in Unity's recharge, Essence Shift, Well of Souls."
+slot = 6
+cost = 2
+tags = Array[StringName]([&"ultimate"])
+effects = Array[ExtResource("1_kmwld")]([SubResource("Resource_ahrn2")])
+uses_per_battle = 1
+hit_sound = ExtResource("4_i64xf")

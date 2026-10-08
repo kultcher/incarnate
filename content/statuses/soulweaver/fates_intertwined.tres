@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/infusion_def.gd" id="1_5ythy"]
+[ext_resource type="Resource" path="res://content/infusions/potent.tres" id="2_x324u"]
+[ext_resource type="Resource" path="res://content/infusions/stalwart.tres" id="3_t6o65"]
+[ext_resource type="Resource" path="res://content/infusions/sage.tres" id="4_h8vgu"]
+[ext_resource type="Resource" path="res://content/infusions/elusive.tres" id="5_1vlkd"]
+[ext_resource type="Script" path="res://defs/statuses/behaviors/fates_intertwined.gd" id="6_5wj7d"]
+[ext_resource type="Texture2D" path="res://art/icons/fates_intertwined.png" id="7_3xoy0"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="8_txqyu"]
+
+[sub_resource type="Resource" id="Resource_x1cwv"]
+script = ExtResource("6_5wj7d")
+infusions = Array[ExtResource("1_5ythy")]([ExtResource("2_x324u"), ExtResource("3_t6o65"), ExtResource("4_h8vgu"), ExtResource("5_1vlkd")])
+
+[resource]
+script = ExtResource("8_txqyu")
+id = &"fates_intertwined"
+display_name = "Fates Intertwined"
+icon = ExtResource("7_3xoy0")
+description = "Passive. Once per turn, when you unveil a card (any card one of your skills uses), you may activate an Infusion for yourself and your Tethered ally: Potent (a free basic attack), Stalwart (shield 1), Sage (recharge a skill) or Elusive (shift 2). Use Tether (free, once per turn) to choose your ally."
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_x1cwv")
