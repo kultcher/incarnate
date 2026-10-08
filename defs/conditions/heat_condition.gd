@@ -1,6 +1,6 @@
 class_name HeatCondition
 extends SkillCondition
-## Stoke: usable when the Heat store can pay for Ignite or Dissipate.
+## Stoke: usable when there's enough Heat for Ignite or Dissipate.
 
 @export var passive_id: StringName = &"rising_heat"
 
@@ -10,5 +10,4 @@ func allows(caster: UnitState, _r: ActionResolver) -> bool:
 	if inst == null:
 		return false
 	var heat := inst.def.behavior as RisingHeatBehavior
-	var total := RisingHeatBehavior.heat_total(caster)
-	return total >= mini(heat.current_ignite_cost(inst), heat.dissipate_cost)
+	return heat.can_ignite(inst) or heat.can_dissipate(inst)

@@ -11,7 +11,7 @@ var battle: Battle
 func before_each() -> void:
 	Engine.time_scale = SPEED
 	battle = load("res://battle/battle.tscn").instantiate()
-	battle.median_cards = true  # Exact damage numbers.
+	battle.fixed_deck = true  # Known cards.
 	add_child_autofree(battle)
 	await wait_process_frames(2)
 
@@ -109,11 +109,15 @@ func test_gate_a_shadow_uses_an_inherited_attack() -> void:
 	assert_eq(tl.shadows, [Vector2i(5, 8)] as Array[Vector2i])
 	assert_not_null(battle.arena.shadows.ghost_at(tl, Vector2i(5, 8)), "Ghost drawn on the Shadow")
 	assert_eq(foe.hp, 17)
+	assert_null(battle.arena.shadows.marker_at(Vector2i(5, 8)), "Nothing inherited yet: no ring")
 
 	c.begin_targeting_index(_index(tl, &"gloom_edge"))
 	await c.click_cell(foe.cell)
 	await _idle()
 	assert_eq(foe.hp, 11)
+	var ring := battle.arena.shadows.marker_at(Vector2i(5, 8))
+	assert_not_null(ring, "A gold ring: the Shadow has a skill with a target")
+	assert_eq(ring.count, 1)
 	# Click the Shadow: it offers the Gloom Edge it inherited.
 	await c.click_cell(Vector2i(5, 8))
 	assert_not_null(c.selected)
@@ -126,6 +130,8 @@ func test_gate_a_shadow_uses_an_inherited_attack() -> void:
 	assert_eq(foe.hp, 5, "11 - 6")
 	assert_true(tl.shadows.is_empty(), "Used up")
 	assert_eq(c.selected, tl, "Back to the Traceless")
+	await wait_process_frames(2)
+	assert_null(battle.arena.shadows.marker_at(Vector2i(5, 8)), "The ring went with it")
 
 
 func test_pact_preference_from_the_passive_icon() -> void:

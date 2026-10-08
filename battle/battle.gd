@@ -11,9 +11,9 @@ extends Node2D
 @export var level_scene: PackedScene = preload("res://levels/test_arena.tscn")
 ## Start with the AI playing the player's side (tests, balance runs).
 @export var autoplay: bool = false
-## Every card is its tier's median instead of drawn from shuffled decks
-## (integration tests that check exact numbers).
-@export var median_cards: bool = false
+## Keep the Soulstream decks in their fixed order instead of shuffling
+## (integration tests that need to know which cards come).
+@export var fixed_deck: bool = false
 ## Seed for the Soulstream decks. 0 = a new random seed each battle.
 @export var card_seed: int = 0
 
@@ -42,7 +42,7 @@ func _ready() -> void:
 	presenter.board_view = arena
 	resolver.board = board
 	resolver.events = presenter
-	if not median_cards:
+	if not fixed_deck:
 		resolver.use_decks(card_seed if card_seed != 0 else randi())
 	controller.board = board
 	controller.board_view = arena
@@ -95,7 +95,8 @@ func _ready() -> void:
 	hud.skill_pressed.connect(controller.begin_targeting_index)
 	hud.restart_pressed.connect(_restart)
 	hud.status_clicked.connect(_on_status_clicked)
-	hud.card_clicked.connect(controller.toggle_card)
+	hud.card_clicked.connect(controller.prime_card)
+	hud.card_activated.connect(controller.activate_card)
 	hud.player_stream = resolver.soulstream(Enums.Team.PLAYER)
 	battle_controller.run()
 

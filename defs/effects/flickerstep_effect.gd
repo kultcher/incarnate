@@ -1,7 +1,7 @@
 class_name FlickerstepEffect
 extends EffectDef
-## Flickerstep: unveil [member tiers]; the caster may then teleport up to
-## their value + [member bonus] squares this turn, as a free action (the
+## Flickerstep: the caster may teleport up to [member tiers]' value +
+## [member bonus] squares this turn, as a free action (the
 ## granted Flicker skill reads the range from [member status]'s stacks).
 
 @export var tiers: Array[Enums.Tier] = [Enums.Tier.GOLD]
@@ -19,7 +19,7 @@ func apply(ctx: ActionContext) -> void:
 
 
 func describe_values() -> Dictionary:
-	return { "reach": "%s + %d" % [Soulstream.describe(tiers), bonus] }
+	return { "reach": Soulstream.describe(tiers, bonus) }
 
 
 func card_tiers() -> Array[Enums.Tier]:

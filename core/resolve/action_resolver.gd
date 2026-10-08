@@ -22,6 +22,18 @@ signal action_finished
 const MAX_FOLLOWUPS := 32
 ## Recovery skills the whole team can use per battle.
 const RECOVERIES_PER_BATTLE := 2
+## Soulstream card base effects (suit_effect).
+const HONED := preload("res://content/statuses/common/honed.tres")
+const SWIFT := preload("res://content/statuses/common/swift.tres")
+const SHIELD := preload("res://content/statuses/common/shield.tres")
+const WARD_SHIELD := 2
+const SUIT_COLOR := Color(0.85, 0.8, 1.0)
+const SUIT_TEXT: Dictionary[Enums.Suit, String] = {
+	Enums.Suit.BLADE: "+1 damage on the next attack.",
+	Enums.Suit.ORB: "Recharge one skill.",
+	Enums.Suit.PORTAL: "+1 move until end of turn.",
+	Enums.Suit.WARD: "+2 Shield until end of turn.",
+}
 
 var board: BoardState
 var events: EventSink
@@ -30,8 +42,8 @@ var events: EventSink
 var player_decisions: DecisionProvider
 ## Answers everyone else's decisions.
 var ai_decisions := DecisionProvider.new()
-## Each side's Soulstream (decks, and the Incarnates' shared row), by team.
-## Medians until use_decks() is called, so rules tests get fixed numbers.
+## Each side's Soulstream (its deck, and the Incarnates' shared row), by
+## team. In a fixed order until use_decks() shuffles them.
 var soulstreams: Dictionary[int, Soulstream] = {
 	Enums.Team.PLAYER: Soulstream.new(),
 	Enums.Team.ENEMY: Soulstream.new(),
@@ -52,9 +64,11 @@ var _followups: Array[Callable] = []
 ## Counts skill uses this battle; 0 while none is resolving. Shadows
 ## remember the use that made them.
 var action_number: int = 0
-## The skill being resolved is a Burnout replay (its cards can't become Heat).
+## The skill being resolved is a Burnout replay (it makes no Heat).
 var action_is_copy: bool = false
 var _uses_so_far: int = 0
+## Units whose Shadows were last shown as ready (refresh_shadow_ready).
+var _had_ready_shadows: Dictionary[int, bool] = {}
 
 
 func _ready() -> void:
@@ -163,23 +177,18 @@ func has_targets(caster: UnitState, skill: SkillDef) -> bool:
 
 
 ## Uses [param skill] with one picked cell per targeting step (or the path's
-## squares, for path skills). [param cards] are readied from the caster's
-## hand or the shared row: the skill's draws use them first (see
-## Soulstream.draw_for), and any it doesn't use go back. Returns false and
-## changes nothing if anything is illegal.
+## squares, for path skills). [param primed] are cards from the caster's
+## hand or the shared row primed for this skill: those matching its boon
+## suits are spent for its boon (one match) or Heroic (two); the rest stay.
+## Returns false and changes nothing if anything is illegal.
 func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
-		cards: Array[Card] = []) -> bool:
+		primed: Array[Card] = []) -> bool:
 	if not can_use(caster, skill):
 		return false
 	if not Targeting.are_valid_picks(board, caster, skill, picks):
 		return false
-	var stream := soulstream(caster.team)
-	if not stream.can_ready(caster, cards):
-		return false
 
-	if not cards.is_empty():
-		stream.ready_cards(caster, cards)
-		_emit(GameEvent.cards_changed(caster.team))
+	var boon_level := _spend_primed(caster, skill, primed)
 	var free := _free_source(caster, skill)
 	var ignited := free != null and free.def.has_tag(&"ignite")
 	var copied := free != null and free.def.has_tag(&"echo")
@@ -206,6 +215,8 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	var ctx := ActionContext.new(caster, skill, picks, board, self)
 	ctx.ignited = ignited
 	ctx.copied = copied
+	ctx.boon_level = boon_level
+	ctx.paid = free == null and skill.cost != Enums.Cost.FREE
 	_uses_so_far += 1
 	action_number = _uses_so_far
 	action_is_copy = copied
@@ -213,6 +224,10 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 		await effect.apply(ctx)
 	if skill.has_tag(&"attack"):
 		caster.turn_attacks += 1
+		# A Blade card's +1 lasts for one attack.
+		for inst: StatusInstance in caster.statuses.duplicate():
+			if inst.def.has_tag(&"end_after_attack"):
+				await remove_status(inst)
 	stats.record_action(caster)
 	# After the effects, so Blade Fury can see the move right before it.
 	caster.last_action_was_move = false
@@ -222,12 +237,9 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 			if inst.def.behavior != null and caster.statuses.has(inst):
 				await inst.def.behavior.after_skill(inst, ctx, self)
 
-	# Shadow copies (follow-ups) may still use readied cards.
 	await _drain_followups()
 	action_number = 0
 	action_is_copy = false
-	if stream.release() > 0:
-		_emit(GameEvent.cards_changed(caster.team))
 	await _finish_action()
 	return true
 
@@ -275,7 +287,7 @@ func gain_action(unit: UnitState, cost: Enums.Cost) -> void:
 #region Damage and healing
 
 ## One strike from [param attacker] on [param target]. Effects call this.
-## Draws the cards, applies Power, Armor and dodges, lets the target's
+## Applies Power, Armor and dodges, lets the target's
 ## statuses change or cancel it (Chimeric Cloak), deals the damage, then lets
 ## the attacker's statuses react (Bound in Blood).
 func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
@@ -288,8 +300,7 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 	if not target.is_alive():
 		hit.cancelled = true
 		return hit
-	hit.cards = _stream_of(attacker, target).draw_for(spec.tiers)
-	_unveiled(attacker, hit.cards)
+	hit.parts = Soulstream.parts_of(spec.tiers)
 	if attacker != null:
 		hit.power = spec.power + attacker.get_stat(&"power") + attacker.get_stat(&"strike_power")
 	else:
@@ -388,44 +399,23 @@ func heal(target: UnitState, amount: int, healer: UnitState = null) -> int:
 	return healed
 
 
-## Heals for Soulstream cards. The healer's Power raises the cards.
+## Heals for a skill's tiers (flat values). The healer's Power adds to it.
 func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 		bonus: int = 0) -> int:
 	return heal(target, card_value(healer, tiers, bonus), healer)
 
 
-## The value of a set of cards drawn now from [param user]'s Soulstream,
-## plus its Power unless [param with_power] is false (Violent Transfusion).
+## The flat value of [param tiers] plus [param bonus], plus [param user]'s
+## Power unless [param with_power] is false (Violent Transfusion).
 func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
 		with_power: bool = true) -> int:
-	var total := bonus
-	var cards := _stream_of(user, null).draw_for(tiers)
-	_unveiled(user, cards)
-	for card in cards:
-		total += card.value
+	var total := Soulstream.total_of(tiers) + bonus
 	if user != null and with_power and not tiers.is_empty():
 		total += user.get_stat(&"power")
 	return total
 
 
-## Lets [param user]'s statuses react to the cards it just unveiled.
-func _unveiled(user: UnitState, cards: Array[Card]) -> void:
-	if user == null or cards.is_empty():
-		return
-	if user.shadow_of != null:
-		user = user.shadow_of
-	stats.record_cards(user, cards)
-	for inst: StatusInstance in user.statuses.duplicate():
-		if inst.def.behavior != null and user.statuses.has(inst):
-			inst.def.behavior.on_cards_unveiled(inst, cards, self)
-
-
-## The Soulstream [param team] draws from.
-func soulstream(team: Enums.Team) -> Soulstream:
-	return soulstreams[team]
-
-
-## Real shuffled decks for both sides (battles); tests keep the medians.
+## Shuffled decks for both sides (battles); tests keep a fixed order.
 func use_decks(seed_value: int) -> void:
 	soulstream(Enums.Team.PLAYER).use_decks(seed_value)
 	soulstream(Enums.Team.ENEMY).use_decks(seed_value + 1)
@@ -436,10 +426,19 @@ func cards_changed(team: Enums.Team) -> void:
 	_emit(GameEvent.cards_changed(team))
 
 
-## Hand income: one card for [param unit] if its hand has room.
+## Hand income: one card for [param unit]. A hand that would hold more than
+## HAND_SIZE activates its oldest card first.
 func deal_card(unit: UnitState) -> void:
-	if unit.is_alive() and soulstream(unit.team).deal_to(unit) != null:
-		_emit(GameEvent.cards_changed(unit.team))
+	if not unit.is_alive():
+		return
+	var stream := soulstream(unit.team)
+	while unit.hand.size() >= Soulstream.HAND_SIZE and unit.is_alive():
+		if not await activate_card(unit, unit.hand[0]):
+			break
+	if not unit.is_alive():
+		return
+	unit.hand.append(stream.take())
+	_emit(GameEvent.cards_changed(unit.team))
 
 
 ## Row income: one card into [param team]'s shared row if it has room.
@@ -449,7 +448,7 @@ func refill_row(team: Enums.Team) -> void:
 
 
 ## [param unit] takes [param card] from its side's shared row into its hand
-## (Well of Souls). The hand limit only stops income, not this.
+## (Well of Souls). The hand limit only applies to income, not this.
 func claim_row_card(unit: UnitState, card: Card) -> bool:
 	var stream := soulstream(unit.team)
 	if not unit.is_alive() or not stream.row.has(card):
@@ -460,13 +459,116 @@ func claim_row_card(unit: UnitState, card: Card) -> bool:
 	return true
 
 
-## A strike with no attacker (none yet) draws from the side opposing its target.
-func _stream_of(user: UnitState, target: UnitState) -> Soulstream:
-	if user != null:
-		return soulstream(user.team)
-	if target != null and target.team == Enums.Team.PLAYER:
-		return soulstream(Enums.Team.ENEMY)
-	return soulstream(Enums.Team.PLAYER)
+## The top card of [param unit]'s side's Soulstream, turned face up and
+## discarded (Fates Intertwined).
+func flip_card(unit: UnitState) -> Card:
+	var card := soulstream(unit.team).flip()
+	announce(unit, "Flipped: %s" % card, SUIT_COLOR)
+	return card
+
+
+## Activates [param card] from [param unit]'s hand or the shared row: its
+## base effect for each suit it has (a Wild asks which), then it's
+## discarded. Free. Returns false if the card isn't there.
+func activate_card(unit: UnitState, card: Card) -> bool:
+	var stream := soulstream(unit.team)
+	if not unit.is_alive() or not stream.can_use(unit, card):
+		return false
+	stream.spend(unit, card)
+	_emit(GameEvent.cards_changed(unit.team))
+	stats.record_card(unit)
+	var suits: Array[Enums.Suit] = card.suits.duplicate()
+	if card.is_wild():
+		suits = [await _pick_suit(unit)]
+	for suit in suits:
+		await suit_effect(unit, suit)
+	return true
+
+
+## A card's base effect for [param suit] on [param unit]:
+##   Blade   +1 damage on its next attack (Honed)
+##   Ward    +2 Shield until end of turn
+##   Portal  +1 move until end of turn (Swift)
+##   Orb     recharge one skill (the one recharging, or the one it picks)
+func suit_effect(unit: UnitState, suit: Enums.Suit) -> void:
+	match suit:
+		Enums.Suit.BLADE:
+			await apply_status(unit, HONED, unit)
+			announce(unit, "Blade: +1 damage", SUIT_COLOR)
+		Enums.Suit.WARD:
+			await apply_status(unit, SHIELD, unit, null, WARD_SHIELD)
+			announce(unit, "Ward: Shield %d" % WARD_SHIELD, SUIT_COLOR)
+		Enums.Suit.PORTAL:
+			await apply_status(unit, SWIFT, unit)
+			announce(unit, "Portal: +1 move", SUIT_COLOR)
+		Enums.Suit.ORB:
+			var skill := await _pick_recharge(unit)
+			if skill == null:
+				announce(unit, "Orb: nothing to recharge", SUIT_COLOR)
+				return
+			recharge_skill(unit, skill)
+			announce(unit, "Orb: %s recharged" % skill.display_name, SUIT_COLOR)
+
+
+func _pick_suit(unit: UnitState) -> Enums.Suit:
+	var request := DecisionRequest.new()
+	request.team = unit.team
+	request.title = "Wild card"
+	request.text = "Which suit does the Wild card count as for %s?" % unit.def.display_name
+	for suit: Enums.Suit in Enums.Suit.values():
+		request.add_option(Card.suit_name(suit), SUIT_TEXT[suit])
+	request.ai_choice = int(Enums.Suit.WARD)
+	var answer := await decide(request)
+	if answer < 0 or answer >= Enums.Suit.size():
+		answer = request.ai_choice
+	return answer as Enums.Suit
+
+
+## The skill an Orb recharges: the only one recharging, or the one picked.
+func _pick_recharge(unit: UnitState) -> SkillDef:
+	var waiting: Array[SkillDef] = []
+	for skill in unit.skills():
+		if unit.cooldown_left(skill) > 0:
+			waiting.append(skill)
+	if waiting.size() <= 1:
+		return null if waiting.is_empty() else waiting[0]
+	var request := DecisionRequest.new()
+	request.team = unit.team
+	request.title = "Orb card"
+	request.text = "Recharge which of %s's skills?" % unit.def.display_name
+	for skill in waiting:
+		request.add_option(skill.display_name, "%d turns left" % unit.cooldown_left(skill), skill.icon)
+	var answer := await decide(request)
+	return waiting[clampi(answer, 0, waiting.size() - 1)]
+
+
+## Spends the primed cards that match [param skill]'s boon suits. Returns
+## the tier reached: 0 = base, 1 = boon, 2 = Heroic.
+func _spend_primed(caster: UnitState, skill: SkillDef, primed: Array[Card]) -> int:
+	if skill.boon_suits.is_empty() or primed.is_empty():
+		return 0
+	var stream := soulstream(caster.team)
+	var level := 0
+	for card in primed:
+		if level >= 2 or not stream.can_use(caster, card):
+			continue
+		var matches := 0
+		for suit in skill.boon_suits:
+			matches = maxi(matches, card.count(suit))
+		if matches == 0:
+			continue
+		stream.spend(caster, card)
+		stats.record_card(caster)
+		level = mini(level + matches, 2)
+	if level > 0:
+		_emit(GameEvent.cards_changed(caster.team))
+		announce(caster, "Heroic" if level == 2 else "Boon", SUIT_COLOR)
+	return level
+
+
+## The Soulstream [param team] uses.
+func soulstream(team: Enums.Team) -> Soulstream:
+	return soulstreams[team]
 
 
 func _kill(unit: UnitState) -> void:
@@ -476,14 +578,15 @@ func _kill(unit: UnitState) -> void:
 			inst.def.behavior.on_owner_died(inst, cell, self)
 	board.remove_unit(unit)
 	unit.statuses.clear()
-	# Held cards (the hand, the Kindleborne's Heat) go back to the discards.
-	if not unit.hand.is_empty() or not unit.heat.is_empty():
+	if unit.def.report_as_group:
+		stats.record_slain(unit)
+	# Its hand goes back to the discards.
+	if not unit.hand.is_empty() or unit.heat > 0:
 		var stream := soulstream(unit.team)
-		for card in unit.hand + unit.heat:
-			if stream.deck(card.tier) != null:
-				stream.deck(card.tier).discard(card)
+		for card in unit.hand:
+			stream.discard(card)
 		unit.hand.clear()
-		unit.heat.clear()
+		unit.heat = 0
 		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()
@@ -632,6 +735,8 @@ func summon(def: UnitDef, team: Enums.Team, cell: Vector2i) -> UnitState:
 		return null
 	board.place_unit(unit, cell)
 	_emit(GameEvent.unit_spawned(unit))
+	if def.report_as_group:
+		stats.record_spawned(unit)
 	for passive in def.passives:
 		await apply_status(unit, passive, unit)
 	return unit
@@ -870,6 +975,8 @@ func apply_status(target: UnitState, def: StatusDef, source: UnitState = null,
 			if inst.def.behavior != null and target.statuses.has(inst):
 				if await inst.def.behavior.before_status_received(inst, def, source, self):
 					return null
+	if def.id == &"shield":
+		stats.record_shield(source, stacks)
 	if def.stacking != Enums.Stacking.INDEPENDENT:
 		var existing := target.find_status(def.id)
 		if existing != null:
@@ -1013,24 +1120,39 @@ func _emit(event: GameEvent) -> void:
 ## Tells the board which Shadows can use an inherited skill on a target now.
 func refresh_shadow_ready() -> void:
 	for unit in board.units():
-		if unit.shadows.is_empty() and unit.shadow_skills.is_empty():
+		if unit.shadows.is_empty() and unit.shadow_skills.is_empty() \
+				and not _had_ready_shadows.has(unit.id):
 			continue
 		var ready: Array[Vector2i] = []
+		var counts: Array[int] = []
 		for cell in unit.shadows:
-			if shadow_ready(unit, cell):
+			var usable := shadow_usable_count(unit, cell)
+			if usable > 0:
 				ready.append(cell)
-		_emit(GameEvent.shadows_ready(unit, ready))
+				counts.append(usable)
+		# Once its last ready Shadow is gone, say so once more, then stop.
+		if ready.is_empty():
+			_had_ready_shadows.erase(unit.id)
+		else:
+			_had_ready_shadows[unit.id] = true
+		_emit(GameEvent.shadows_ready(unit, ready, counts))
 
 
 ## True if the Shadow on [param cell] has an inherited skill with a target.
 func shadow_ready(owner: UnitState, cell: Vector2i) -> bool:
+	return shadow_usable_count(owner, cell) > 0
+
+
+## How many of the Shadow on [param cell]'s inherited skills have a target.
+func shadow_usable_count(owner: UnitState, cell: Vector2i) -> int:
 	if shadow_skill_list(owner, cell).is_empty():
-		return false
+		return 0
 	var proxy := shadow_proxy(owner, cell)
+	var count := 0
 	for skill in proxy.skills():
 		if Targeting.has_any(board, proxy, skill):
-			return true
-	return false
+			count += 1
+	return count
 
 
 ## Ends a step of an encounter script like any other action: follow-ups,

@@ -22,6 +22,10 @@ func apply(ctx: ActionContext) -> void:
 						await r.remove_status(other)
 	await r.apply_status(ctx.caster, tether_status, ctx.caster, ally)
 	await r.apply_status(ally, tethered_status, ctx.caster, ctx.caster)
+	# Fates Intertwined: a new ally gets this turn's Infusions.
+	for inst: StatusInstance in ctx.caster.statuses.duplicate():
+		if inst.def.behavior is FatesIntertwinedBehavior:
+			await (inst.def.behavior as FatesIntertwinedBehavior).on_tethered(inst, ally, r)
 
 
 ## The AI tethers first thing when it has no living Tether.

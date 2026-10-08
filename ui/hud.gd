@@ -11,8 +11,10 @@ signal restart_pressed
 ## The player clicked a status icon on the unit panel (Bound in Blood opens
 ## its Pact preference).
 signal status_clicked(inst: StatusInstance)
-## The player clicked a card in the Soulstream tray.
+## The player clicked a card in the Soulstream tray (prime it).
 signal card_clicked(card: Card)
+## The player double-clicked a card in the Soulstream tray (activate it).
+signal card_activated(card: Card)
 
 ## Modal choices (Pacts, reactions). Lives on the HUD so it draws on top.
 var prompt: PromptDialog
@@ -21,8 +23,8 @@ var player_stream: Soulstream
 
 const SKILL_BUTTON_SIZE := Vector2(64, 64)
 ## The battle report's columns.
-const REPORT_COLUMNS: Array[String] = ["Unit", "Damage", "Healing", "Actions", "Moved",
-		"Bronze", "Silver", "Gold"]
+const REPORT_COLUMNS: Array[String] = ["Unit", "Damage", "Healing", "Shield", "Actions",
+		"Moved", "Cards"]
 ## Strikes kept in the log under the round counter.
 const LOG_LINES := 5
 
@@ -55,11 +57,15 @@ var _targeting: SkillDef
 var _targeting_step: int = 0
 var _status_strip: HBoxContainer
 var _tray: CardTray
-var _readied: Array[Card] = []
+var _primed: Array[Card] = []
+## Heat, for the Kindleborne (in the unit panel).
+var _heat_label: Label
+var _report_notes: Label
 var _log_label: Label
 var _log: Array[String] = []
 ## What the boss will do this turn (Encounter intents).
 var _intent_box: VBoxContainer
+var _info_panel: PanelContainer
 
 
 func _ready() -> void:
@@ -116,35 +122,63 @@ func _ready() -> void:
 	intent_margin.add_child(_intent_box)
 	root.add_child(intent_margin)
 
-	var bottom := VBoxContainer.new()
+	# Bottom: the Soulstream tray, the skill bar (with its tooltip and hint),
+	# and the selected unit's panel (health, actions, Heat, statuses).
+	var bottom := HBoxContainer.new()
 	bottom.size_flags_vertical = Control.SIZE_SHRINK_END
+	bottom.add_theme_constant_override("separation", 16)
 	bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bottom)
+
+	_tray = CardTray.new()
+	_tray.size_flags_vertical = Control.SIZE_SHRINK_END
+	_tray.card_clicked.connect(card_clicked.emit)
+	_tray.card_activated.connect(card_activated.emit)
+	bottom.add_child(_tray)
+
+	var center := VBoxContainer.new()
+	center.size_flags_vertical = Control.SIZE_SHRINK_END
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bottom.add_child(center)
 	_tooltip = _label(15)
 	_tooltip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tooltip.custom_minimum_size = Vector2(420, 0)
 	_tooltip.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_unit_label = _label(20)
-	_points_label = _label(16)
 	_skill_bar = HBoxContainer.new()
 	_skill_bar.add_theme_constant_override("separation", 8)
 	_skill_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hint_label = _label(14)
 	_hint_label.modulate = Color(1, 1, 1, 0.75)
-	bottom.add_child(_tooltip)
-	bottom.add_child(_unit_label)
+	center.add_child(_tooltip)
+	center.add_child(_skill_bar)
+	center.add_child(_hint_label)
+
+	var panel := PanelContainer.new()
+	panel.size_flags_vertical = Control.SIZE_SHRINK_END
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.06, 0.05, 0.08, 0.8)
+	panel_style.set_corner_radius_all(6)
+	panel_style.set_content_margin_all(8)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	bottom.add_child(panel)
+	var info := VBoxContainer.new()
+	info.custom_minimum_size = Vector2(220, 0)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(info)
+	_unit_label = _label(18)
+	_unit_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_points_label = _label(15)
+	_points_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_heat_label = _label(15)
+	_heat_label.modulate = Color(1.0, 0.75, 0.4)
 	_status_strip = HBoxContainer.new()
 	_status_strip.add_theme_constant_override("separation", 6)
-	bottom.add_child(_status_strip)
-	bottom.add_child(_points_label)
-	bottom.add_child(_skill_bar)
-	bottom.add_child(_hint_label)
-
-	_tray = CardTray.new()
-	_tray.size_flags_horizontal = Control.SIZE_SHRINK_END
-	_tray.size_flags_vertical = Control.SIZE_SHRINK_END
-	_tray.card_clicked.connect(card_clicked.emit)
-	root.add_child(_tray)
+	info.add_child(_unit_label)
+	info.add_child(_points_label)
+	info.add_child(_heat_label)
+	info.add_child(_status_strip)
+	_info_panel = panel
 
 	_build_banner()
 	_build_end_screen()
@@ -166,7 +200,7 @@ func _ready() -> void:
 	EventBus.targeting_started.connect(_on_targeting_started)
 	EventBus.targeting_ended.connect(_on_targeting_ended)
 	EventBus.cards_changed.connect(func(_team: Enums.Team) -> void: _refresh_tray())
-	EventBus.cards_readied.connect(_on_cards_readied)
+	EventBus.cards_primed.connect(_on_cards_primed)
 	EventBus.strike_shown.connect(_on_strike_shown)
 	EventBus.intents_changed.connect(_on_intents_changed)
 	_clear_unit()
@@ -294,7 +328,13 @@ func _build_end_screen() -> void:
 	_report.columns = REPORT_COLUMNS.size()
 	_report.add_theme_constant_override("h_separation", 22)
 	_report.add_theme_constant_override("v_separation", 4)
-	panel.add_child(_report)
+	var report_box := VBoxContainer.new()
+	report_box.add_theme_constant_override("separation", 8)
+	panel.add_child(report_box)
+	report_box.add_child(_report)
+	_report_notes = _label(14)
+	_report_notes.modulate = Color(1.0, 0.75, 0.7)
+	report_box.add_child(_report_notes)
 	var again := Button.new()
 	again.text = "Play Again"
 	again.custom_minimum_size = Vector2(180, 48)
@@ -310,7 +350,8 @@ func _build_end_screen() -> void:
 
 
 ## The end screen's table: one row per unit (the Welcoming Dead summed,
-## damage only), from the BattleStats.
+## damage only), from the BattleStats, and how many adds were spawned and
+## slain under it.
 func _fill_report() -> void:
 	for child in _report.get_children():
 		child.queue_free()
@@ -324,10 +365,10 @@ func _fill_report() -> void:
 	for row in stats.rows():
 		var cells: Array[String] = [row.name, str(row.damage)]
 		if row.group:
-			cells.append_array(["-", "-", "-", "-", "-", "-"])
+			cells.append_array(["-", "-", "-", "-", "-"])
 		else:
-			cells.append_array([str(row.healing), str(row.actions), str(row.moved),
-					str(row.cards[0]), str(row.cards[1]), str(row.cards[2])])
+			cells.append_array([str(row.healing), str(row.shield), str(row.actions),
+					str(row.moved), str(row.cards)])
 		for i in cells.size():
 			var cell := _label(14)
 			cell.text = cells[i]
@@ -335,6 +376,8 @@ func _fill_report() -> void:
 				cell.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			cell.modulate = Color(0.75, 0.9, 1.0) if row.team == Enums.Team.PLAYER else Color(1.0, 0.75, 0.7)
 			_report.add_child(cell)
+	_report_notes.text = "\n".join(stats.group_lines())
+	_report_notes.visible = not _report_notes.text.is_empty()
 
 
 func _show_unit(unit: UnitState) -> void:
@@ -347,6 +390,8 @@ func _clear_unit() -> void:
 	_targeting = null
 	_unit_label.text = ""
 	_points_label.text = ""
+	_heat_label.text = ""
+	_info_panel.visible = false
 	_tooltip.text = ""
 	_build_skill_bar()
 	_build_status_strip()
@@ -382,7 +427,7 @@ func _on_targeting_started(_unit: UnitState, skill: SkillDef, step: int) -> void
 		if skill.targets.size() > 1:
 			prompt += " (%d of %d)" % [step + 1, skill.targets.size()]
 		_hint_label.text = "%s: %s. Right-click to go back." % [skill.display_name, prompt]
-	_hint_label.text += _readied_hint()
+	_hint_label.text += _primed_hint()
 	_tooltip.text = _skill_text(skill)
 	_build_skill_bar()
 
@@ -396,6 +441,9 @@ func _on_targeting_ended() -> void:
 
 func _refresh_unit() -> void:
 	var unit := _shown
+	_info_panel.visible = true
+	_heat_label.text = _heat_text(unit)
+	_heat_label.visible = not _heat_label.text.is_empty()
 	if unit.shadow_of != null:
 		_unit_label.text = "Shadow of the %s" % unit.shadow_of.def.display_name
 		_points_label.text = "Free: use one inherited skill from this square (the Shadow then fades)."
@@ -405,7 +453,7 @@ func _refresh_unit() -> void:
 		if _targeting == null:
 			_hint_label.text = "Pick an inherited skill. Right-click to deselect."
 		return
-	_unit_label.text = "%s   HP %d/%d   Speed %d" % [
+	_unit_label.text = "%s\nHP %d/%d   Speed %d" % [
 		unit.def.display_name, unit.hp, unit.get_stat(&"max_hp"), unit.get_stat(&"move")]
 	var a := unit.actions
 	_points_label.text = "Move %d   Skill %d   Flex %d" % [a.move, a.skill, a.flex]
@@ -418,7 +466,7 @@ func _refresh_unit() -> void:
 		else:
 			_hint_label.text = "Click a blue cell to move, or pick a skill (1-%d). Right-click to deselect." \
 					% unit.skills().size()
-		_hint_label.text += _readied_hint()
+		_hint_label.text += _primed_hint()
 
 
 func _build_skill_bar() -> void:
@@ -483,11 +531,23 @@ func _refresh_tray() -> void:
 	if player_stream == null:
 		return
 	var holder := _shown if _shown == null or _shown.shadow_of == null else null
-	_tray.show_cards(holder, player_stream.row, _readied, _my_phase and holder != null)
+	_tray.show_cards(holder, player_stream.row, _primed, _my_phase and holder != null)
+	if _shown != null:
+		_heat_label.text = _heat_text(_shown)
+		_heat_label.visible = not _heat_label.text.is_empty()
 
 
-func _on_cards_readied(cards: Array[Card]) -> void:
-	_readied = cards.duplicate()
+## "Heat 3/5" for a unit with Rising Heat, else "".
+func _heat_text(unit: UnitState) -> String:
+	var inst := unit.find_status(&"rising_heat")
+	if inst == null:
+		return ""
+	var heat := inst.def.behavior as RisingHeatBehavior
+	return "Heat %d/%d" % [unit.heat, heat.max_heat]
+
+
+func _on_cards_primed(cards: Array[Card]) -> void:
+	_primed = cards.duplicate()
 	_refresh_tray()
 	if _shown != null and _targeting == null:
 		_refresh_unit()
@@ -495,15 +555,14 @@ func _on_cards_readied(cards: Array[Card]) -> void:
 		_on_targeting_started(_shown, _targeting, _targeting_step)
 
 
-## "  Readied: Silver Blade 4. Your next skill uses it in place of a draw."
-func _readied_hint() -> String:
-	if _readied.is_empty():
+## "Primed: Blade + Ward. Spent if your next skill has a matching boon."
+func _primed_hint() -> String:
+	if _primed.is_empty():
 		return ""
 	var names: Array[String] = []
-	for card in _readied:
+	for card in _primed:
 		names.append(str(card))
-	return "\nReadied: %s. Your next skill uses %s in place of its lowest-tier draws." \
-			% [", ".join(names), "it" if _readied.size() == 1 else "them"]
+	return "\nPrimed: %s. Spent if your next skill has a boon of that suit." % ", ".join(names)
 
 
 ## "Enemy turn: Death's Caress / Grave Smash -> Bloodthane ..."

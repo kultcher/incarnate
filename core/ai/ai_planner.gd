@@ -128,36 +128,6 @@ static func next_action(board: BoardState, resolver: ActionResolver, unit: UnitS
 	return best_move(board, resolver, unit)
 
 
-## Held cards worth readying for [param skill] used on [param picks], from
-## [param unit]'s hand and the shared row. A skill striking several foes
-## draws cards for each strike, so it can use more. Readied cards replace the skill's lowest-tier draws, so
-## readying the best k cards gains their total minus the medians of the k
-## lowest tiers; this picks the k that gains most (the fewest on a tie).
-## Greedy: it doesn't save cards for later.
-static func choose_cards(resolver: ActionResolver, unit: UnitState, skill: SkillDef,
-		picks: Array[Vector2i] = []) -> Array[Card]:
-	var chosen: Array[Card] = []
-	var slots := skill.card_tiers_for(resolver.board, unit, picks)
-	if slots.is_empty():
-		return chosen
-	slots.sort()
-	var pool: Array[Card] = unit.hand.duplicate()
-	pool.append_array(resolver.soulstream(unit.team).row)
-	# Highest value first; your own card before a shared one on a tie.
-	pool.sort_custom(func(a: Card, b: Card) -> bool:
-		return a.value > b.value or (a.value == b.value and unit.hand.has(a) and not unit.hand.has(b)))
-	var best_k := 0
-	var best_gain := 0
-	var gain := 0
-	for k in mini(slots.size(), pool.size()):
-		gain += pool[k].value - Soulstream.median(slots[k])
-		if gain > best_gain:
-			best_gain = gain
-			best_k = k + 1
-	chosen.assign(pool.slice(0, best_k))
-	return chosen
-
-
 ## True if the AI can judge [param skill] (it has an effect that scores).
 ## The AI leaves the rest alone for now.
 static func knows(skill: SkillDef) -> bool:

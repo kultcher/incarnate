@@ -30,10 +30,10 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 		return
 	# A Recovery is scarce: only worth it when the ally needs the healing.
 	var missing := ally.get_stat(&"max_hp") - score.hp_of(ally)
-	if missing < Soulstream.median_sum(tiers) / 2:
+	if missing < Soulstream.total_of(tiers) / 2:
 		return
-	var lost := mini(Soulstream.median_sum(tiers), score.hp_of(foe))
-	score.damage(foe, Soulstream.median_sum(tiers))
+	var lost := mini(Soulstream.total_of(tiers), score.hp_of(foe))
+	score.damage(foe, Soulstream.total_of(tiers))
 	score.heal(ally, lost)
 
 

@@ -1,6 +1,6 @@
 extends GutTest
-## The Soulweaver's 2014 kit (cards at their medians: Bronze 2, Silver 3,
-## Gold 4): Tether, Fates Intertwined's Infusions and every skill.
+## The Soulweaver's 2014 kit (flat tiers: Bronze 2, Silver 3, Gold 4):
+## Tether, Fates Intertwined's turn-start flip and every skill.
 
 const SW := preload("res://content/units/soulweaver.tres")
 const BT := preload("res://content/units/bloodthane.tres")
@@ -12,15 +12,28 @@ const SAGE := 2
 const ELUSIVE := 3
 
 
-## The Soulweaver is P; A (if any) is a Bloodthane.
+## The Soulweaver is P; A (if any) is a Bloodthane. Its first turn flips an
+## Orb (Sage), which does nothing with nothing recharging.
 func _rig(rows: Array[String]) -> TestRig:
 	var rig := TestRig.make(self, rows)
 	await rig.equip(rig.player(), SW)
+	_next_flip(rig, [Enums.Suit.ORB])
 	await rig.new_turn(rig.player())
 	if not rig.fixture.allies.is_empty():
 		await rig.equip(rig.ally(), BT)
 		await rig.new_turn(rig.ally())
 	return rig
+
+
+## Puts a card with [param suits] (empty: a Wild) on top of the deck.
+func _next_flip(rig: TestRig, suits: Array) -> void:
+	rig.resolver.soulstream(Enums.Team.PLAYER).deck.draw_pile.append(Card.of(suits))
+
+
+## A new turn for the Soulweaver that flips a card with [param suits].
+func _turn_flipping(rig: TestRig, suits: Array) -> void:
+	_next_flip(rig, suits)
+	await rig.new_turn(rig.player())
 
 
 ## Tethers to the first ally, outside the turn's action points (it's free).
@@ -95,38 +108,47 @@ func test_healing_an_ally_to_full_readies_spirit_flare() -> void:
 
 #region Fates Intertwined
 
-func test_unveiling_a_card_offers_an_infusion_once_per_turn() -> void:
-	var rig := await _rig([". E", "P A"] as Array[String])
-	rig.enemy().hp = 40
+func test_the_turn_flip_activates_its_suits_infusion_for_both() -> void:
+	var rig := await _rig(["P A E"] as Array[String])
+	await _tether(rig)
+	await _turn_flipping(rig, [Enums.Suit.WARD])
+	assert_eq(rig.answers.asked.size(), 0, "No prompt")
+	assert_eq(rig.player().find_status(&"shield").stacks, 1, "Stalwart")
+	assert_eq(rig.ally().find_status(&"shield").stacks, 1, "The Tethered ally too")
+
+
+func test_a_two_suit_flip_brings_both_infusions() -> void:
+	var rig := await _rig(["P A E"] as Array[String])
+	await _tether(rig)
+	await _turn_flipping(rig, [Enums.Suit.BLADE, Enums.Suit.WARD])
+	var bt := rig.ally()
+	assert_true(bt.has_status(&"shield"))
+	assert_eq(rig.resolver.cost_of(bt, rig.skill(bt, &"blade_fury")), Enums.Cost.FREE)
+
+
+func test_a_wild_flip_asks_which_infusion() -> void:
+	var rig := await _rig(["P A E"] as Array[String])
 	await _tether(rig)
 	rig.answers.answers = [STALWART]
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
+	await _turn_flipping(rig, [])
 	assert_eq(rig.answers.titles(), ["Fates Intertwined"] as Array[String])
-	assert_eq(rig.player().find_status(&"shield").stacks, 1)
-	assert_eq(rig.ally().find_status(&"shield").stacks, 1, "The Tethered ally too")
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
-	assert_eq(rig.answers.asked.size(), 1, "Once per turn")
-	await rig.new_turn(rig.player())
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
-	assert_eq(rig.answers.asked.size(), 2, "Again next turn")
+	assert_true(rig.ally().has_status(&"shield"))
 
 
-func test_declining_keeps_the_infusion_for_a_later_unveil() -> void:
-	var rig := await _rig(["P E"] as Array[String])
-	rig.enemy().hp = 40
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
-	rig.answers.answers = [STALWART]
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
-	assert_eq(rig.answers.asked.size(), 2)
+func test_an_ally_tethered_later_gets_the_turns_infusion_once() -> void:
+	var rig := await _rig(["P A E"] as Array[String])
+	await _turn_flipping(rig, [Enums.Suit.WARD])
 	assert_true(rig.player().has_status(&"shield"), "Untethered: just the Soulweaver")
+	assert_false(rig.ally().has_status(&"shield"))
+	await _tether(rig)
+	assert_eq(rig.ally().find_status(&"shield").stacks, 1, "Tethered after the flip")
 
 
 func test_potent_gives_a_free_basic_attack_to_both() -> void:
-	var rig := await _rig([". E", "P A"] as Array[String])
+	var rig := await _rig(["P A E"] as Array[String])
 	rig.enemy().hp = 40
 	await _tether(rig)
-	rig.answers.answers = [POTENT]
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
+	await _turn_flipping(rig, [Enums.Suit.BLADE])
 	var bt := rig.ally()
 	assert_eq(rig.resolver.cost_of(bt, rig.skill(bt, &"blade_fury")), Enums.Cost.FREE)
 	assert_eq(rig.resolver.cost_of(bt, rig.skill(bt, &"rending_claws")), Enums.Cost.SKILL,
@@ -138,23 +160,19 @@ func test_potent_gives_a_free_basic_attack_to_both() -> void:
 
 func test_sage_recharges_a_skill_each() -> void:
 	var rig := await _rig(["P A E"] as Array[String])
-	rig.enemy().hp = 40
 	await _tether(rig)
 	var rending := rig.skill(rig.ally(), &"rending_claws")
-	rig.ally().cooldowns[rending.id] = 2
-	rig.player().cooldowns[&"soul_echo"] = 2
-	rig.answers.answers = [SAGE]
-	assert_true(await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell]))
-	assert_eq(rig.ally().cooldown_left(rending), 1)
-	assert_eq(rig.player().cooldowns[&"soul_echo"], 1)
+	rig.ally().cooldowns[rending.id] = 3
+	rig.player().cooldowns[&"soul_echo"] = 3
+	await _turn_flipping(rig, [Enums.Suit.ORB])
+	assert_eq(rig.ally().cooldown_left(rending), 2)
+	assert_eq(rig.player().cooldowns[&"soul_echo"], 1, "Its own turn tick, then Sage")
 
 
 func test_elusive_grants_a_free_shift_of_two() -> void:
 	var rig := await _rig([". . . E", "P A . ."] as Array[String])
-	rig.enemy().hp = 40
 	await _tether(rig)
-	rig.answers.answers = [ELUSIVE]
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
+	await _turn_flipping(rig, [Enums.Suit.PORTAL])
 	var bt := rig.ally()
 	var shift := rig.skill(bt, &"elusive_shift")
 	assert_not_null(shift, "On the ally's bar while Elusive lasts")
@@ -171,9 +189,9 @@ func test_soul_echo_gains_power_per_blade_in_the_row() -> void:
 	var rig := await _rig(["P . . E"] as Array[String])
 	rig.enemy().hp = 40
 	var row := rig.resolver.soulstream(Enums.Team.PLAYER).row
-	row.append(Card.new(Enums.Tier.SILVER, 3, Enums.Suit.BLADE))
-	row.append(Card.new(Enums.Tier.GOLD, 4, Enums.Suit.BLADE))
-	row.append(Card.new(Enums.Tier.GOLD, 4, Enums.Suit.WARD))
+	row.append(Card.of([Enums.Suit.BLADE]))
+	row.append(Card.of([Enums.Suit.BLADE, Enums.Suit.WARD]))
+	row.append(Card.of([Enums.Suit.WARD]))
 	assert_true(await rig.use(rig.player(), &"soul_echo", [rig.enemy().cell]))
 	assert_eq(rig.enemy().hp, 40 - (6 + 4), "Silver + Silver, +2 Power per Blade")
 
@@ -242,8 +260,8 @@ func test_well_of_souls_lets_both_take_a_row_card() -> void:
 	var rig := await _rig(["P A E"] as Array[String])
 	await _tether(rig)
 	var row := rig.resolver.soulstream(Enums.Team.PLAYER).row
-	var low := Card.new(Enums.Tier.BRONZE, 1)
-	var high := Card.new(Enums.Tier.GOLD, 5)
+	var low := Card.of([Enums.Suit.ORB])
+	var high := Card.wild()
 	row.append_array([low, high])
 	rig.answers.answers = [1, 0]
 	assert_true(await rig.use(rig.player(), &"well_of_souls"))
@@ -270,10 +288,6 @@ func test_anima_nexus_makes_every_ally_tethered() -> void:
 	rig.enemy().hp = 40
 	assert_true(await rig.use(rig.player(), &"anima_nexus"))
 	assert_eq(Tethers.allies_of(rig.player(), rig.board).size(), 2)
-	rig.answers.answers = [STALWART]
-	await rig.use(rig.player(), &"spirit_flare", [rig.enemy().cell])
-	for unit: UnitState in [rig.player(), rig.ally(0), rig.ally(1)]:
-		assert_true(unit.has_status(&"shield"), "%s infused" % unit)
 	await rig.new_round()
 	assert_true(Tethers.allies_of(rig.player(), rig.board).is_empty(), "Only this turn")
 

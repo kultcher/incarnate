@@ -11,6 +11,33 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (suit Soulstream and flat numbers, milestone 10)
+
+Full spec: `references/soulstream-spec.md`.
+
+### Michael's calls
+- **Flat numbers**, with boons (tier 2) and Heroics (tier 3) on skills. Boons and Heroics wait for the skill update pass.
+- **Base effects for spending a held card:** Blade +1 damage on the next attack, Ward +2 Shield until end of turn, Portal +1 move until end of turn, Orb recharge one skill.
+- **The deck: 60 cards.** 9 of each suit, 4 Wilds, 2 of each two-suit pair including doubles.
+- **Double-click activates** a card; **click primes** it for a boon or Heroic.
+- **Cards are only flipped by specific effects.**
+- **Hands hold 2.** A third draw activates the oldest card first.
+- **Layout:** cards to the left of the skill bar; unit info, Heat and statuses in their own panel to the right.
+- **Report:** shield given, and adds spawned vs slain.
+- **Deferred:** Golgothon's suit riders, the boons and Heroics themselves, and highlights for cards that could pay a boon or Heroic (different colours for each).
+
+### Claude's calls (provisional)
+- Tiers stay in the data as fixed values (Bronze 2, Silver 3, Gold 4), the old medians, so balance didn't move. A dodge still cancels a strike's smallest part.
+- The shared row stays (1 card a round, up to 3; any Incarnate can use it).
+- **Shield** for Ward uses the existing shield (absorbs strikes until the next round).
+- Blade's +1 covers every strike of the next attack skill, then ends.
+- A double does its effect twice; a primed double pays a Heroic.
+- A Wild asks for a suit when activated (the AI picks Ward).
+- **Rising Heat rework:** a counter. Each paid skill gives +1 (Ignited skills, replays and free skills give none), up to 5. Ignite and Dissipate cost 2 (Ignite +1 per Ignite this turn). Wracking Flame gets +1 Power per Heat; Ash Augur gains 2 Heat. This is the 2014 designer note's "less snowbally" alternative, plus your Ignite knob. Autoplay: Kindleborne actions are down from 35-42 to 23-35 a battle.
+- **Fates Intertwined rework:** at turn start, flip the top card, and its suit picks the Infusion for her and her Tethered ally, with no prompt (Blade Potent, Ward Stalwart, Orb Sage, Portal Elusive). A two-suit card brings both; a Wild asks. An ally Tethered later that turn gets it too.
+- **AI card use:** Orbs at turn start if something is recharging, Portals before a move, Blades before an attack, Wards at the end of its turn. Wilds wait for a full hand.
+- **Shadows:** the ready indicator is now a pulsing gold ring under the Shadow, with a badge for its usable skill count. It also clears properly when the last ready Shadow goes.
+
 ## 2026-10-08 (playtest fixes: Shadows, Nexus, QoL, battle report)
 
 ### Michael's calls

@@ -14,10 +14,10 @@ extends Node
 ##   cloak      the Chimeric Cloak prompt during the enemy phase
 ##   shadow     a Shadow selected, showing the Gloom Edge it inherited
 ##   traceless  the Traceless selected, its 10-skill bar and a tooltip
-##   cards      Bloodthane selected with a hand card and a shared card readied
-##   logged     after Blade Fury with a readied card: the strike log
+##   cards      Bloodthane selected with a hand card and a shared card primed
+##   logged     after activating a hand card and Blade Fury: the strike log
 ##   soulweaver the Soulweaver Tethered to the Bloodthane, its bar and a tooltip
-##   infusion   the Fates Intertwined prompt after Spirit Flare
+##   infusion   the Soulweaver after Tethering: this turn's Infusion reaches the ally
 ##   wave       the Kindleborne aiming Cinder Wave (area preview), Heat shown
 ##   stoke      the Kindleborne's Stoke prompt (Ignite or Dissipate)
 ##   golgothon  the boss fight, round 1: his intents listed and drawn
@@ -125,8 +125,11 @@ func _ready() -> void:
 		"cards", "logged":
 			if shot == "logged":
 				await c.click_cell(Vector2i(5, 8))
-			c.toggle_card(bt.hand[0])
-			c.toggle_card(battle.resolver.soulstream(Enums.Team.PLAYER).row[0])
+			if shot == "logged":
+				await c.activate_card(bt.hand[0])
+			else:
+				c.prime_card(bt.hand[0])
+				c.prime_card(battle.resolver.soulstream(Enums.Team.PLAYER).row[0])
 			if shot == "logged":
 				c.begin_targeting_index(_index(bt, &"blade_fury"))
 				await c.click_cell(Vector2i(6, 8))
@@ -139,16 +142,11 @@ func _ready() -> void:
 			if shot == "soulweaver":
 				battle.hud._tooltip.text = battle.hud._skill_text(sw.skills()[_index(sw, &"dread_diffusion")])
 			else:
-				await c.click_cell(Vector2i(2, 8))
-				c.begin_targeting_index(_index(sw, &"spirit_flare"))
-				c.click_cell(Vector2i(6, 8))
-				while not battle.hud.prompt.is_open():
-					await get_tree().process_frame
-				await get_tree().create_timer(0.4).timeout
+				# The Tethered ally got this turn's flipped Infusion.
+				await get_tree().create_timer(0.6).timeout
 		"wave", "stoke":
 			var kb := _find(battle, &"kindleborne")
-			for v: int in [5, 3, 2]:
-				kb.heat.append(Card.new(Enums.Tier.SILVER if v < 5 else Enums.Tier.GOLD, v))
+			kb.heat = 4
 			await c.click_cell(kb.cell)
 			await c.click_cell(Vector2i(3, 7))
 			if shot == "wave":

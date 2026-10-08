@@ -23,7 +23,7 @@ func describe_values() -> Dictionary:
 func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 		picks: Array[Vector2i]) -> void:
 	var target := picked_unit(board, caster, picks, target_step)
-	var amount := Soulstream.median_sum(tiers) + bonus + caster.get_stat(&"power")
+	var amount := Soulstream.total_of(tiers) + bonus + caster.get_stat(&"power")
 	score.heal(target, amount)
 
 

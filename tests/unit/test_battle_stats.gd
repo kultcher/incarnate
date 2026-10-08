@@ -5,7 +5,7 @@ const BT := preload("res://content/units/bloodthane.tres")
 const MINION := preload("res://content/units/welcoming_dead.tres")
 
 
-func test_strikes_actions_moves_and_cards_are_counted() -> void:
+func test_strikes_actions_and_moves_are_counted() -> void:
 	var rig := TestRig.make(self, ["P . . E"] as Array[String])
 	await rig.equip(rig.player(), BT)
 	await rig.new_turn(rig.player())
@@ -15,7 +15,7 @@ func test_strikes_actions_moves_and_cards_are_counted() -> void:
 	assert_eq(row.damage, 6)
 	assert_eq(row.actions, 2)
 	assert_eq(row.moved, 2)
-	assert_eq(row.cards, [0, 2, 0] as Array[int], "Two Silver cards")
+	assert_eq(row.cards, 0, "No cards used")
 
 
 func test_healing_and_health_loss_count_for_their_source() -> void:
@@ -40,3 +40,14 @@ func test_welcoming_dead_share_one_damage_row() -> void:
 	assert_eq(rows[0].name, "Welcoming Dead (all)")
 	assert_eq(rows[0].damage, 4)
 	assert_true(rig.resolver.stats.report().contains("Welcoming Dead (all)"))
+
+
+func test_adds_spawned_and_slain_are_counted() -> void:
+	var rig := TestRig.make(self, ["P . . ."] as Array[String])
+	var a := await rig.resolver.summon(MINION, Enums.Team.ENEMY, Vector2i(1, 0))
+	await rig.resolver.summon(MINION, Enums.Team.ENEMY, Vector2i(2, 0))
+	rig.resolver.lose_health(a, 99, null, rig.player())
+	var minions := rig.resolver.stats.rows().filter(func(r: BattleStats.Row) -> bool: return r.group)
+	assert_eq(minions[0].spawned, 2)
+	assert_eq(minions[0].slain, 1)
+	assert_eq(rig.resolver.stats.group_lines(), ["Welcoming Dead: 2 spawned, 1 slain"] as Array[String])

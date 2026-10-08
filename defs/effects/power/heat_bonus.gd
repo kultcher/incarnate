@@ -1,10 +1,9 @@
 class_name HeatBonus
 extends PowerBonus
-## Wracking Flame: Power equal to the highest value among the caster's Heat.
+## Wracking Flame: +[member per] Power for each Heat the caster has.
+
+@export var per: int = 1
 
 
 func power(caster: UnitState, _target: UnitState, _r: ActionResolver = null) -> int:
-	var best := 0
-	for card in caster.heat:
-		best = maxi(best, card.value)
-	return best
+	return caster.heat * per

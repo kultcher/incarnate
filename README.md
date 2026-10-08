@@ -6,7 +6,7 @@ Godot 4.7, GDScript, Compatibility renderer.
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review: https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
 
-## Status: milestone 9 (Golgothon, the first boss)
+## Status: milestone 10 (suit Soulstream, flat numbers)
 
 Run the project (F5) and pick a battle from the menu:
 
@@ -25,9 +25,11 @@ Incarnates have **40 health**, the scale the 2014 cards were written for.
 - **Path skills** (Bloody Rush, Phantom Dash): click squares one at a time.
   The path may pass through foes but must end on an empty square. Click the
   last square again (or press **Enter**) to stop early.
-- **Cards** (bottom right): click a card in the selected unit's hand or the
-  shared Soulstream row to ready it for that unit's next skill; click again
-  to put it back. See below.
+- **Cards** (bottom left, beside the skill bar): **double-click** a card in
+  the selected unit's hand or the shared Soulstream row to activate it;
+  **click** to prime it for that unit's next skill. See below.
+- The selected unit's health, actions, Heat and statuses sit in their own
+  panel to the right of the skill bar.
 - **Space** or **End Turn** ends your phase; if a unit still has actions
   left you're asked first. **F9** toggles autoplay (the AI plays your side,
   prompts included).
@@ -37,31 +39,42 @@ Incarnates have **40 health**, the scale the 2014 cards were written for.
 - Automatic choices (a recharge, Heat spent, a knockback resisted) show as
   floating text and in the log.
 - When the battle ends, the end screen (and the console) shows a report:
-  damage, healing, actions, squares moved and cards flipped per tier for
-  each unit. The Welcoming Dead share one damage row.
+  damage, healing, shield given, actions, squares moved and cards used for
+  each unit. The Welcoming Dead share one damage row, with how many were
+  spawned and slain.
 
-### Damage: Soulstream cards
+### Numbers and the Soulstream
 
-Skills strike for cards, e.g. "6 (Silver + Silver)": the number is the
-average, and the cards are drawn when the skill lands. Bronze is 1-3, Silver
-2-4, Gold 3-5.
+Spec: `references/soulstream-spec.md`.
 
-- **Decks:** each tier is a 60-card deck: four suits (Blade, Orb, Portal,
-  Ward), each with 5 low, 6 middle and 4 high cards. Discards are reshuffled
-  in when a deck runs out. Enemies draw from their own decks.
+**Numbers are flat.** Skills still use the 2014 tier notation internally,
+read as fixed values: Bronze 2, Silver 3, Gold 4. "(Si)(Si)" strikes for 6.
+The skill update pass will write plain numbers, boons and Heroics.
+
+**Cards are suits.** One 60-card deck per side: 9 each of Blade, Ward, Orb
+and Portal, 4 Wilds, and 2 of each two-suit pair including doubles (Blade x2,
+Blade + Ward...). Discards are reshuffled in when it runs out.
+
 - **Hands and the shared row:** at the start of your phase each Incarnate
-  draws a Silver card (holding up to 2), and the shared row gets a card of a
-  random tier (up to 3). Unspent cards carry over.
-- **Readying:** click held or shared cards before using a skill. The skill
-  uses them in place of its lowest-tier draws (any card can stand in for any
-  tier) and draws the rest blind. Readied cards it doesn't need go back.
-- The log under the round counter shows each strike's cards.
-- Suits don't do anything yet; suit bonuses and Heroic versions come later.
+  draws a card (hands hold 2: a third draw activates the oldest card first),
+  and the shared row gets a card (up to 3). Any Incarnate can use a row card.
+- **Double-click: activate** for the card's base effect, once per suit
+  (free). A Wild asks which suit.
+  - **Blade:** +1 damage on your next attack.
+  - **Ward:** +2 Shield until end of turn.
+  - **Portal:** +1 move until end of turn.
+  - **Orb:** recharge a skill by 1.
+- **Click: prime** for the unit's next skill. A skill with a boon suit
+  spends one matching card for its **boon** and two (or one double) for its
+  **Heroic**. No skill has a boon yet, so primed cards stay in the hand.
+- **Flips:** only specific effects flip cards. So far that's Fates
+  Intertwined (Soulweaver).
 
-- **Power**: +1 per point (raises a card a tier). Heals get it too.
+- **Power**: +1 per point. Heals get it too.
 - **Armor**: -1 per point on strikes against you. A strike always deals at least 1.
 - **Evasion**: one dodge per round per point, used automatically. A dodge
-  cancels the strike's lowest card; a one-card strike becomes a **graze** for 1.
+  cancels the strike's smallest part (one per tier); a one-part strike
+  becomes a **graze** for 1.
 - **Accuracy**: each point means the target needs one more dodge to dodge you.
 - **Health loss** (Vampiric Pact, Violent Transfusion) isn't a strike: no
   Armor, no dodges.
@@ -122,18 +135,21 @@ move), **Blinded** (its next strike counts as dodged).
 ### Soulweaver
 
 **Fates Intertwined** (passive): use **Tether** (free, once per turn) to
-Tether yourself to an ally within 5. Once per turn, when you **unveil** a card
-(any card one of your skills uses, blind or readied), you may activate an
-Infusion for yourself and your Tethered ally: **Potent** (a free basic attack
-this turn), **Stalwart** (shield 1), **Sage** (recharge a skill by 1) or
-**Elusive** (a free shift of 2: Elusive Shift appears on the bar). Declining
-saves it for a later unveil that turn.
+Tether yourself to an ally within 5. At the start of your turn you flip the
+top Soulstream card, and its suit's Infusion goes to you and your Tethered
+ally, with no prompt. An ally you Tether later that turn gets it too.
+- Blade: **Potent** (a free basic attack this turn).
+- Ward: **Stalwart** (shield 1).
+- Orb: **Sage** (recharge a skill by 1).
+- Portal: **Elusive** (a free shift of 2: Elusive Shift appears on the bar).
+
+A two-suit card brings both Infusions; a Wild lets you pick.
 
 | Skill | Cost | Recharge | What it does |
 | --- | --- | --- | --- |
 | Spirit Flare | Skill | - | Strike a foe within 4 for 3 (Si), or heal an ally within 4 for 3. After a kill or healing an ally to full, the next one this turn is free (once per turn) |
 | Tether | Free | 1 | Tether to an ally within 5 |
-| Soul Echo | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +2 Power per Blade card in the shared row |
+| Soul Echo | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +2 Power per Blade in the shared row (a Blade x2 counts twice, a Wild once) |
 | Dread Diffusion | Skill | 3 | Strike a foe within 4 for 5 (Si+Br), force it 3 away; foes next to its path take 2 (Br) and are forced 1 |
 | Strength in Unity | Skill | 3 | Shield you and an ally within 5 against 4 (G) each this turn; recharges by 1 if that ally is Tethered |
 | Essence Shift | Maneuver | 3 | Teleport next to your Tethered ally, or they teleport next to you |
@@ -146,22 +162,23 @@ turn ends; more shielding adds to the same shield.
 
 ### Kindleborne
 
-**Rising Heat** (passive): every card your skills unveil is stored as
-**Heat** (shown under your hand; up to 5, the lowest drop out). **Stoke**
-(free) spends Heat, lowest cards first: **Ignite** (5+, one more for each
-Ignite this turn) makes your next skill this turn cost no action;
-**Dissipate** (5+) heals 3 (Si) and gives +1 Evasion this turn.
+**Rising Heat** (passive, provisional rework): each skill you pay an action
+for adds 1 **Heat** (up to 5, shown in the unit panel). Ignited skills,
+Burnout replays and free skills add none. **Stoke** (free) spends it:
+- **Ignite** (2 Heat, one more for each Ignite this turn) makes your next
+  skill this turn cost no action.
+- **Dissipate** (2 Heat) heals 3 and gives +1 Evasion this turn.
 
 | Skill | Cost | Recharge | What it does |
 | --- | --- | --- | --- |
 | Tinderbolt | Skill | - | Strike a foe within 4 for 2 (Br), +1 Power per attack skill already used this turn |
-| Stoke | Free | - | Ignite or Dissipate (needs 5+ Heat) |
-| Wracking Flame | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +Power equal to your highest Heat card |
+| Stoke | Free | - | Ignite or Dissipate (needs 2+ Heat) |
+| Wracking Flame | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +1 Power per Heat |
 | Stoking Blast | Skill | 2 | Strike a foe within 4 for 6 (Si+Si); recharges by 1 if Ignited |
 | Cinder Wave | Skill | 2 | Strike each foe in a wave 3 wide and 4 deep for 3 (Si). Hover a direction to see it |
 | Ember Shield | Skill | 3 | Shield yourself against 4 (G); this turn, strike back for 3 (Si) whenever a foe strikes you |
-| Flickerstep | Maneuver | 4 | Unveil (G): teleport up to its value + 2 this turn (Flicker, free). Recharges by 1 whenever you Ignite |
-| Ash Augur | Free | 3 | Each Bronze or Silver Heat card becomes the top card of the next tier's deck |
+| Flickerstep | Maneuver | 4 | Teleport up to 6 (G + 2) this turn (Flicker, free). Recharges by 1 whenever you Ignite |
+| Ash Augur | Free | 3 | Gain 2 Heat |
 | Cauterizing Brand | Recovery | - | An ally (or you) loses 3 (Si) more each time a strike damages them this turn; at end of turn, heal 12 (G+G+G) |
 | Burnout | Free, once | - | The next 3 skills you Ignite this turn can each be used once more for free, ignoring recharge |
 

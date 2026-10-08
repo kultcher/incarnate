@@ -137,7 +137,7 @@ func _play(event: GameEvent) -> void:
 			await fade.finished
 			EventBus.unit_spawned.emit(event.unit)
 		GameEvent.SHADOWS_READY:
-			board_view.shadows.set_ready(event.unit, event.path)
+			board_view.shadows.set_ready(event.unit, event.path, event.counts)
 		GameEvent.MARKS_CHANGED:
 			board_view.marks.set_marks(StringName(event.text), event.path, event.icon)
 		GameEvent.CARDS_CHANGED:

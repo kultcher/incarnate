@@ -10,7 +10,7 @@ var battle: Battle
 func before_each() -> void:
 	Engine.time_scale = SPEED
 	battle = load("res://battle/battle.tscn").instantiate()
-	battle.median_cards = true  # Exact damage numbers.
+	battle.fixed_deck = true  # Known cards.
 	add_child_autofree(battle)
 	await wait_process_frames(2)
 
@@ -117,32 +117,48 @@ func test_killing_blow_removes_the_shambler_and_its_view() -> void:
 	assert_false(is_instance_valid(view), "View faded out and was freed")
 
 
-func test_a_readied_card_is_spent_by_the_next_skill() -> void:
+func test_double_clicking_a_card_activates_it() -> void:
 	var bt := _unit(&"bloodthane")
 	var c := battle.controller
 	var stream := battle.resolver.soulstream(Enums.Team.PLAYER)
 	assert_eq(bt.hand.size(), 1, "One card dealt at the start of the phase")
 	assert_eq(stream.row.size(), 1, "One card in the shared row")
 	var held := bt.hand[0]
+	assert_eq(str(held), "Orb", "The fixed deck: the row got the Blade")
 	await c.click_cell(bt.cell)
+	var blade := stream.row[0]
+	await c.activate_card(blade)
+	assert_true(bt.has_status(&"honed"), "Blade: +1 on the next attack")
+	assert_true(stream.row.is_empty())
 	await c.click_cell(Vector2i(5, 8))
-	c.toggle_card(held)
-	assert_eq(c.readied, [held] as Array[Card])
-	assert_true(battle.hud._readied.has(held), "The HUD shows it readied")
 	c.begin_targeting_index(_index(bt, &"blade_fury"))
 	await c.click_cell(Vector2i(6, 8))
-	assert_false(bt.hand.has(held), "Spent on the strike")
-	assert_true(c.readied.is_empty())
-	assert_string_contains(battle.hud._log_label.text, "(held)")
+	assert_false(bt.has_status(&"honed"), "Spent on the attack")
+	assert_string_contains(battle.hud._log_label.text, "+3 Power", "+2 for closing in, +1 Blade")
 
 
-func test_switching_units_unreadies_cards() -> void:
+func test_priming_a_card_and_switching_units_unprimes_it() -> void:
 	var bt := _unit(&"bloodthane")
 	var tl := _unit(&"traceless")
 	var c := battle.controller
 	await c.click_cell(bt.cell)
-	c.toggle_card(bt.hand[0])
+	c.prime_card(bt.hand[0])
+	assert_eq(c.primed, [bt.hand[0]] as Array[Card])
+	assert_true(battle.hud._primed.has(bt.hand[0]), "The HUD shows it primed")
 	await c.click_cell(tl.cell)
-	assert_true(c.readied.is_empty())
-	c.toggle_card(bt.hand[0])
-	assert_true(c.readied.is_empty(), "Can't ready another unit's card")
+	assert_true(c.primed.is_empty())
+	c.prime_card(bt.hand[0])
+	assert_true(c.primed.is_empty(), "Can't prime another unit's card")
+
+
+func test_a_primed_card_stays_when_the_skill_has_no_boon() -> void:
+	var bt := _unit(&"bloodthane")
+	var c := battle.controller
+	var held := bt.hand[0]
+	await c.click_cell(bt.cell)
+	await c.click_cell(Vector2i(5, 8))
+	c.prime_card(held)
+	c.begin_targeting_index(_index(bt, &"blade_fury"))
+	await c.click_cell(Vector2i(6, 8))
+	assert_true(bt.hand.has(held), "No boons yet: nothing to pay")
+	assert_true(c.primed.is_empty())

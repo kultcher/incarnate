@@ -37,9 +37,9 @@ var proxy_skills: Array[SkillDef] = []
 ## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
 ## Change it only through the resolver.
 var hand: Array[Card] = []
-## Kindleborne's stored Heat cards (Rising Heat). Change it only through the
-## resolver or the Rising Heat behavior.
-var heat: Array[Card] = []
+## Kindleborne's Heat (Rising Heat). Change it only through the Rising Heat
+## behavior.
+var heat: int = 0
 
 #region This turn
 ## Reset at the start of the unit's turn.

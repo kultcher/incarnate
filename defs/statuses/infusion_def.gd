@@ -4,6 +4,8 @@ extends Resource
 ## Tethered ally get when it's activated.
 
 @export var display_name: String
+## The Soulstream suit that brings it (Fates Intertwined flips a card).
+@export var suit: Enums.Suit = Enums.Suit.BLADE
 @export var icon: Texture2D
 @export_multiline var description: String
 ## Put on each of them (Potent: a free basic attack; Elusive: a free shift).
@@ -17,14 +19,19 @@ extends Resource
 
 func activate(soulweaver: UnitState, r: ActionResolver) -> void:
 	for unit in Tethers.with_allies(soulweaver, r.board):
-		if not unit.is_alive():
-			continue
-		if status != null:
-			await r.apply_status(unit, status, soulweaver)
-		if shield > 0 and shield_status != null:
-			await r.apply_status(unit, shield_status, soulweaver, null, shield)
-		if recharge:
-			await _recharge_one(soulweaver, unit, r)
+		await activate_for(unit, soulweaver, r)
+
+
+## The Infusion for one unit (a newly Tethered ally gets this turn's).
+func activate_for(unit: UnitState, soulweaver: UnitState, r: ActionResolver) -> void:
+	if not unit.is_alive():
+		return
+	if status != null:
+		await r.apply_status(unit, status, soulweaver)
+	if shield > 0 and shield_status != null:
+		await r.apply_status(unit, shield_status, soulweaver, null, shield)
+	if recharge:
+		await _recharge_one(soulweaver, unit, r)
 
 
 ## The unit's owner picks which recharging skill to recharge by 1.

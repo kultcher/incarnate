@@ -30,7 +30,7 @@ func hp_of(unit: UnitState) -> int:
 ## Expected damage of a strike: card medians, plus Power, minus Armor.
 func expected_strike(target: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
 		power: int = 0) -> int:
-	return maxi(1, Soulstream.median_sum(tiers) + bonus + power
+	return maxi(1, Soulstream.total_of(tiers) + bonus + power
 			+ attacker.get_stat(&"power") - target.get_stat(&"armor"))
 
 

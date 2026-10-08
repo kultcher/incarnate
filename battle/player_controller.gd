@@ -31,9 +31,10 @@ var state: State = State.INACTIVE
 var selected: UnitState
 var skill: SkillDef
 var picks: Array[Vector2i] = []
-## Cards from the selected unit's hand or the shared row, readied for its
-## next skill. Cleared when the skill is used or another unit is selected.
-var readied: Array[Card] = []
+## Cards from the selected unit's hand or the shared row, primed for its
+## next skill's boon or Heroic. Cleared when the skill is used or another
+## unit is selected.
+var primed: Array[Card] = []
 ## Asks the player to confirm something: (title, text, icon, yes label) ->
 ## bool. Set by Battle (the HUD's prompt). Without it, nothing is asked.
 var confirm: Callable
@@ -114,7 +115,7 @@ func is_active() -> bool:
 
 func _finish_turn() -> void:
 	_end_targeting()
-	_clear_readied()
+	_clear_primed()
 	if selected != null:
 		var view := presenter.view_for(selected)
 		if view != null:
@@ -170,7 +171,7 @@ func select(unit: UnitState) -> void:
 	if selected != null and presenter.view_for(selected) != null:
 		presenter.view_for(selected).set_selected(false)
 	if unit != selected:
-		_clear_readied()
+		_clear_primed()
 	selected = unit
 	state = State.UNIT_SELECTED
 	if presenter.view_for(unit) != null:
@@ -184,7 +185,7 @@ func deselect() -> void:
 	if state == State.BUSY or state == State.INACTIVE:
 		return
 	_end_targeting()
-	_clear_readied()
+	_clear_primed()
 	if selected != null and presenter.view_for(selected) != null:
 		presenter.view_for(selected).set_selected(false)
 	selected = null
@@ -266,7 +267,7 @@ func _use_skill() -> void:
 	board_view.clear_highlights()
 	var used_skill := skill
 	var used_picks: Array[Vector2i] = picks.duplicate()
-	var used_cards := _valid_readied()
+	var used_cards := _valid_primed()
 	# Once-per-battle and team-limited skills ask first.
 	if (used_skill.slot == Enums.Slot.ULTIMATE or used_skill.slot == Enums.Slot.RECOVERY) \
 			and selected.shadow_of == null and confirm.is_valid():
@@ -283,7 +284,7 @@ func _use_skill() -> void:
 				_refresh_range()
 			return
 	_end_targeting()
-	_clear_readied()
+	_clear_primed()
 	if selected.shadow_of != null:
 		await resolver.request_shadow_skill(selected, used_skill, used_picks)
 	else:
@@ -299,36 +300,60 @@ func _usable(unit: UnitState, p_skill: SkillDef) -> bool:
 	return resolver.can_use(unit, p_skill) and resolver.has_targets(unit, p_skill)
 
 
-## Readies [param card] for the selected unit's next skill, or puts it back.
-## Only the selected unit's hand and the shared row can be readied.
-func toggle_card(card: Card) -> void:
-	if selected == null or selected.shadow_of != null or state == State.BUSY \
-			or state == State.INACTIVE:
+## Primes [param card] for the selected unit's next skill, or unprimes it.
+## Only the selected unit's hand and the shared row can be primed.
+func prime_card(card: Card) -> void:
+	if not _can_handle_cards():
 		return
-	if readied.has(card):
-		readied.erase(card)
-	elif selected.hand.has(card) or resolver.soulstream(selected.team).row.has(card):
-		readied.append(card)
+	if primed.has(card):
+		primed.erase(card)
+	elif resolver.soulstream(selected.team).can_use(selected, card):
+		primed.append(card)
 	else:
 		return
-	EventBus.cards_readied.emit(readied)
+	EventBus.cards_primed.emit(primed)
 
 
-## Readied cards still in the hand or the row (a card may have been spent).
-func _valid_readied() -> Array[Card]:
+## Activates [param card] for the selected unit: its base effects, free.
+func activate_card(card: Card) -> void:
+	if not _can_handle_cards():
+		return
+	if primed.has(card):
+		primed.erase(card)
+		EventBus.cards_primed.emit(primed)
+	var was := state
+	state = State.BUSY
+	var ok := await resolver.activate_card(selected, card)
+	state = was
+	if not ok:
+		return
+	if state == State.TARGETING:
+		_show_targeting()
+	elif state == State.UNIT_SELECTED:
+		_refresh_range()
+		EventBus.unit_selected.emit(selected)
+
+
+func _can_handle_cards() -> bool:
+	return selected != null and selected.shadow_of == null and selected.is_player() \
+			and state != State.BUSY and state != State.INACTIVE
+
+
+## Primed cards still in the hand or the row (a card may have been spent).
+func _valid_primed() -> Array[Card]:
 	var out: Array[Card] = []
-	var row := resolver.soulstream(selected.team).row
-	for card in readied:
-		if selected.hand.has(card) or row.has(card):
+	var stream := resolver.soulstream(selected.team)
+	for card in primed:
+		if stream.can_use(selected, card):
 			out.append(card)
 	return out
 
 
-func _clear_readied() -> void:
-	if readied.is_empty():
+func _clear_primed() -> void:
+	if primed.is_empty():
 		return
-	readied.clear()
-	EventBus.cards_readied.emit(readied)
+	primed.clear()
+	EventBus.cards_primed.emit(primed)
 
 
 func _show_targeting() -> void:

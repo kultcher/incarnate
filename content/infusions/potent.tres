@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("2_q6kn7")
 display_name = "Potent Infusion"
+suit = 0
 icon = ExtResource("1_ofbm1")
 description = "You and your Tethered ally may each make a basic attack as a free action this turn."
 status = ExtResource("3_bp64s")

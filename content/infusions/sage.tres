@@ -6,6 +6,7 @@
 [resource]
 script = ExtResource("2_8xbgv")
 display_name = "Sage Infusion"
+suit = 1
 icon = ExtResource("1_b7mri")
 description = "You and your Tethered ally may each recharge a skill by 1."
 recharge = true

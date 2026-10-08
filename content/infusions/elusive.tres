@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("2_aqokh")
 display_name = "Elusive Infusion"
+suit = 2
 icon = ExtResource("1_2pose")
 description = "You and your Tethered ally may each shift 2 squares as a free action this turn."
 status = ExtResource("3_y6koa")

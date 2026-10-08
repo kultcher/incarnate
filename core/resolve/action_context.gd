@@ -11,6 +11,10 @@ var resolver: ActionResolver
 var ignited: bool = false
 ## The skill is a free replay of an Ignited skill (Burnout).
 var copied: bool = false
+## The caster paid an action for it (not free, not made free by a status).
+var paid: bool = false
+## 0 = the base skill, 1 = its boon, 2 = its Heroic (primed cards paid).
+var boon_level: int = 0
 ## Units standing on each pick when the skill was used. Kept so a pick still
 ## means the same unit even if something moves during resolution.
 var _picked_units: Array[UnitState] = []

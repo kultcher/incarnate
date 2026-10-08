@@ -1,6 +1,7 @@
 extends GutTest
-## The Kindleborne's 2014 kit (cards at their medians: Bronze 2, Silver 3,
-## Gold 4): Rising Heat, Stoke (Ignite and Dissipate) and every skill.
+## The Kindleborne's 2014 kit (flat tiers: Bronze 2, Silver 3, Gold 4):
+## Rising Heat (the counter rework), Stoke (Ignite and Dissipate) and every
+## skill.
 
 const KB := preload("res://content/units/kindleborne.tres")
 const BT := preload("res://content/units/bloodthane.tres")
@@ -20,17 +21,8 @@ func _rig(rows: Array[String]) -> TestRig:
 	return rig
 
 
-func _heat(rig: TestRig, values: Array) -> void:
-	rig.player().heat.clear()
-	for v: int in values:
-		rig.player().heat.append(Card.new(Enums.Tier.SILVER, v))
-
-
-func _values(cards: Array[Card]) -> Array[int]:
-	var out: Array[int] = []
-	for card in cards:
-		out.append(card.value)
-	return out
+func _heat(rig: TestRig, amount: int) -> void:
+	rig.player().heat = amount
 
 
 func _points(unit: UnitState) -> int:
@@ -39,74 +31,67 @@ func _points(unit: UnitState) -> int:
 
 #region Rising Heat
 
-func test_unveiled_cards_are_stored_as_heat() -> void:
+func test_each_paid_skill_adds_one_heat() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	rig.enemy().hp = 40
 	assert_true(await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell]))
-	assert_eq(_values(rig.player().heat), [3, 3] as Array[int], "Both Silver cards stored")
+	assert_eq(rig.player().heat, 1)
+	assert_true(await rig.use(rig.player(), &"tinderbolt", [rig.enemy().cell]))
+	assert_eq(rig.player().heat, 2)
 
 
-func test_heat_keeps_the_best_five() -> void:
+func test_heat_stops_at_five() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
-	_heat(rig, [5, 4, 4, 2, 1])
+	_heat(rig, 5)
 	rig.enemy().hp = 40
 	await rig.use(rig.player(), &"tinderbolt", [rig.enemy().cell])
-	assert_eq(_values(rig.player().heat), [5, 4, 4, 2, 2] as Array[int], "The 1 dropped for a 2")
-
-
-func test_stored_cards_leave_the_discards() -> void:
-	var rig := await _rig(["P . E"] as Array[String])
-	rig.resolver.use_decks(3)
-	rig.enemy().hp = 40
-	await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell])
-	var silver := rig.resolver.soulstream(Enums.Team.PLAYER).deck(Enums.Tier.SILVER)
-	assert_eq(silver.discard_pile.size(), 0, "Held as Heat, not discarded")
-	assert_eq(silver.draw_pile.size(), 58)
+	assert_eq(rig.player().heat, 5)
 
 
 func test_stoke_needs_enough_heat() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	var stoke := rig.skill(rig.player(), &"stoke")
-	_heat(rig, [2, 2])
-	assert_false(rig.resolver.can_use(rig.player(), stoke), "4 isn't enough")
-	_heat(rig, [3, 2])
+	_heat(rig, 1)
+	assert_false(rig.resolver.can_use(rig.player(), stoke), "1 isn't enough")
+	_heat(rig, 2)
 	assert_true(rig.resolver.can_use(rig.player(), stoke))
 
 
 func test_ignite_makes_the_next_skill_free_and_costs_more_each_time() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	rig.enemy().hp = 60
-	_heat(rig, [4, 3, 2, 1])
+	_heat(rig, 3)
 	rig.answers.answers = [IGNITE]
 	assert_true(await rig.use(rig.player(), &"stoke"))
-	assert_eq(_values(rig.player().heat), [4] as Array[int], "Lowest first: 1 + 2 + 3 = 6")
+	assert_eq(rig.player().heat, 1, "Ignite cost 2")
 	assert_true(rig.player().has_status(&"ignite"))
 	var points := _points(rig.player())
 	assert_true(await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell]))
 	assert_eq(_points(rig.player()), points, "Free")
+	assert_eq(rig.player().heat, 1, "An Ignited skill makes no Heat")
 	assert_false(rig.player().has_status(&"ignite"), "Used up")
 	var heat := rig.player().find_status(&"rising_heat")
-	assert_eq((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 6, "+1 this turn")
+	assert_eq((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 3, "+1 this turn")
 	await rig.new_turn(rig.player())
-	assert_eq((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 5, "Back to 5")
+	assert_eq((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 2, "Back to 2")
 
 
 func test_dissipate_heals_and_grants_evasion() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	rig.player().hp = 5
-	_heat(rig, [5])
+	_heat(rig, 2)
 	rig.answers.answers = [DISSIPATE]
 	assert_true(await rig.use(rig.player(), &"stoke"))
-	assert_eq(rig.player().hp, 8, "Healed Silver 3")
+	assert_eq(rig.player().hp, 8, "Healed 3")
 	assert_eq(rig.player().get_stat(&"evasion"), 1)
-	assert_eq(_values(rig.player().heat), [3] as Array[int], "The heal's card became Heat")
+	assert_eq(rig.player().heat, 0)
 
 
 func test_stoking_blast_recharges_when_ignited() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	rig.enemy().hp = 60
 	var blast := rig.skill(rig.player(), &"stoking_blast")
-	_heat(rig, [5])
+	_heat(rig, 2)
 	rig.answers.answers = [IGNITE]
 	await rig.use(rig.player(), &"stoke")
 	await rig.use(rig.player(), &"stoking_blast", [rig.enemy().cell])
@@ -117,7 +102,7 @@ func test_igniting_recharges_flickerstep() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	var step := rig.skill(rig.player(), &"flickerstep")
 	rig.player().cooldowns[step.id] = 3
-	_heat(rig, [5])
+	_heat(rig, 2)
 	rig.answers.answers = [IGNITE]
 	await rig.use(rig.player(), &"stoke")
 	assert_eq(rig.player().cooldown_left(step), 2)
@@ -135,12 +120,12 @@ func test_tinderbolt_gains_power_per_prior_attack() -> void:
 	assert_eq(rig.enemy().hp, 55, "One attack before: +1 Power")
 
 
-func test_wracking_flame_gains_power_from_the_highest_heat() -> void:
+func test_wracking_flame_gains_power_per_heat() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
 	rig.enemy().hp = 60
-	_heat(rig, [2, 5, 3])
+	_heat(rig, 3)
 	await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell])
-	assert_eq(rig.enemy().hp, 60 - 11, "Silver + Silver, +5 Power")
+	assert_eq(rig.enemy().hp, 60 - 9, "Silver + Silver, +3 Power")
 
 
 func test_cinder_wave_strikes_each_foe_in_the_wave() -> void:
@@ -169,30 +154,22 @@ func test_ember_shield_shields_and_strikes_back() -> void:
 	assert_eq(rig.enemy().hp, 9, "Struck back for Silver 3")
 
 
-func test_flickerstep_unveils_a_gold_and_grants_a_teleport() -> void:
+func test_flickerstep_grants_a_teleport() -> void:
 	var rig := await _rig(["P . . . . . . . . E"] as Array[String])
 	assert_true(await rig.use(rig.player(), &"flickerstep"))
 	assert_eq(rig.player().find_status(&"flicker").stacks, 6, "Gold 4 + 2")
-	assert_eq(_values(rig.player().heat), [4] as Array[int], "The Gold became Heat")
+	assert_eq(rig.player().heat, 1, "A paid skill (a move action)")
 	assert_true(await rig.use(rig.player(), &"flicker", [Vector2i(6, 0)]))
 	assert_eq(rig.player().cell, Vector2i(6, 0))
 	assert_null(rig.skill(rig.player(), &"flicker"), "One use")
 	assert_eq(rig.player().actions.move + rig.player().actions.flex, 1, "Flickerstep cost the move")
 
 
-func test_ash_augur_upgrades_heat() -> void:
+func test_ash_augur_gains_two_heat() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
-	rig.player().heat.clear()
-	rig.player().heat.append(Card.new(Enums.Tier.BRONZE, 1))
-	rig.player().heat.append(Card.new(Enums.Tier.SILVER, 2))
-	rig.player().heat.append(Card.new(Enums.Tier.GOLD, 5))
+	_heat(rig, 1)
 	assert_true(await rig.use(rig.player(), &"ash_augur"))
-	var tiers: Array[int] = []
-	for card in rig.player().heat:
-		tiers.append(int(card.tier))
-	tiers.sort()
-	assert_eq(tiers, [1, 2, 2] as Array[int], "Bronze to Silver, Silver to Gold, Gold stays")
-	assert_eq(_values(rig.player().heat), [5, 4, 3] as Array[int], "Medians: Gold 4, Silver 3")
+	assert_eq(rig.player().heat, 3, "Free, so no Heat of its own")
 
 
 func test_cauterizing_brand_costs_health_then_heals_big() -> void:
@@ -211,17 +188,17 @@ func test_burnout_lets_ignited_skills_be_replayed_free() -> void:
 	rig.enemy().hp = 80
 	var wracking := rig.skill(rig.player(), &"wracking_flame")
 	assert_true(await rig.use(rig.player(), &"burnout"))
-	_heat(rig, [5])
+	_heat(rig, 2)
 	rig.answers.answers = [IGNITE]
 	await rig.use(rig.player(), &"stoke")
 	await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell])
 	assert_eq(rig.player().cooldown_left(wracking), 2)
 	assert_true(rig.resolver.can_use(rig.player(), wracking), "Replay ignores the recharge")
 	var points := _points(rig.player())
-	var heat_before := rig.player().heat.size()
+	var heat_before := rig.player().heat
 	assert_true(await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell]))
 	assert_eq(_points(rig.player()), points, "Free")
-	assert_eq(rig.player().heat.size(), heat_before, "Replay cards don't become Heat")
+	assert_eq(rig.player().heat, heat_before, "Replays make no Heat")
 	assert_false(rig.resolver.can_use(rig.player(), wracking), "Only once")
 	assert_eq(rig.player().find_status(&"burnout").stacks, 2, "Two Ignites left")
 
@@ -233,7 +210,7 @@ func test_the_ai_ignites_for_extra_attacks() -> void:
 	rig.answers.use_ai = true
 	rig.enemy().def.max_hp = 80  # The AI's scoring assumes HP <= max.
 	rig.enemy().hp = 80
-	_heat(rig, [5, 5])
+	_heat(rig, 5)
 	var used: Array[StringName] = []
 	for i in 8:
 		var plan := AiPlanner.next_action(rig.board, rig.resolver, rig.player())
@@ -243,13 +220,12 @@ func test_the_ai_ignites_for_extra_attacks() -> void:
 			await rig.resolver.request_move(rig.player(), plan.move_to)
 			continue
 		used.append(plan.skill.id)
-		await rig.resolver.request_skill(rig.player(), plan.skill, plan.picks,
-				AiPlanner.choose_cards(rig.resolver, rig.player(), plan.skill, plan.picks))
+		await rig.resolver.request_skill(rig.player(), plan.skill, plan.picks)
 	assert_has(used, &"stoke", "Spent Heat: %s" % [used])
 	var attacks := used.filter(func(id: StringName) -> bool: return id != &"stoke")
 	assert_gt(attacks.size(), 2, "Skill, flex, then Ignited attacks: %s" % [used])
 	var heat := rig.player().find_status(&"rising_heat")
-	assert_gt((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 5,
+	assert_gt((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 2,
 			"Each Ignite this turn costs more")
 
 
@@ -269,7 +245,7 @@ func test_a_burnout_replay_ignores_a_spent_recovery_pool() -> void:
 	var brand := rig.skill(rig.player(), &"cauterizing_brand")
 	assert_true(await rig.use(rig.player(), &"burnout"))
 	rig.resolver.recoveries_used[Enums.Team.PLAYER] = 1
-	_heat(rig, [5])
+	_heat(rig, 2)
 	rig.answers.answers = [IGNITE]
 	await rig.use(rig.player(), &"stoke")
 	assert_true(await rig.use(rig.player(), &"cauterizing_brand", [rig.ally().cell]))
@@ -277,13 +253,8 @@ func test_a_burnout_replay_ignores_a_spent_recovery_pool() -> void:
 	assert_true(rig.resolver.can_use(rig.player(), brand), "The free replay still works")
 
 
-func test_a_fallen_kindleborne_discards_its_heat() -> void:
+func test_a_fallen_kindleborne_loses_its_heat() -> void:
 	var rig := await _rig(["P . E"] as Array[String])
-	rig.resolver.use_decks(4)
-	rig.enemy().hp = 40
-	await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell])
-	assert_eq(rig.player().heat.size(), 2)
+	_heat(rig, 4)
 	rig.resolver.lose_health(rig.player(), 99)
-	assert_true(rig.player().heat.is_empty())
-	var silver := rig.resolver.soulstream(Enums.Team.PLAYER).deck(Enums.Tier.SILVER)
-	assert_eq(silver.discard_pile.size(), 2, "Back in the discards")
+	assert_eq(rig.player().heat, 0)

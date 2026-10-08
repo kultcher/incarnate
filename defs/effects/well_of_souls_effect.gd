@@ -21,7 +21,8 @@ func apply(ctx: ActionContext) -> void:
 				% unit.def.display_name
 		for i in row.size():
 			request.add_option(str(row[i]), "")
-			if row[i].value > row[request.ai_choice].value:
+			# The AI takes a two-suit card or a Wild first.
+			if row[i].is_wild() or row[i].suits.size() > 1:
 				request.ai_choice = i
 		request.decline_label = "None"
 		var pick := await r.decide(request)

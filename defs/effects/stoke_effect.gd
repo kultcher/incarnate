@@ -23,19 +23,15 @@ func apply(ctx: ActionContext) -> void:
 	request.team = unit.team
 	request.title = ctx.skill.display_name
 	request.icon = ctx.skill.icon
-	request.text = "Heat: %s (total %d). Spend it how?" % [_names(unit.heat),
-			RisingHeatBehavior.heat_total(unit)]
-	var ignite_cards := RisingHeatBehavior.cheapest(unit, heat.current_ignite_cost(inst))
-	if not ignite_cards.is_empty():
+	request.text = "Heat: %d. Spend it how?" % unit.heat
+	if heat.can_ignite(inst):
 		options.append(IGNITE)
-		request.add_option("Ignite (%d+)" % heat.current_ignite_cost(inst),
-				"Your next skill this turn costs no action. Discards %s." % _names(ignite_cards))
-	var dissipate_cards := RisingHeatBehavior.cheapest(unit, heat.dissipate_cost)
-	if not dissipate_cards.is_empty():
+		request.add_option("Ignite (%d Heat)" % heat.current_ignite_cost(inst),
+				"Your next skill this turn costs no action.")
+	if heat.can_dissipate(inst):
 		options.append(DISSIPATE)
-		request.add_option("Dissipate (%d+)" % heat.dissipate_cost,
-				"Heal %s and +1 Evasion this turn. Discards %s." % [
-				Soulstream.describe(heal_tiers), _names(dissipate_cards)])
+		request.add_option("Dissipate (%d Heat)" % heat.dissipate_cost,
+				"Heal %s and +1 Evasion this turn." % Soulstream.describe(heal_tiers))
 	if options.is_empty():
 		return
 	request.decline_label = "Cancel"
@@ -46,8 +42,7 @@ func apply(ctx: ActionContext) -> void:
 		return
 	if options[answer] == IGNITE:
 		await heat.ignite(inst, r)
-	else:
-		heat.spend(unit, dissipate_cards, r)
+	elif heat.spend(unit, heat.dissipate_cost, r):
 		r.announce(unit, "Dissipate", Color(1.0, 0.75, 0.4))
 		r.heal_cards(unit, unit, heal_tiers)
 		if feint_status != null:
@@ -71,19 +66,11 @@ func ai_score(score: AiScore, _board: BoardState, caster: UnitState,
 		return
 	var heat := inst.def.behavior as RisingHeatBehavior
 	if ai_choice(caster) == IGNITE:
-		if not RisingHeatBehavior.cheapest(caster, heat.current_ignite_cost(inst)).is_empty():
+		if heat.can_ignite(inst):
 			score.total += 20.0
-	elif caster.get_stat(&"max_hp") - caster.hp >= 4 \
-			and not RisingHeatBehavior.cheapest(caster, heat.dissipate_cost).is_empty():
+	elif caster.get_stat(&"max_hp") - caster.hp >= 4 and heat.can_dissipate(inst):
 		score.total += 4.0
 
 
 func has_ai_value() -> bool:
 	return true
-
-
-static func _names(cards: Array[Card]) -> String:
-	var parts: Array[String] = []
-	for card in cards:
-		parts.append(str(card.value))
-	return "none" if parts.is_empty() else ", ".join(parts)

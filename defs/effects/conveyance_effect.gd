@@ -48,7 +48,7 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 	for unit in board.units():
 		if unit != chosen and unit.team == caster.team and unit.hp > AI_MIN_HP:
 			givers += 1
-	var per := Soulstream.median_sum(tiers) + caster.get_stat(&"power")
+	var per := Soulstream.total_of(tiers) + caster.get_stat(&"power")
 	var missing := chosen.get_stat(&"max_hp") - score.hp_of(chosen)
 	if givers == 0 or missing < per * 2:
 		return

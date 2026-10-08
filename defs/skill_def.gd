@@ -41,6 +41,9 @@ extends Resource
 @export var shadow_use: bool = false
 ## Put on each foe a Shadow's use of it strikes (Gloom Edge: Blind).
 @export var copy_status: StatusDef
+## Suits whose primed cards pay for this skill's boon (one match) or
+## Heroic (two). Empty until the skill update pass writes boons.
+@export var boon_suits: Array[Enums.Suit] = []
 
 @export_group("Presentation")
 ## Flipbook played on each struck target: a grid of equal frames, read left
@@ -59,7 +62,7 @@ func describe() -> String:
 	return text
 
 
-## Every Soulstream card the skill's effects draw, in effect order.
+## The skill's tiers (flat values), in effect order.
 func card_tiers() -> Array[Enums.Tier]:
 	var all: Array[Enums.Tier] = []
 	for effect in effects:
@@ -67,8 +70,8 @@ func card_tiers() -> Array[Enums.Tier]:
 	return all
 
 
-## Every card the skill will draw when used with [param picks] (one set per
-## strike for skills that strike several foes).
+## The skill's tiers when used with [param picks] (one set per strike for
+## skills that strike several foes).
 func card_tiers_for(board: BoardState, caster: UnitState, picks: Array[Vector2i]) -> Array[Enums.Tier]:
 	var all: Array[Enums.Tier] = []
 	for effect in effects:

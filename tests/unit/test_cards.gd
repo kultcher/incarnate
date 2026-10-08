@@ -1,5 +1,5 @@
 extends GutTest
-## Strike maths: Soulstream cards at their medians, Power, Armor, dodges
+## Strike maths: flat tier values, Power, Armor, dodges
 ## (Evasion), grazes, Accuracy and Blind. Plus round-clock statuses.
 
 const BLIND := preload("res://content/statuses/common/blind.tres")
@@ -22,20 +22,12 @@ func _stat_status(stat: StringName, amount: int) -> StatusDef:
 	return st
 
 
-func test_medians_are_two_three_four() -> void:
-	assert_eq(Soulstream.median(BR), 2)
-	assert_eq(Soulstream.median(SI), 3)
-	assert_eq(Soulstream.median(GO), 4)
-	assert_eq(Soulstream.describe([GO, SI] as Array[Enums.Tier]), "7 (Gold + Silver)")
-
-
-func test_deck_draws_stay_in_the_tier_range() -> void:
-	var s := Soulstream.new()
-	s.use_decks(7)
-	for tier: Enums.Tier in [BR, SI, GO]:
-		for i in 50:
-			var v := s.draw(tier).value
-			assert_between(v, int(tier) + 1, int(tier) + 3, "%s range" % Soulstream.tier_name(tier))
+func test_tiers_are_flat_two_three_four() -> void:
+	assert_eq(Soulstream.value_of(BR), 2)
+	assert_eq(Soulstream.value_of(SI), 3)
+	assert_eq(Soulstream.value_of(GO), 4)
+	assert_eq(Soulstream.describe([GO, SI] as Array[Enums.Tier]), "7")
+	assert_eq(Soulstream.describe([GO, SI] as Array[Enums.Tier], 2), "9")
 
 
 func test_strike_deals_the_card_total() -> void:
@@ -49,14 +41,14 @@ func test_power_adds_and_armor_subtracts_never_below_one() -> void:
 	var rig := TestRig.make(self, ["P E"] as Array[String])
 	await rig.resolver.apply_status(rig.player(), _stat_status(&"power", 2))
 	var hit := await rig.resolver.strike(rig.player(), rig.enemy(), _spec([SI]))
-	assert_eq(hit.amount, 5, "Silver 3 raised two tiers (Gold, then +1 past Gold)")
+	assert_eq(hit.amount, 5, "Silver 3, +2 Power")
 
 	await rig.resolver.apply_status(rig.enemy(), _stat_status(&"armor", 9))
 	hit = await rig.resolver.strike(rig.player(), rig.enemy(), _spec([BR]))
 	assert_eq(hit.amount, 1, "Armor can't push a strike below 1")
 
 
-func test_a_dodge_cancels_the_lowest_card() -> void:
+func test_a_dodge_cancels_the_smallest_part() -> void:
 	var rig := TestRig.make(self, ["P E"] as Array[String])
 	rig.enemy().def.evasion = 1
 	var hit := await rig.resolver.strike(rig.player(), rig.enemy(), _spec([GO, SI]))
@@ -69,7 +61,7 @@ func test_a_dodge_cancels_the_lowest_card() -> void:
 	assert_eq(hit.amount, 7)
 
 
-func test_a_one_card_strike_is_grazed_for_one() -> void:
+func test_a_one_part_strike_is_grazed_for_one() -> void:
 	var rig := TestRig.make(self, ["P E"] as Array[String])
 	rig.enemy().def.evasion = 1
 	var hit := await rig.resolver.strike(rig.player(), rig.enemy(), _spec([GO]))

@@ -117,9 +117,9 @@ func test_cannot_use_a_skill_the_unit_lacks() -> void:
 	assert_false(await rig.resolver.request_skill(rig.player(), RENDING, TestRig.cells([Vector2i(1, 0)])))
 
 
-func test_descriptions_show_the_cards() -> void:
-	assert_string_contains(BLADE_FURY.describe(), "4 (Bronze + Bronze)")
+func test_descriptions_show_the_numbers() -> void:
+	assert_string_contains(BLADE_FURY.describe(), "for 4.")
 	assert_string_contains(BLADE_FURY.describe(), "every 2 squares")
-	assert_string_contains(RENDING.describe(), "6 (Silver + Silver)")
+	assert_string_contains(RENDING.describe(), "for 6,")
 	assert_eq(RENDING.cost_text(), "Skill action · Recharge 2")
 	assert_eq(SHADOWSTEP.cost_text(), "Free")

@@ -32,6 +32,8 @@ var target: UnitState
 ## SHADOWS_CHANGED: the owner's Shadows at that moment. STRIKE: the cell the
 ## strike comes from, when that isn't the attacker's (a Shadow's copy).
 var path: Array[Vector2i] = []
+## SHADOWS_READY: usable skills for each cell in [member path].
+var counts: Array[int] = []
 var skill: SkillDef
 var amount: int = 0
 var melee: bool = false
@@ -91,9 +93,11 @@ static func unit_spawned(p_unit: UnitState) -> GameEvent:
 
 
 ## [param p_unit]'s Shadows that can use an inherited skill now ([member path]).
-static func shadows_ready(p_unit: UnitState, cells: Array[Vector2i]) -> GameEvent:
+static func shadows_ready(p_unit: UnitState, cells: Array[Vector2i],
+		p_counts: Array[int] = []) -> GameEvent:
 	var e := _make(SHADOWS_READY, p_unit)
 	e.path = cells.duplicate()
+	e.counts = p_counts.duplicate()
 	return e
 
 

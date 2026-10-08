@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("2_8cwlg")
 display_name = "Stalwart Infusion"
+suit = 3
 icon = ExtResource("1_7eip5")
 description = "You and your Tethered ally are each shielded against 1 damage this turn."
 shield = 1

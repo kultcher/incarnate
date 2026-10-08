@@ -145,7 +145,7 @@ func _common_statuses() -> Dictionary:
 	_save(cripple, dir + "cripple.tres")
 
 	var blind := _status(&"blind", "Blinded", "blind",
-			"Its next strike counts as dodged: it loses its lowest card, or grazes for 1.")
+			"Its next strike counts as dodged: it loses its smallest part, or grazes for 1.")
 	blind.tags = [&"debuff", &"blind"]
 	_save(blind, dir + "blind.tres")
 	return { "provoke": provoke, "cripple": cripple, "blind": blind }
@@ -222,8 +222,8 @@ func _bloodthane(common: Dictionary) -> void:
 	bib_behavior.ai_choice = 1
 	var bib := _status(&"bound_in_blood", "Bound in Blood", "bound_in_blood",
 			"Passive. When you strike a foe you've already struck this turn, you may bind a Pact to it. " \
-			+ "Each Pact can be bound once per turn. (Stands in for the 2014 trigger, a Blade card " \
-			+ "unveiled on the strike, until the Soulstream has suits.)", 0, Enums.StatusClock.OWNER_TURN)
+			+ "Each Pact can be bound once per turn. (A stand-in trigger until the Bloodthane's " \
+			+ "rework.)", 0, Enums.StatusClock.OWNER_TURN)
 	bib.behavior = bib_behavior
 	bib.tags = [&"passive"]
 	bib.show_on_unit = false
@@ -562,28 +562,33 @@ func _soulweaver() -> void:
 	var potent_inf := _infusion("Potent Infusion", "potent_infusion",
 			"You and your Tethered ally may each make a basic attack as a free action this turn.")
 	potent_inf.status = potent
+	potent_inf.suit = Enums.Suit.BLADE
 	_save(potent_inf, "res://content/infusions/potent.tres")
 	var stalwart_inf := _infusion("Stalwart Infusion", "stalwart_infusion",
 			"You and your Tethered ally are each shielded against 1 damage this turn.")
 	stalwart_inf.shield = 1
 	stalwart_inf.shield_status = shield
+	stalwart_inf.suit = Enums.Suit.WARD
 	_save(stalwart_inf, "res://content/infusions/stalwart.tres")
 	var sage_inf := _infusion("Sage Infusion", "well_of_souls",
 			"You and your Tethered ally may each recharge a skill by 1.")
 	sage_inf.recharge = true
+	sage_inf.suit = Enums.Suit.ORB
 	_save(sage_inf, "res://content/infusions/sage.tres")
 	var elusive_inf := _infusion("Elusive Infusion", "essence_shift",
 			"You and your Tethered ally may each shift 2 squares as a free action this turn.")
 	elusive_inf.status = elusive
+	elusive_inf.suit = Enums.Suit.PORTAL
 	_save(elusive_inf, "res://content/infusions/elusive.tres")
 
 	var fates_behavior := FatesIntertwinedBehavior.new()
 	fates_behavior.infusions = [potent_inf, stalwart_inf, sage_inf, elusive_inf]
 	var fates := _status(&"fates_intertwined", "Fates Intertwined", "fates_intertwined",
-			"Passive. Once per turn, when you unveil a card (any card one of your skills uses), " \
-			+ "you may activate an Infusion for yourself and your Tethered ally: Potent (a free " \
-			+ "basic attack), Stalwart (shield 1), Sage (recharge a skill) or Elusive (shift 2). " \
-			+ "Use Tether (free, once per turn) to choose your ally.", 0, Enums.StatusClock.OWNER_TURN)
+			"Passive. At the start of your turn, flip the top Soulstream card: its suit's Infusion " \
+			+ "activates for you and your Tethered ally (and for an ally you Tether later this turn). " \
+			+ "Blade: Potent (a free basic attack). Ward: Stalwart (shield 1). Orb: Sage (recharge " \
+			+ "a skill). Portal: Elusive (shift 2). A two-suit card brings both; a Wild lets you " \
+			+ "pick. Use Tether (free, once per turn) to choose your ally.", 0, Enums.StatusClock.OWNER_TURN)
 	fates.behavior = fates_behavior
 	fates.tags = [&"passive"]
 	fates.show_on_unit = false
@@ -725,7 +730,7 @@ func _kindleborne() -> void:
 
 	var echo := _status(&"burnout_echo", "Burnout", "burnout",
 			"You may use the skill you just Ignited once more this turn, free and ignoring its " \
-			+ "recharge. Cards it unveils don't become Heat.")
+			+ "recharge. Replays don't make Heat.")
 	echo.tags = [&"echo"]
 	echo.stacking = Enums.Stacking.INDEPENDENT
 	_save(echo, sdir + "burnout_echo.tres")
@@ -782,10 +787,10 @@ func _kindleborne() -> void:
 	heat_behavior.ignite_status = ignite
 	heat_behavior.echo_status = echo
 	var rising := _status(&"rising_heat", "Rising Heat", "rising_heat",
-			"Passive. Every card your skills unveil is stored as Heat (up to {max}; the lowest " \
-			+ "drop out). Use Stoke (free) to discard Heat: Ignite ({ignite}+, 1 more for each " \
-			+ "Ignite this turn) makes your next skill this turn free; Dissipate ({dissipate}+) " \
-			+ "heals you and gives +1 Evasion this turn. Stoke discards your lowest Heat first.",
+			"Passive. Each skill you use that costs an action adds 1 Heat (up to {max}); Ignited " \
+			+ "skills and Burnout replays add none. Use Stoke (free) to spend Heat: Ignite " \
+			+ "({ignite} Heat, 1 more for each Ignite this turn) makes your next skill this turn " \
+			+ "free; Dissipate ({dissipate} Heat) heals you and gives +1 Evasion this turn.",
 			0, Enums.StatusClock.OWNER_TURN)
 	rising.behavior = heat_behavior
 	rising.tags = [&"passive"]
@@ -796,12 +801,12 @@ func _kindleborne() -> void:
 	var stoke_effect := StokeEffect.new()
 	stoke_effect.feint_status = feint
 	var stoke := _skill(&"stoke", "Stoke", "rising_heat",
-			"Free. Spend Heat: Ignite (discard {ignite}+, 1 more for each Ignite this turn) to make " \
-			+ "your next skill this turn free, or Dissipate (discard {dissipate}+) to heal 3 (Silver) " \
-			+ "and gain +1 Evasion this turn. Your lowest Heat cards go first.",
+			"Free. Spend Heat: Ignite ({ignite} Heat, 1 more for each Ignite this turn) to make " \
+			+ "your next skill this turn free, or Dissipate ({dissipate} Heat) to heal 3 and gain " \
+			+ "+1 Evasion this turn.",
 			Enums.Slot.BASIC, Enums.Cost.FREE, 0, [&"utility"], [], [stoke_effect])
 	stoke.condition = HeatCondition.new()
-	stoke.description = stoke.description.replace("{ignite}", "5").replace("{dissipate}", "5")
+	stoke.description = stoke.description.replace("{ignite}", "2").replace("{dissipate}", "2")
 	_save(stoke, kdir + "stoke.tres")
 
 	var tinder_damage := _damage(_tiers([BR]), PriorAttacksBonus.new())
@@ -817,7 +822,7 @@ func _kindleborne() -> void:
 	var wracking_damage := _damage(_tiers([SI, SI]), HeatBonus.new())
 	wracking_damage.melee = false
 	var wracking := _skill(&"wracking_flame", "Wracking Flame", "wracking_flame",
-			"Strike a foe within 4 for {damage}, with Power equal to your highest Heat card.",
+			"Strike a foe within 4 for {damage}, with +1 Power for each Heat you have.",
 			Enums.Slot.ATTACK, Enums.Cost.SKILL, 2, [&"attack", &"ranged"],
 			[_step(Enums.TargetShape.WITHIN, Enums.TargetFilter.ENEMY, "Pick a foe within 4", 4)],
 			[wracking_damage])
@@ -859,15 +864,14 @@ func _kindleborne() -> void:
 	var flickerstep_effect := FlickerstepEffect.new()
 	flickerstep_effect.status = flicker
 	var flickerstep := _skill(&"flickerstep", "Flickerstep", "flickerstep",
-			"Maneuver. Unveil {reach}: this turn you may teleport up to that many squares (Flicker, " \
+			"Maneuver. This turn you may teleport up to {reach} squares (Flicker, " \
 			+ "free). Whenever you Ignite, Flickerstep recharges by 1.",
 			Enums.Slot.MOBILITY, Enums.Cost.MOVE, 4, [&"maneuver", &"recharge_on_ignite"], [],
 			[flickerstep_effect])
 	_save(flickerstep, kdir + "flickerstep.tres")
 
 	var augur := _skill(&"ash_augur", "Ash Augur", "ash_augur",
-			"Free. Swap each Bronze or Silver card in your Heat for the top card of the next " \
-			+ "tier's deck.",
+			"Free. Gain {heat} Heat.",
 			Enums.Slot.UTILITY, Enums.Cost.FREE, 3, [&"utility"], [], [AshAugurEffect.new()])
 	_save(augur, kdir + "ash_augur.tres")
 
@@ -883,7 +887,7 @@ func _kindleborne() -> void:
 
 	var burnout := _skill(&"burnout", "Burnout", "burnout",
 			"Ultimate. Free. The next 3 times you Ignite a skill this turn, you may use it once " \
-			+ "more for free (ignoring its recharge). Cards those replays unveil don't become Heat.",
+			+ "more for free (ignoring its recharge). Replays don't make Heat.",
 			Enums.Slot.ULTIMATE, Enums.Cost.FREE, 0, [&"ultimate"], [], [_apply(burnout_status)])
 	(burnout.effects[0] as ApplyStatusEffect).stacks = 3
 	burnout.uses_per_battle = 1

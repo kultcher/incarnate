@@ -26,8 +26,8 @@ signal unit_healed(unit: UnitState, amount: int)
 signal statuses_changed(unit: UnitState)
 ## A hand or the shared Soulstream row of [param team] changed.
 signal cards_changed(team: Enums.Team)
-## The player readied or unreadied cards for the selected unit's next skill.
-signal cards_readied(cards: Array[Card])
+## The player primed or unprimed cards for the selected unit's next skill.
+signal cards_primed(cards: Array[Card])
 ## The player is choosing step [param step] of [param skill]'s targets.
 signal targeting_started(unit: UnitState, skill: SkillDef, step: int)
 signal targeting_ended()

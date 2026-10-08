@@ -4,6 +4,8 @@ Canonical source: the "BFTA (flat damage era?)" folder under Incarnate > Referen
 
 ## 0. As built in milestone 5 (2026-10-07). Read this first
 
+**Superseded in part (2026-10-08):** numbers are now flat and Soulstream cards are suits only; see `references/soulstream-spec.md`. Unveil triggers below were reworked: Rising Heat counts paid skills, and Fates Intertwined flips a card at turn start.
+
 Michael's direction (see `references/design-decisions.md`) replaced the precedence rule and number translation in sections 1 and 3:
 
 - **The kits follow the 2014 cards and the Master sheet.** The booklets are background only.
@@ -218,10 +220,12 @@ The two eras differ most here.
 - **Soulweaver: built in M7 (2026-10-08).** See the decisions log for the calls made. Built: Fates Intertwined (Tether + the four Infusions), Spirit Flare, Soul Echo (card version), Dread Diffusion, Strength in Unity, Essence Shift, Well of Souls, Conveyance, Anima Nexus. Not built: the Alpha-only sheet skills (Steal Spirit, Essence Gyre, Renewing Glow, Astral Jump, the unnamed U2), Heroic versions and Talents.
   - Fates Intertwined: at turn start, Tether to an ally within 5. Once per turn, when you unveil a card, activate an Infusion: Potent (both basic-attack free), Stalwart (both shielded 1), Sage (both recharge a skill), Elusive (both shift 2).
   - The Infusion trigger now works on real unveils: any card a Soulweaver skill uses (Michael, 2026-10-08).
+  - **Reworked with the suit Soulstream (provisional):** a turn-start flip; the suit picks the Infusion (Blade Potent, Ward Stalwart, Orb Sage, Portal Elusive).
   - Basic: **Spirit Flare** (Alpha). Cards: Soul Echo/Cascade, Dread Diffusion/Expulsion, Strength in Unity/Unbreakable Union, Essence Shift/Meld, Well/Sea of Souls, Conveyance, Anima Nexus.
   - Some card names differ from the sheet (Soul Spike/Lance in the sheet, Soul Echo/Cascade on the cards).
 - **Kindleborne: built in M8 (2026-10-08).** See the decisions log for the calls made. Built: Rising Heat (with the Stoke skill for Ignite and Dissipate), Tinderbolt, Wracking Flame, Stoking Blast, Cinder Wave, Ember Shield, Flickerstep, Ash Augur, Cauterizing Brand, Burnout. Not built: the Alpha-only sheet skills (Fiery Burst, Choking Ash, Frictious Feet, Hearthfire), Heroic versions and Talents.
   - Rising Heat: store unveiled cards as Heat (max 5); discard 5+ value to **Ignite** (next skill free) or **Dissipate** (heal (Si), +1 Feint).
+  - **Reworked with the suit Soulstream (provisional):** Heat is a counter (max 5), +1 per paid skill; Ignite and Dissipate cost 2. Wracking Flame +1 Power per Heat; Ash Augur gains 2 Heat.
   - **Card vs sheet:** where they differ, the newer sheet wins, per section 1. Flickerstep: sheet (G)+2, card (G)(G)+1. Cauterizing Brand: sheet (G)(G)(G), card (G)(G)(Si). Burnout: sheet "copy the next 3 Ignited skills", card "on each Ignite, strike a foe for the Heat discarded".
   - *Note:* the Soulweaver port took Well of Souls' recharge from its card (3; sheet 4) and Soul Echo from its card (the sheet's Soul Spike needs the Attunement grid).
 - **Techsage: Modular Technology.** Gain 1 Energy per turn; spend it on Mods (Power Cycler, Reflex Armor, Ballistic Shaper). Several slots are blank; the roster decision says the Techsage may be set aside.

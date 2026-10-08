@@ -30,7 +30,7 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 	if caster.is_foe(target):
 		score.damage(target, score.expected_strike(target, tiers))
 	else:
-		score.heal(target, Soulstream.median_sum(tiers) + caster.get_stat(&"power"))
+		score.heal(target, Soulstream.total_of(tiers) + caster.get_stat(&"power"))
 
 
 func card_tiers() -> Array[Enums.Tier]:

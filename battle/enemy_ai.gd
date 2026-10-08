@@ -30,6 +30,7 @@ func take_turn(team: Enums.Team) -> void:
 
 func take_unit_turn(unit: UnitState) -> void:
 	_mark(unit, true)
+	await _use_cards(unit, Enums.Suit.ORB)
 	for i in MAX_ACTIONS_PER_UNIT:
 		if is_over.call() or not unit.is_alive():
 			break
@@ -46,14 +47,36 @@ func take_unit_turn(unit: UnitState) -> void:
 			break
 		var ok: bool
 		if plan.is_move():
+			await _use_cards(unit, Enums.Suit.PORTAL)
 			ok = await resolver.request_move(unit, plan.move_to)
 		else:
-			ok = await resolver.request_skill(unit, plan.skill, plan.picks,
-					AiPlanner.choose_cards(resolver, unit, plan.skill, plan.picks))
+			if plan.skill.has_tag(&"attack"):
+				await _use_cards(unit, Enums.Suit.BLADE)
+			ok = await resolver.request_skill(unit, plan.skill, plan.picks)
 		if not ok:
 			push_warning("AI plan was rejected: %s %s" % [unit, plan])
 			break
+	# Shield up for the other side's phase.
+	await _use_cards(unit, Enums.Suit.WARD)
 	_mark(unit, false)
+
+
+## Activates the cards in [param unit]'s hand that have [param suit] (Wilds
+## are kept; a full hand activates them when it draws). Orbs only when a
+## skill is recharging.
+func _use_cards(unit: UnitState, suit: Enums.Suit) -> void:
+	if suit == Enums.Suit.ORB and not _recharging(unit):
+		return
+	for card: Card in unit.hand.duplicate():
+		if unit.is_alive() and not card.is_wild() and card.suits.has(suit):
+			await resolver.activate_card(unit, card)
+
+
+func _recharging(unit: UnitState) -> bool:
+	for skill in unit.skills():
+		if unit.cooldown_left(skill) > 0:
+			return true
+	return false
 
 
 func _mark(unit: UnitState, on: bool) -> void:

@@ -1,13 +1,11 @@
 class_name Hit
 extends RefCounted
-## One strike in progress. The resolver draws its cards and applies Power,
-## Armor and dodges; then statuses on the target may change [member amount]
+## One strike in progress. The resolver sets its parts (one flat value per
+## tier) and applies Power, Armor and dodges; then statuses on the target may change [member amount]
 ## or cancel it (before_damage_taken); statuses on the attacker see the
 ## result afterwards (after_damage_dealt).
 ##
-## Power raises a card a tier and Armor lowers one. A tier step is exactly
-## one point of value, and past Gold or below Bronze each point is +/-1
-## damage, so both come out as +/-1 per point. A strike that lands always
+## Power and Armor are +/-1 damage per point. A strike that lands always
 ## deals at least 1.
 
 var attacker: UnitState
@@ -15,13 +13,14 @@ var target: UnitState
 var skill: SkillDef
 var melee: bool = true
 var spec: StrikeSpec
-var cards: Array[Card] = []
+## The strike's parts: one flat value per tier (Silver = 3).
+var parts: Array[int] = []
 var bonus: int = 0
 var power: int = 0
 var armor: int = 0
-## The strike's lowest card was cancelled by a dodge (or Blind).
+## The strike's smallest part was cancelled by a dodge (or Blind).
 var dodged: bool = false
-## A one-card strike was dodged: it deals 1 and keeps its riders.
+## A one-part strike was dodged: it deals 1 and keeps its riders.
 var grazed: bool = false
 ## Dodges the target spent on this strike (given back if it's cancelled).
 var dodges_spent: int = 0
@@ -47,41 +46,41 @@ func is_copy() -> bool:
 	return spec.copy
 
 
-## Cancels the lowest card, or grazes a strike with only one card (or none).
+## Cancels the smallest part, or grazes a strike with only one part (or none).
 func dodge() -> void:
 	dodged = true
-	if cards.size() >= 2:
+	if parts.size() >= 2:
 		var lowest := 0
-		for i in cards.size():
-			if cards[i].value < cards[lowest].value:
+		for i in parts.size():
+			if parts[i] < parts[lowest]:
 				lowest = i
-		cards.remove_at(lowest)
+		parts.remove_at(lowest)
 	else:
 		grazed = true
 
 
-func card_total() -> int:
+func part_total() -> int:
 	var total := 0
-	for card in cards:
-		total += card.value
+	for part in parts:
+		total += part
 	return total
 
 
-## Works out [member amount] from the cards, bonus, Power and Armor.
+## Works out [member amount] from the parts, bonus, Power and Armor.
 func compute() -> void:
 	if grazed:
 		amount = 1
 		return
-	amount = maxi(1, card_total() + bonus + power - armor)
+	amount = maxi(1, part_total() + bonus + power - armor)
 
 
-## "Gold 4 + Silver 3, +1 Power": for logs and tooltips.
+## "4 + 3, +1 Power": for logs and tooltips.
 func breakdown() -> String:
-	var parts: Array[String] = []
-	for card in cards:
-		parts.append("%s (held)" % card if card.held else str(card))
-	var text := " + ".join(parts)
-	if parts.is_empty():
+	var names: Array[String] = []
+	for part in parts:
+		names.append(str(part))
+	var text := " + ".join(names)
+	if names.is_empty():
 		text = str(bonus)
 	elif bonus != 0:
 		text += " %+d" % bonus
