@@ -11,11 +11,17 @@ signal restart_pressed
 ## The player clicked a status icon on the unit panel (Bound in Blood opens
 ## its Pact preference).
 signal status_clicked(inst: StatusInstance)
+## The player clicked a card in the Soulstream tray.
+signal card_clicked(card: Card)
 
 ## Modal choices (Pacts, reactions). Lives on the HUD so it draws on top.
 var prompt: PromptDialog
+## The player's Soulstream (for the shared row), set by Battle.
+var player_stream: Soulstream
 
 const SKILL_BUTTON_SIZE := Vector2(64, 64)
+## Strikes kept in the log under the round counter.
+const LOG_LINES := 5
 
 var _round_label: Label
 var _unit_label: Label
@@ -36,7 +42,12 @@ var _end_title: Label
 var _round: int = 0
 var _my_phase: bool = true
 var _targeting: SkillDef
+var _targeting_step: int = 0
 var _status_strip: HBoxContainer
+var _tray: CardTray
+var _readied: Array[Card] = []
+var _log_label: Label
+var _log: Array[String] = []
 
 
 func _ready() -> void:
@@ -52,8 +63,14 @@ func _ready() -> void:
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(top)
 
+	var left := VBoxContainer.new()
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(left)
 	_round_label = _label(22)
-	top.add_child(_round_label)
+	left.add_child(_round_label)
+	_log_label = _label(13)
+	_log_label.modulate = Color(1, 1, 1, 0.8)
+	left.add_child(_log_label)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -96,6 +113,12 @@ func _ready() -> void:
 	bottom.add_child(_skill_bar)
 	bottom.add_child(_hint_label)
 
+	_tray = CardTray.new()
+	_tray.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_tray.size_flags_vertical = Control.SIZE_SHRINK_END
+	_tray.card_clicked.connect(card_clicked.emit)
+	root.add_child(_tray)
+
 	_build_banner()
 	_build_end_screen()
 
@@ -115,6 +138,9 @@ func _ready() -> void:
 	EventBus.unit_damaged.connect(_on_unit_damaged)
 	EventBus.targeting_started.connect(_on_targeting_started)
 	EventBus.targeting_ended.connect(_on_targeting_ended)
+	EventBus.cards_changed.connect(func(_team: Enums.Team) -> void: _refresh_tray())
+	EventBus.cards_readied.connect(_on_cards_readied)
+	EventBus.strike_shown.connect(_on_strike_shown)
 	_clear_unit()
 
 
@@ -142,6 +168,7 @@ func _on_phase_started(team: Enums.Team, round_number: int) -> void:
 	_round_label.text = "Round %d  ·  %s" % [round_number, "Your turn" if mine else "Enemy turn"]
 	_end_turn.disabled = not mine
 	_stop_pulse()
+	_refresh_tray()
 	_show_banner("Round %d" % round_number if mine else "Enemy Turn",
 			Color(0.55, 0.85, 1.0) if mine else Color(1.0, 0.45, 0.4))
 
@@ -149,6 +176,7 @@ func _on_phase_started(team: Enums.Team, round_number: int) -> void:
 func _on_battle_ended(outcome: Enums.Outcome) -> void:
 	_end_turn.disabled = true
 	_my_phase = false
+	_refresh_tray()
 	_hint_label.text = ""
 	_stop_pulse()
 	match outcome:
@@ -246,6 +274,7 @@ func _clear_unit() -> void:
 	_tooltip.text = ""
 	_build_skill_bar()
 	_build_status_strip()
+	_refresh_tray()
 	_hint_label.text = _idle_hint()
 
 
@@ -266,6 +295,7 @@ func _on_unit_damaged(unit: UnitState, _amount: int) -> void:
 
 func _on_targeting_started(_unit: UnitState, skill: SkillDef, step: int) -> void:
 	_targeting = skill
+	_targeting_step = step
 	if skill.is_path():
 		_hint_label.text = "%s: %s. Click the last square again (or Enter) to stop there. Right-click to go back." \
 				% [skill.display_name, skill.path.prompt]
@@ -276,6 +306,7 @@ func _on_targeting_started(_unit: UnitState, skill: SkillDef, step: int) -> void
 		if skill.targets.size() > 1:
 			prompt += " (%d of %d)" % [step + 1, skill.targets.size()]
 		_hint_label.text = "%s: %s. Right-click to go back." % [skill.display_name, prompt]
+	_hint_label.text += _readied_hint()
 	_tooltip.text = _skill_text(skill)
 	_build_skill_bar()
 
@@ -295,12 +326,14 @@ func _refresh_unit() -> void:
 	_points_label.text = "Move %d   Skill %d   Flex %d" % [a.move, a.skill, a.flex]
 	_build_skill_bar()
 	_build_status_strip()
+	_refresh_tray()
 	if _targeting == null:
 		if unit.skills().is_empty():
 			_hint_label.text = "Click a blue cell to move. Right-click or Esc to deselect."
 		else:
 			_hint_label.text = "Click a blue cell to move, or pick a skill (1-%d). Right-click to deselect." \
 					% unit.skills().size()
+		_hint_label.text += _readied_hint()
 
 
 func _build_skill_bar() -> void:
@@ -348,6 +381,41 @@ func _skill_button(index: int, skill: SkillDef) -> Button:
 		cd.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		b.add_child(cd)
 	return b
+
+
+func _refresh_tray() -> void:
+	_tray.visible = player_stream != null
+	if player_stream == null:
+		return
+	_tray.show_cards(_shown, player_stream.row, _readied, _my_phase and _shown != null)
+
+
+func _on_cards_readied(cards: Array[Card]) -> void:
+	_readied = cards.duplicate()
+	_refresh_tray()
+	if _shown != null and _targeting == null:
+		_refresh_unit()
+	elif _targeting != null:
+		_on_targeting_started(_shown, _targeting, _targeting_step)
+
+
+## "  Readied: Silver Blade 4. Your next skill uses it in place of a draw."
+func _readied_hint() -> String:
+	if _readied.is_empty():
+		return ""
+	var names: Array[String] = []
+	for card in _readied:
+		names.append(str(card))
+	return "\nReadied: %s. Your next skill uses %s in place of its lowest-tier draws." \
+			% [", ".join(names), "it" if _readied.size() == 1 else "them"]
+
+
+func _on_strike_shown(attacker: UnitState, target: UnitState, amount: int, text: String) -> void:
+	var who := attacker.def.display_name if attacker != null else "?"
+	_log.append("%s hits %s for %d: %s" % [who, target.def.display_name, amount, text])
+	while _log.size() > LOG_LINES:
+		_log.pop_front()
+	_log_label.text = "\n".join(_log)
 
 
 ## "Gloom Edge (Skill action · Recharge 2): Strike target foe for..."

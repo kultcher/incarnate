@@ -16,10 +16,16 @@ signal autoplay_changed(on: bool)
 signal player_out_of_actions()
 signal skill_used(unit: UnitState, skill: SkillDef)
 signal unit_damaged(unit: UnitState, amount: int)
+## A strike landed: [param text] is its breakdown ("Silver Blade 4 + ...").
+signal strike_shown(attacker: UnitState, target: UnitState, amount: int, text: String)
 signal unit_died(unit: UnitState)
 signal unit_healed(unit: UnitState, amount: int)
 ## A unit gained, lost or changed a status.
 signal statuses_changed(unit: UnitState)
+## A hand or the shared Soulstream row of [param team] changed.
+signal cards_changed(team: Enums.Team)
+## The player readied or unreadied cards for the selected unit's next skill.
+signal cards_readied(cards: Array[Card])
 ## The player is choosing step [param step] of [param skill]'s targets.
 signal targeting_started(unit: UnitState, skill: SkillDef, step: int)
 signal targeting_ended()

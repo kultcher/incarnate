@@ -79,7 +79,7 @@ func compute() -> void:
 func breakdown() -> String:
 	var parts: Array[String] = []
 	for card in cards:
-		parts.append(str(card))
+		parts.append("%s (held)" % card if card.held else str(card))
 	var text := " + ".join(parts)
 	if bonus != 0:
 		text += " %+d" % bonus

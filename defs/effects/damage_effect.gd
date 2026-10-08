@@ -44,5 +44,9 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 	score.damage(target, score.expected_strike(target, tiers, bonus, power))
 
 
+func card_tiers() -> Array[Enums.Tier]:
+	return tiers
+
+
 func has_ai_value() -> bool:
 	return true

@@ -6,7 +6,7 @@ Godot 4.7, GDScript, Compatibility renderer.
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review: https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
 
-## Status: milestone 5 (full Bloodthane and Traceless kits, 2014 version)
+## Status: milestone 6 (the Soulstream: card decks, hands and the shared row)
 
 Run the project (F5) to open the test arena: your three Incarnates against
 three Shamblers.
@@ -21,14 +21,29 @@ three Shamblers.
 - **Path skills** (Bloody Rush, Phantom Dash): click squares one at a time.
   The path may pass through foes but must end on an empty square. Click the
   last square again (or press **Enter**) to stop early.
+- **Cards** (bottom right): click a card in the selected unit's hand or the
+  shared Soulstream row to ready it for that unit's next skill; click again
+  to put it back. See below.
 - **Space** or **End Turn** ends your phase. **F9** toggles autoplay (the AI
   plays your side, prompts included).
 
 ### Damage: Soulstream cards
 
-Skills strike for cards, e.g. "6 (Silver + Silver)". Bronze is 1-3, Silver
-2-4, Gold 3-5. **For now every card counts as its middle value** (2, 3, 4);
-held cards, the shared Soulstream, suits and Heroic versions come later.
+Skills strike for cards, e.g. "6 (Silver + Silver)": the number is the
+average, and the cards are drawn when the skill lands. Bronze is 1-3, Silver
+2-4, Gold 3-5.
+
+- **Decks:** each tier is a 60-card deck: four suits (Blade, Orb, Portal,
+  Ward), each with 5 low, 6 middle and 4 high cards. Discards are reshuffled
+  in when a deck runs out. Enemies draw from their own decks.
+- **Hands and the shared row:** at the start of your phase each Incarnate
+  draws a Silver card (holding up to 2), and the shared row gets a card of a
+  random tier (up to 3). Unspent cards carry over.
+- **Readying:** click held or shared cards before using a skill. The skill
+  uses them in place of its lowest-tier draws (any card can stand in for any
+  tier) and draws the rest blind. Readied cards it doesn't need go back.
+- The log under the round counter shows each strike's cards.
+- Suits don't do anything yet; suit bonuses and Heroic versions come later.
 
 - **Power**: +1 per point (raises a card a tier). Heals get it too.
 - **Armor**: -1 per point on strikes against you. A strike always deals at least 1.
@@ -59,7 +74,8 @@ you may bind a Pact to it, each Pact once per turn. **Dominance**: Provoke
 the foe, +1 Armor. **Vampiric**: the foe loses 1, you heal 1. **Predation**:
 Cripple the foe, then you may shift 1. Tick "Always choose this", or click
 the passive's icon, to bind one Pact without being asked. (The 2014 trigger
-is a Blade card on the strike; the two-strike rule stands in until suits.)
+is a Blade card on the strike; the two-strike rule stands in until suits
+do something.)
 
 ### Traceless
 
@@ -90,7 +106,7 @@ move), **Blinded** (its next strike counts as dodged).
 8 HP, move 3, Claw for 3 (Silver), one attack per turn. They're training
 dummies: the AI clears them in 2 rounds.
 
-Not in yet: Heroic versions, Talents, held cards and suits, Perfect Decoy's
+Not in yet: Heroic versions, Talents, suit bonuses, Perfect Decoy's
 teleport, and Titan Charge and the other Alpha-only skills. The AI uses
 damage and healing skills but not the utility ones yet.
 
@@ -98,7 +114,7 @@ damage and healing skills but not the utility ones yet.
 
 | Folder | What lives there | May depend on |
 | --- | --- | --- |
-| `core/` | Rules and battle state as plain data: board, pathing, targeting, units, action points, the resolver, the AI planner | `defs/` only |
+| `core/` | Rules and battle state as plain data: board, pathing, targeting, units, action points, the Soulstream (`core/cards/`), the resolver, the AI planner | `defs/` only |
 | `defs/` | Resource scripts for content: `UnitDef`, `SkillDef`, `TargetStep`, effects, `StatusDef` and status behaviors | `core/` |
 | `content/` | The `.tres` content files | `defs/`, `art/` |
 | `battle/` | The battle scene, turn loop (`BattleController`), input (`PlayerController`), `EnemyAI`, spawn markers | everything |
@@ -108,6 +124,7 @@ damage and healing skills but not the utility ones yet.
 | `autoload/` | `EventBus`, the only autoload | `core/` |
 | `tests/` | GUT tests: `unit/` for rules, `integration/` for the real scene | everything |
 | `tools/` | Arena and kit builders, script checker, screenshot helper; `tools/dev/` has the autoplay stats scene | everything |
+| `references/` | Design log, kit reference and the 2013-14 archive. Godot ignores it (`.gdignore`) | - |
 
 ## Editing the arena
 
@@ -196,7 +213,7 @@ files are the source of truth after that; edit them in the editor. Re-running
 the builder overwrites them.
 
 For a quick balance check, run `tools/dev/autoplay_stats.tscn` (20 AI-vs-AI
-battles with random card values; prints outcomes and skill use).
+battles with shuffled decks; prints outcomes and skill use).
 
 ## Conventions
 

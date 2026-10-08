@@ -125,6 +125,8 @@ func _play(event: GameEvent) -> void:
 			if jumper != null:
 				await jumper.teleport_to(board_view.cell_to_local(event.path[0]))
 			EventBus.unit_moved.emit(event.unit, event.path)
+		GameEvent.CARDS_CHANGED:
+			EventBus.cards_changed.emit(event.team)
 		GameEvent.SHADOWS_CHANGED:
 			board_view.shadows.set_shadows(event.unit, view_for(event.unit), event.path)
 		GameEvent.FLOATING_TEXT:
@@ -148,6 +150,7 @@ func _play_strike(event: GameEvent) -> void:
 		await attacker.lunge_toward(target.position)
 	elif attacker != null:
 		attacker.face_toward(target.position)
+	EventBus.strike_shown.emit(event.unit, event.target, event.amount, event.text)
 	var skill := event.skill
 	if skill != null and skill.hit_fx != null:
 		HitFx.spawn(board_view, target.position + Vector2(0, -20),

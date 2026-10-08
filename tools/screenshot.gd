@@ -14,6 +14,8 @@ extends Node
 ##   cloak      the Chimeric Cloak prompt during the enemy phase
 ##   shadow     the Shadowstrike prompt, with the Traceless's Shadow drawn
 ##   traceless  the Traceless selected, its 10-skill bar and a tooltip
+##   cards      Bloodthane selected with a hand card and a shared card readied
+##   logged     after Blade Fury with a readied card: the strike log
 
 
 func _ready() -> void:
@@ -22,6 +24,7 @@ func _ready() -> void:
 	var shot := args[1] if args.size() > 1 else "select"
 	var battle: Battle = load("res://battle/battle.tscn").instantiate()
 	battle.autoplay = shot == "end"
+	battle.card_seed = 4  # The same cards every time.
 	if shot == "end":
 		Engine.time_scale = 10.0
 	add_child(battle)
@@ -90,6 +93,15 @@ func _ready() -> void:
 				while not battle.hud.prompt.is_open():
 					await get_tree().process_frame
 				await get_tree().create_timer(0.4).timeout
+		"cards", "logged":
+			if shot == "logged":
+				await c.click_cell(Vector2i(5, 8))
+			c.toggle_card(bt.hand[0])
+			c.toggle_card(battle.resolver.soulstream(Enums.Team.PLAYER).row[0])
+			if shot == "logged":
+				c.begin_targeting_index(_index(bt, &"blade_fury"))
+				await c.click_cell(Vector2i(6, 8))
+				await get_tree().create_timer(0.6).timeout
 		"enemy":
 			# Walk Bloodthane forward, then hand over to the enemies.
 			await c.click_cell(Vector2i(4, 7))

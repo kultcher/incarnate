@@ -69,6 +69,7 @@ func _player_phase() -> void:
 	_check_outcome()
 	if is_over():
 		return
+	_soulstream_income()
 	await _start_side(Enums.Team.PLAYER)
 	_check_outcome()
 	if is_over():
@@ -91,6 +92,14 @@ func _enemy_phase() -> void:
 	if is_over():
 		return
 	await enemy_driver.take_turn(Enums.Team.ENEMY)
+
+
+## Each Incarnate draws a card into its hand, and the shared row gets one.
+func _soulstream_income() -> void:
+	resolver.refill_row(Enums.Team.PLAYER)
+	for unit in board.units():
+		if unit.is_player() and unit.is_alive():
+			resolver.deal_card(unit)
 
 
 func _start_side(team: Enums.Team) -> void:

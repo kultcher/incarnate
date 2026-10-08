@@ -19,6 +19,7 @@ const STATUS_CHANGED := &"status_changed"
 const FLOATING_TEXT := &"floating_text"
 const TELEPORTED := &"teleported"
 const SHADOWS_CHANGED := &"shadows_changed"
+const CARDS_CHANGED := &"cards_changed"
 
 var type: StringName
 var unit: UnitState
@@ -34,7 +35,7 @@ var melee: bool = false
 ## HP right after this hit. The view shows this, not the unit's current HP,
 ## which may already be lower by the time the event plays.
 var hp_after: int = 0
-## PHASE_STARTED: whose phase. [member amount] holds the round number.
+## PHASE_STARTED: whose phase. CARDS_CHANGED: whose cards. [member amount] holds the round number.
 var team: Enums.Team
 var outcome: Enums.Outcome = Enums.Outcome.NONE
 ## STATUS_*: the instance. Its stacks are copied into [member amount] so the
@@ -76,6 +77,13 @@ static func strike(attacker: UnitState, p_target: UnitState, hit: Hit) -> GameEv
 static func teleported(p_unit: UnitState, to: Vector2i) -> GameEvent:
 	var e := _make(TELEPORTED, p_unit)
 	e.path = [to]
+	return e
+
+
+## A hand or the shared row of [param p_team] changed.
+static func cards_changed(p_team: Enums.Team) -> GameEvent:
+	var e := _make(CARDS_CHANGED, null)
+	e.team = p_team
 	return e
 
 

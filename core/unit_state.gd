@@ -21,6 +21,9 @@ var statuses: Array[StatusInstance] = []
 ## can't be targeted; they belong to the unit that made them. Change them
 ## only through the resolver.
 var shadows: Array[Vector2i] = []
+## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
+## Change it only through the resolver.
+var hand: Array[Card] = []
 
 #region This turn
 ## Reset at the start of the unit's turn.

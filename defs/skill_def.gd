@@ -57,6 +57,14 @@ func describe() -> String:
 	return text
 
 
+## Every Soulstream card the skill's effects draw, in effect order.
+func card_tiers() -> Array[Enums.Tier]:
+	var all: Array[Enums.Tier] = []
+	for effect in effects:
+		all.append_array(effect.card_tiers())
+	return all
+
+
 ## Standard skills (not Basic, Ultimate or Recovery). Adrenal Surge affects these.
 func is_standard() -> bool:
 	return slot not in [Enums.Slot.BASIC, Enums.Slot.ULTIMATE, Enums.Slot.RECOVERY]

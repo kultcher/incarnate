@@ -19,6 +19,7 @@ func after_each() -> void:
 func _load(autoplay: bool) -> void:
 	battle = load("res://battle/battle.tscn").instantiate()
 	battle.autoplay = autoplay
+	battle.card_seed = 1  # The same shuffle every run.
 	add_child_autofree(battle)
 	await wait_process_frames(2)
 
