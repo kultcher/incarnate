@@ -74,8 +74,24 @@ func _ready() -> void:
 	_center_camera()
 
 	hud.can_use = func(unit: UnitState, skill: SkillDef) -> bool:
+		if unit.shadow_of != null:
+			return resolver.can_use_shadow(unit, skill) and resolver.has_targets(unit, skill)
 		return resolver.can_use(unit, skill) and resolver.has_targets(unit, skill)
-	hud.end_turn_pressed.connect(controller.request_end_turn)
+	hud.cost_of = resolver.cost_of
+	hud.stats = resolver.stats
+	battle_controller.battle_ended.connect(func(_outcome: Enums.Outcome) -> void:
+		print("Battle report:\n", resolver.stats.report()))
+	hud.end_turn_pressed.connect(controller.end_turn_from_input)
+	controller.confirm = func(title: String, text: String, icon: Texture2D, yes: String) -> bool:
+		if battle_controller.autoplay:
+			return true
+		var request := DecisionRequest.new()
+		request.title = title
+		request.text = text
+		request.icon = icon
+		request.add_option(yes)
+		request.decline_label = "Cancel"
+		return await hud.prompt.ask(request) == 0
 	hud.skill_pressed.connect(controller.begin_targeting_index)
 	hud.restart_pressed.connect(_restart)
 	hud.status_clicked.connect(_on_status_clicked)

@@ -6,15 +6,18 @@ extends EffectDef
 
 @export var tiers: Array[Enums.Tier] = [Enums.Tier.SILVER]
 @export var shift_distance: int = 2
+## A Shadow using it shifts this much further (it must match ShiftStrikeRule).
+@export var shadow_bonus: int = 2
 @export var describe_key: String = "damage"
 
 
 func apply(ctx: ActionContext) -> void:
 	var foe := ctx.unit_at_step(0)
 	var dest := ctx.picks[1]
-	var reach := Pathing.reachable(ctx.board, ctx.caster, shift_distance, MoveRules.shift())
+	var distance := shift_distance + (shadow_bonus if ctx.caster.shadow_of != null else 0)
+	var reach := Pathing.reachable(ctx.board, ctx.caster, distance, MoveRules.shift())
 	var path := reach.path_to(dest)
-	var strike_first := foe != null and BoardState.distance(ctx.caster.cell, foe.cell) == 1
+	var strike_first := foe != null and ctx.board.distance_to(foe, ctx.caster.cell) == 1
 	if strike_first:
 		await _strike(ctx, foe)
 	if ctx.caster.is_alive():

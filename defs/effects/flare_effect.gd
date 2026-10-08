@@ -1,7 +1,8 @@
 class_name FlareEffect
 extends EffectDef
 ## Spirit Flare: strikes the unit picked in step 0 if it's a foe, heals it
-## if it's an ally, for the same cards.
+## if it's an ally, for the same cards. Under Anima Nexus the heal reaches
+## every ally (each draws its own cards).
 
 @export var tiers: Array[Enums.Tier] = [Enums.Tier.SILVER]
 
@@ -13,7 +14,8 @@ func apply(ctx: ActionContext) -> void:
 	if ctx.caster.is_foe(target):
 		await ctx.resolver.strike(ctx.caster, target, StrikeSpec.cards(tiers, ctx.skill, false))
 	else:
-		ctx.resolver.heal_cards(ctx.caster, target, tiers)
+		for ally in Tethers.fan_out(ctx.caster, target, ctx.board):
+			ctx.resolver.heal_cards(ctx.caster, ally, tiers)
 
 
 func describe_values() -> Dictionary:

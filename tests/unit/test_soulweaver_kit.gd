@@ -278,3 +278,24 @@ func test_anima_nexus_makes_every_ally_tethered() -> void:
 	assert_true(Tethers.allies_of(rig.player(), rig.board).is_empty(), "Only this turn")
 
 #endregion
+
+
+func test_under_anima_nexus_spirit_flare_heals_every_ally() -> void:
+	var rig := await _rig(["P A A E"] as Array[String])
+	await rig.equip(rig.ally(1), BT)
+	for unit: UnitState in [rig.player(), rig.ally(0), rig.ally(1)]:
+		unit.hp = 5
+	assert_true(await rig.use(rig.player(), &"anima_nexus"))
+	assert_true(await rig.use(rig.player(), &"spirit_flare", [rig.ally(0).cell]))
+	assert_eq(rig.ally(0).hp, 8, "The ally aimed at")
+	assert_eq(rig.ally(1).hp, 8, "And every other ally")
+	assert_eq(rig.player().hp, 5, "Not the Soulweaver: it aimed at an ally")
+
+
+func test_under_anima_nexus_strength_in_unity_shields_every_ally() -> void:
+	var rig := await _rig(["P A A E"] as Array[String])
+	await rig.equip(rig.ally(1), BT)
+	assert_true(await rig.use(rig.player(), &"anima_nexus"))
+	assert_true(await rig.use(rig.player(), &"strength_in_unity", [rig.ally(0).cell]))
+	for unit: UnitState in [rig.player(), rig.ally(0), rig.ally(1)]:
+		assert_eq(unit.find_status(&"shield").stacks, 4, "%s shielded" % unit)

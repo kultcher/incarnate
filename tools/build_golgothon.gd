@@ -118,6 +118,7 @@ func _content() -> Dictionary:
 	var minion := UnitDef.new()
 	minion.id = &"welcoming_dead"
 	minion.display_name = "Welcoming Dead"
+	minion.report_as_group = true
 	minion.max_hp = MINION_HP
 	minion.move = 0
 	minion.flex_points = 0

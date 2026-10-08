@@ -76,6 +76,8 @@ const HOLD_COUNT := 2
 
 
 static func is_held(board: BoardState, unit: UnitState) -> bool:
+	if unit.shadow_of != null:
+		return false  # Shadows can't be grabbed.
 	var holders := 0
 	for cell in board.cells_around(unit):
 		var other := board.unit_at(cell)

@@ -24,6 +24,7 @@ Michael's direction (see `references/design-decisions.md`) replaced the preceden
   - **Shadow copies of area skills** (Phantom Dash) strike a single foe.
   - **Phantom Dash** leaves one Shadow, not two.
   - **A Shadow can't copy the same use of the skill that made it** (Michael, 2026-10-08).
+  - **Shadows inherit skills** instead of copying them (Michael, 2026-10-08): each Shadow can use an inherited Displacer Strike, Gloom Edge or Phantom Dash from its own square until end of turn, then fades. Displacer gets +2 shift from a Shadow.
   - **Perfect Decoy** has no teleport yet.
   - **Chimeric Cloak** doesn't stop health loss.
   - **Blind** makes the next strike count as dodged; the 25% miss chance is gone.

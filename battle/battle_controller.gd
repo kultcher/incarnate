@@ -39,6 +39,8 @@ func run() -> Enums.Outcome:
 			driver.is_over = over
 	resolver.action_finished.connect(_check_outcome)
 	for unit in board.units():
+		resolver.stats.track(unit)
+	for unit in board.units():
 		for passive in unit.def.passives:
 			await resolver.apply_status(unit, passive, unit)
 	_check_outcome()

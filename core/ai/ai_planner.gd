@@ -23,6 +23,8 @@ class Plan:
 	var picks: Array[Vector2i] = []
 	var move_to := Vector2i(-1, -1)
 	var score: float = 0.0
+	## Set when one of the unit's Shadows uses an inherited skill.
+	var shadow: UnitState
 
 	func is_move() -> bool:
 		return skill == null
@@ -43,6 +45,22 @@ static func best_attack(board: BoardState, resolver: ActionResolver, unit: UnitS
 		var plan := _best_picks(board, unit, skill)
 		if plan != null and (best == null or plan.score > best.score):
 			best = plan
+	return best
+
+
+## The best inherited skill one of [param unit]'s Shadows could use now
+## (free), or null if none would hurt a foe.
+static func best_shadow_attack(board: BoardState, resolver: ActionResolver, unit: UnitState) -> Plan:
+	var best: Plan = null
+	for cell in unit.shadows:
+		var proxy := resolver.shadow_proxy(unit, cell)
+		for skill in proxy.skills():
+			if not knows(skill):
+				continue
+			var plan := _best_picks(board, proxy, skill)
+			if plan != null and (best == null or plan.score > best.score):
+				plan.shadow = proxy
+				best = plan
 	return best
 
 

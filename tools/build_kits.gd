@@ -338,7 +338,9 @@ func _traceless(common: Dictionary) -> void:
 	var shadows := _status(&"illusive_shadows", "Illusive Shadows", "illusive_shadows",
 			"Passive. Shifting out of a square leaves a Shadow there (at most {max}; a new one " \
 			+ "replaces the oldest). Shadows don't block anything and can't be struck.\n" \
-			+ "Shadowstrike: after you use an attack, one Shadow may copy it, then fades.\n" \
+			+ "Shadowstrike: when you use Displacer Strike, Gloom Edge or Phantom Dash, each Shadow " \
+			+ "inherits it until end of turn (except one that use made). Click a Shadow to use its " \
+			+ "skills from its square; it fades after one use.\n" \
 			+ "Probability Armor: +1 Evasion (a dodge per round) for each Shadow.",
 			0, Enums.StatusClock.OWNER_TURN)
 	shadows.behavior = shadows_behavior
@@ -369,7 +371,8 @@ func _traceless(common: Dictionary) -> void:
 	_save(decoy, sdir + "perfect_decoy.tres")
 
 	var storm := _status(&"shadowstorm", "Shadowstorm", "shadowstorm",
-			"Any number of Shadows can copy each attack until end of turn.")
+			"Until end of turn, Shadows aren't used up when they use an inherited skill (each can use " \
+			+ "each inherited skill once).")
 	_save(storm, sdir + "shadowstorm.tres")
 
 	# --- Skills ---
@@ -384,12 +387,11 @@ func _traceless(common: Dictionary) -> void:
 	dest_step.prompt = "Pick where to shift"
 	var displacer := _skill(&"displacer_strike", "Displacer Strike", "displacer_strike",
 			"Shift up to {shift} squares, through foes if you like. Before or after the shift, " \
-			+ "strike an adjacent foe for {damage}. A Shadow copying it reaches 2 squares further. " \
-			+ "(Pick your own square to strike without moving.)",
+			+ "strike an adjacent foe for {damage}. (Pick your own square to strike without moving.) " \
+			+ "Shadows inherit it; a Shadow using it shifts 2 squares further.",
 			Enums.Slot.BASIC, Enums.Cost.SKILL, 0, [&"attack", &"melee"],
 			[foe_step, dest_step], [displacer_effect])
-	displacer.copy_range = 5
-	displacer.copy_tiers = _tiers([SI])
+	displacer.shadow_use = true
 	displacer.hit_fx = _shadow_fx
 	_save(displacer, kdir + "displacer_strike.tres")
 
@@ -400,12 +402,11 @@ func _traceless(common: Dictionary) -> void:
 	_save(shadowstep, kdir + "shadowstep.tres")
 
 	var gloom := _skill(&"gloom_edge", "Gloom Edge", "gloom_edge",
-			"Strike an adjacent foe for {damage}. A foe struck by a Shadow copying this is Blinded " \
-			+ "(its next strike counts as dodged).",
+			"Strike an adjacent foe for {damage}. Shadows inherit it; a foe struck by a Shadow's " \
+			+ "Gloom Edge is Blinded (its next strike counts as dodged).",
 			Enums.Slot.ATTACK, Enums.Cost.SKILL, 2, [&"attack", &"melee"],
 			[_adjacent_foe()], [_damage(_tiers([SI, SI]))])
-	gloom.copy_range = 1
-	gloom.copy_tiers = _tiers([SI, SI])
+	gloom.shadow_use = true
 	gloom.copy_status = common["blind"]
 	gloom.hit_fx = _shadow_fx
 	_save(gloom, kdir + "gloom_edge.tres")
@@ -414,14 +415,13 @@ func _traceless(common: Dictionary) -> void:
 	dash_effect.tiers = _tiers([SI])
 	var dash := _skill(&"phantom_dash", "Phantom Dash", "phantom_dash",
 			"Shift 2 squares, plus 2 more for each foe you shift through. Then strike each foe you " \
-			+ "shifted through for {damage}.",
+			+ "shifted through for {damage}. Shadows inherit it.",
 			Enums.Slot.AREA, Enums.Cost.SKILL, 3, [&"attack", &"area"], [], [dash_effect])
 	dash.path = PathSpec.new()
 	dash.path.budget = 2
 	dash.path.extend_per_foe = 2
 	dash.path.prompt = "Click out the dash (each foe you pass through adds 2 squares)"
-	dash.copy_range = 3
-	dash.copy_tiers = _tiers([SI])
+	dash.shadow_use = true
 	dash.hit_fx = _shadow_fx
 	_save(dash, kdir + "phantom_dash.tres")
 
@@ -480,7 +480,8 @@ func _traceless(common: Dictionary) -> void:
 		storm_targets.append(t)
 	var storm_skill := _skill(&"shadowstorm", "Shadowstorm", "shadowstorm",
 			"Ultimate. Free. Put your Shadows on any 3 empty squares (new ones fill any gaps). " \
-			+ "Until end of turn, any number of Shadows can copy each attack.",
+			+ "Until end of turn, a Shadow isn't used up when it uses an inherited skill: each Shadow can " \
+			+ "use each skill it inherited once.",
 			Enums.Slot.ULTIMATE, Enums.Cost.FREE, 0, [&"ultimate"], storm_targets, [storm_effect])
 	storm_skill.uses_per_battle = 1
 	_save(storm_skill, kdir + "shadowstorm.tres")
@@ -532,7 +533,7 @@ func _soulweaver() -> void:
 	_save(flare_ready, sdir + "flare_ready.tres")
 
 	var nexus := _status(Tethers.NEXUS, "Anima Nexus", "anima_nexus",
-			"Until end of turn, everything that reaches your Tethered ally reaches every ally.")
+			"Until end of turn, everything that reaches your Tethered ally, and anything you do to one ally, reaches every ally.")
 	_save(nexus, sdir + "anima_nexus.tres")
 
 	# Elusive Infusion grants a one-use free shift.
@@ -685,7 +686,9 @@ func _soulweaver() -> void:
 
 	var anima := _skill(&"anima_nexus", "Anima Nexus", "anima_nexus",
 			"Ultimate. Free. This turn, everything that reaches your Tethered ally reaches every " \
-			+ "ally instead: Infusions, Strength in Unity's recharge, Essence Shift, Well of Souls.",
+			+ "ally (Infusions, Strength in Unity's recharge, Essence Shift, Well of Souls), and " \
+			+ "anything you do to one ally reaches every ally (Spirit Flare's heal, Strength in " \
+			+ "Unity's shield).",
 			Enums.Slot.ULTIMATE, Enums.Cost.FREE, 0, [&"ultimate"], [], [_apply(nexus)])
 	anima.uses_per_battle = 1
 	_save(anima, kdir + "anima_nexus.tres")

@@ -62,3 +62,36 @@ func test_cannot_select_enemies() -> void:
 	var enemy := _unit_named("Shambler")
 	await battle.controller.click_cell(enemy.cell)
 	assert_null(battle.controller.selected)
+
+
+func test_ending_the_turn_with_actions_left_asks_first() -> void:
+	var c := battle.controller
+	c.end_turn_from_input()
+	await wait_until(func() -> bool: return battle.hud.prompt.is_open(), 2.0)
+	assert_string_contains(battle.hud.prompt._text.text, "still")
+	battle.hud.prompt.pick(DecisionRequest.DECLINED)
+	await wait_process_frames(2)
+	assert_true(c.is_active(), "Kept playing")
+	c.end_turn_from_input()
+	await wait_until(func() -> bool: return battle.hud.prompt.is_open(), 2.0)
+	battle.hud.prompt.pick(0)
+	await wait_process_frames(2)
+	assert_false(c.is_active(), "Ended the turn")
+
+
+func test_a_skill_made_free_shows_a_badge() -> void:
+	var bt := _unit_named("Bloodthane")
+	var potent := load("res://content/statuses/soulweaver/potent.tres") as StatusDef
+	await battle.resolver.apply_status(bt, potent, bt)
+	for unit in battle.board.units():
+		if unit.team == Enums.Team.ENEMY:
+			battle.board.move_unit(unit, bt.cell + Vector2i(1, 0))
+			break
+	await battle.controller.click_cell(bt.cell)
+	await wait_process_frames(2)
+	var first: Button = battle.hud._skill_bar.get_child(0)
+	var badges := 0
+	for child in first.get_children():
+		if child is Label and (child as Label).text == "FREE":
+			badges += 1
+	assert_eq(badges, 1, "Blade Fury is free under Potent")

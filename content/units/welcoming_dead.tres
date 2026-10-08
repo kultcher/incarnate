@@ -11,6 +11,7 @@
 script = ExtResource("4_o64k4")
 id = &"welcoming_dead"
 display_name = "Welcoming Dead"
+report_as_group = true
 max_hp = 5
 move = 0
 flex_points = 0

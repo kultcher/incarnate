@@ -15,6 +15,7 @@ extends TurnDriver
 ##   Right click / Esc       undo the last pick, cancel targeting, deselect
 ##   Space / End Turn button end the player's phase
 ##   Click a card (HUD)      ready it for the selected unit's next skill
+##   Left click a Shadow     use a skill it inherited this turn (Traceless)
 
 ## Emitted when the player ends their phase (or the battle ends during it).
 signal turn_ended
@@ -33,6 +34,9 @@ var picks: Array[Vector2i] = []
 ## Cards from the selected unit's hand or the shared row, readied for its
 ## next skill. Cleared when the skill is used or another unit is selected.
 var readied: Array[Card] = []
+## Asks the player to confirm something: (title, text, icon, yes label) ->
+## bool. Set by Battle (the HUD's prompt). Without it, nothing is asked.
+var confirm: Callable
 var _reach: Pathing.Reach
 var _valid: Array[Vector2i] = []
 var _hover_cell := Vector2i(-1, -1)
@@ -70,7 +74,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			finish_path()
 			get_viewport().set_input_as_handled()
 		elif key == KEY_SPACE:
-			request_end_turn()
+			end_turn_from_input()
 			get_viewport().set_input_as_handled()
 
 
@@ -81,7 +85,23 @@ func take_turn(_team: Enums.Team) -> void:
 	await turn_ended
 
 
-## End Turn button / Space. Ignored while an action is playing out.
+## End Turn button / Space: asks first if a unit still has actions left.
+func end_turn_from_input() -> void:
+	if state == State.INACTIVE or state == State.BUSY:
+		return
+	var idle: Array[String] = []
+	for unit in board.units():
+		if unit.is_player() and unit.is_alive() and not unit.actions.is_spent():
+			idle.append(unit.def.display_name)
+	if not idle.is_empty() and confirm.is_valid():
+		var text := "%s still %s actions left. End your turn anyway?" % [
+				", ".join(idle), "has" if idle.size() == 1 else "have"]
+		if not await confirm.call("End turn?", text, null, "End turn"):
+			return
+	request_end_turn()
+
+
+## Ends the player's phase now. Ignored while an action is playing out.
 func request_end_turn() -> void:
 	if state == State.INACTIVE or state == State.BUSY:
 		return
@@ -123,8 +143,24 @@ func click_cell(cell: Vector2i) -> void:
 	var unit := board.unit_at(cell)
 	if unit != null and unit.is_player():
 		select(unit)
+		return
+	var shadow := _shadow_at(cell)
+	if shadow != null:
+		select(shadow)
 	else:
 		deselect()
+
+
+## A stand-in for a player's Shadow on [param cell] that can use an inherited
+## skill now, or null.
+func _shadow_at(cell: Vector2i) -> UnitState:
+	if board.is_occupied(cell):
+		return null
+	for owner in board.units():
+		if owner.is_player() and owner.shadows.has(cell) \
+				and not resolver.shadow_skill_list(owner, cell).is_empty():
+			return resolver.shadow_proxy(owner, cell)
+	return null
 
 
 func select(unit: UnitState) -> void:
@@ -137,7 +173,9 @@ func select(unit: UnitState) -> void:
 		_clear_readied()
 	selected = unit
 	state = State.UNIT_SELECTED
-	presenter.view_for(unit).set_selected(true)
+	if presenter.view_for(unit) != null:
+		presenter.view_for(unit).set_selected(true)
+	board_view.shadows.selected_cell = unit.cell if unit.shadow_of != null else Vector2i(-1, -1)
 	_refresh_range()
 	EventBus.unit_selected.emit(unit)
 
@@ -150,6 +188,7 @@ func deselect() -> void:
 	if selected != null and presenter.view_for(selected) != null:
 		presenter.view_for(selected).set_selected(false)
 	selected = null
+	board_view.shadows.selected_cell = Vector2i(-1, -1)
 	_reach = null
 	state = State.IDLE
 	board_view.clear_highlights()
@@ -181,7 +220,7 @@ func begin_targeting_index(index: int) -> void:
 func begin_targeting(p_skill: SkillDef) -> void:
 	if selected == null or state == State.BUSY or state == State.INACTIVE:
 		return
-	if not resolver.can_use(selected, p_skill) or not resolver.has_targets(selected, p_skill):
+	if not _usable(selected, p_skill):
 		return
 	_end_targeting()
 	skill = p_skill
@@ -228,16 +267,43 @@ func _use_skill() -> void:
 	var used_skill := skill
 	var used_picks: Array[Vector2i] = picks.duplicate()
 	var used_cards := _valid_readied()
+	# Once-per-battle and team-limited skills ask first.
+	if (used_skill.slot == Enums.Slot.ULTIMATE or used_skill.slot == Enums.Slot.RECOVERY) \
+			and selected.shadow_of == null and confirm.is_valid():
+		var kind := "your Ultimate (once per battle)" if used_skill.slot == Enums.Slot.ULTIMATE \
+				else "a Recovery (%d left for the team)" % resolver.recoveries_left(selected.team)
+		if not await confirm.call(used_skill.display_name,
+				"Use %s, %s?" % [used_skill.display_name, kind], used_skill.icon, "Use it"):
+			state = State.TARGETING if not used_picks.is_empty() else State.UNIT_SELECTED
+			if state == State.TARGETING:
+				picks.pop_back()
+				_show_targeting()
+			else:
+				_end_targeting()
+				_refresh_range()
+			return
 	_end_targeting()
 	_clear_readied()
-	await resolver.request_skill(selected, used_skill, used_picks, used_cards)
+	if selected.shadow_of != null:
+		await resolver.request_shadow_skill(selected, used_skill, used_picks)
+	else:
+		await resolver.request_skill(selected, used_skill, used_picks, used_cards)
 	_after_action()
+
+
+## The skill can be started now: its cost, recharge and rules, and a target.
+## A Shadow's stand-in uses its inherited skills for free.
+func _usable(unit: UnitState, p_skill: SkillDef) -> bool:
+	if unit.shadow_of != null:
+		return resolver.can_use_shadow(unit, p_skill) and resolver.has_targets(unit, p_skill)
+	return resolver.can_use(unit, p_skill) and resolver.has_targets(unit, p_skill)
 
 
 ## Readies [param card] for the selected unit's next skill, or puts it back.
 ## Only the selected unit's hand and the shared row can be readied.
 func toggle_card(card: Card) -> void:
-	if selected == null or state == State.BUSY or state == State.INACTIVE:
+	if selected == null or selected.shadow_of != null or state == State.BUSY \
+			or state == State.INACTIVE:
 		return
 	if readied.has(card):
 		readied.erase(card)
@@ -306,6 +372,16 @@ func _after_action() -> void:
 		state = State.IDLE
 		_finish_turn()
 		return
+	if selected != null and selected.shadow_of != null:
+		# A Shadow fades after acting: go back to its owner if it did.
+		var owner := selected.shadow_of
+		var again := _shadow_at(selected.cell) if owner.shadows.has(selected.cell) else null
+		selected = again if again != null else (owner if owner.is_alive() else null)
+		board_view.shadows.selected_cell = Vector2i(-1, -1)
+		if selected != null and selected.shadow_of != null:
+			board_view.shadows.selected_cell = selected.cell
+		elif selected != null and presenter.view_for(selected) != null:
+			presenter.view_for(selected).set_selected(true)
 	if selected == null or not selected.is_alive():
 		selected = null
 		state = State.IDLE

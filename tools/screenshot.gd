@@ -12,7 +12,7 @@ extends Node
 ##   pact       the Bound in Blood prompt after Bloodthane's 2nd strike
 ##   pacted     after binding Dominance: Provoke over the Shambler, panel strip
 ##   cloak      the Chimeric Cloak prompt during the enemy phase
-##   shadow     the Shadowstrike prompt, with the Traceless's Shadow drawn
+##   shadow     a Shadow selected, showing the Gloom Edge it inherited
 ##   traceless  the Traceless selected, its 10-skill bar and a tooltip
 ##   cards      Bloodthane selected with a hand card and a shared card readied
 ##   logged     after Blade Fury with a readied card: the strike log
@@ -116,12 +116,12 @@ func _ready() -> void:
 				c.begin_targeting_index(_index(tl, &"displacer_strike"))
 				await c.click_cell(Vector2i(6, 8))
 				await c.click_cell(Vector2i(7, 8))
-				# Its own Shadow can't copy Displacer Strike; Gloom Edge it can.
+				# The Shadow it left inherits Gloom Edge; select the Shadow.
 				c.begin_targeting_index(_index(tl, &"gloom_edge"))
-				c.click_cell(Vector2i(6, 8))
-				while not battle.hud.prompt.is_open():
-					await get_tree().process_frame
+				await c.click_cell(Vector2i(6, 8))
 				await get_tree().create_timer(0.4).timeout
+				await c.click_cell(Vector2i(5, 8))
+				await get_tree().create_timer(0.6).timeout
 		"cards", "logged":
 			if shot == "logged":
 				await c.click_cell(Vector2i(5, 8))

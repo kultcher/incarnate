@@ -12,9 +12,10 @@ func apply(ctx: ActionContext) -> void:
 	var ally := ctx.unit_at_step(1)
 	if foe == null:
 		return
-	var lost := ctx.resolver.lose_health(foe, ctx.resolver.card_value(ctx.caster, tiers, 0, false), ctx.skill)
+	var lost := ctx.resolver.lose_health(foe, ctx.resolver.card_value(ctx.caster, tiers, 0, false),
+			ctx.skill, ctx.caster)
 	if ally != null and ally.is_alive():
-		ctx.resolver.heal(ally, lost + (kill_bonus if not foe.is_alive() else 0))
+		ctx.resolver.heal(ally, lost + (kill_bonus if not foe.is_alive() else 0), ctx.caster)
 
 
 func describe_values() -> Dictionary:

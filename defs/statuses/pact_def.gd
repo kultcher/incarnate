@@ -27,9 +27,9 @@ func bind(bloodthane: UnitState, foe: UnitState, r: ActionResolver) -> void:
 	if self_status != null:
 		await r.apply_status(bloodthane, self_status, bloodthane)
 	if foe_health_loss > 0:
-		r.lose_health(foe, foe_health_loss)
+		r.lose_health(foe, foe_health_loss, null, bloodthane)
 	if self_heal > 0:
-		r.heal(bloodthane, self_heal)
+		r.heal(bloodthane, self_heal, bloodthane)
 	if self_shift > 0 and bloodthane.is_alive():
 		await _shift(bloodthane, r)
 
