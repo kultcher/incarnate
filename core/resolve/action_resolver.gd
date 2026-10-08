@@ -138,9 +138,13 @@ func can_use_ignoring_points(caster: UnitState, skill: SkillDef) -> bool:
 		return false
 	if skill.requires_status != &"" and not caster.has_status(skill.requires_status):
 		return false
-	if skill.uses_per_battle > 0 and caster.uses.get(skill.id, 0) >= skill.uses_per_battle:
+	# A Burnout replay is a copy: it doesn't count against these limits, so
+	# they don't block it either.
+	var echo := _echo_for(caster, skill) != null
+	if not echo and skill.uses_per_battle > 0 \
+			and caster.uses.get(skill.id, 0) >= skill.uses_per_battle:
 		return false
-	if skill.slot == Enums.Slot.RECOVERY and recoveries_left(caster.team) <= 0:
+	if not echo and skill.slot == Enums.Slot.RECOVERY and recoveries_left(caster.team) <= 0:
 		return false
 	return true
 
@@ -453,12 +457,14 @@ func _kill(unit: UnitState) -> void:
 			inst.def.behavior.on_owner_died(inst, cell, self)
 	board.remove_unit(unit)
 	unit.statuses.clear()
-	if not unit.hand.is_empty():
+	# Held cards (the hand, the Kindleborne's Heat) go back to the discards.
+	if not unit.hand.is_empty() or not unit.heat.is_empty():
 		var stream := soulstream(unit.team)
-		for card in unit.hand:
+		for card in unit.hand + unit.heat:
 			if stream.deck(card.tier) != null:
 				stream.deck(card.tier).discard(card)
 		unit.hand.clear()
+		unit.heat.clear()
 		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()

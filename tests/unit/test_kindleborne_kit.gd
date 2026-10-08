@@ -244,10 +244,46 @@ func test_the_ai_ignites_for_extra_attacks() -> void:
 			continue
 		used.append(plan.skill.id)
 		await rig.resolver.request_skill(rig.player(), plan.skill, plan.picks,
-				AiPlanner.choose_cards(rig.resolver, rig.player(), plan.skill))
+				AiPlanner.choose_cards(rig.resolver, rig.player(), plan.skill, plan.picks))
 	assert_has(used, &"stoke", "Spent Heat: %s" % [used])
 	var attacks := used.filter(func(id: StringName) -> bool: return id != &"stoke")
 	assert_gt(attacks.size(), 2, "Skill, flex, then Ignited attacks: %s" % [used])
 	var heat := rig.player().find_status(&"rising_heat")
 	assert_gt((heat.def.behavior as RisingHeatBehavior).current_ignite_cost(heat), 5,
 			"Each Ignite this turn costs more")
+
+
+func test_a_second_flickerstep_replaces_the_range() -> void:
+	var rig := await _rig(["P . . . . . . . . E"] as Array[String])
+	var step := rig.skill(rig.player(), &"flickerstep")
+	assert_true(await rig.use(rig.player(), &"flickerstep"))
+	rig.player().find_status(&"flicker").stacks = 2  # As if the first draw was low.
+	rig.player().cooldowns.erase(step.id)
+	rig.player().actions.refresh()
+	assert_true(await rig.use(rig.player(), &"flickerstep"))
+	assert_eq(rig.player().find_status(&"flicker").stacks, 6, "The new draw's range")
+
+
+func test_a_burnout_replay_ignores_a_spent_recovery_pool() -> void:
+	var rig := await _rig(["P A E"] as Array[String])
+	var brand := rig.skill(rig.player(), &"cauterizing_brand")
+	assert_true(await rig.use(rig.player(), &"burnout"))
+	rig.resolver.recoveries_used[Enums.Team.PLAYER] = 1
+	_heat(rig, [5])
+	rig.answers.answers = [IGNITE]
+	await rig.use(rig.player(), &"stoke")
+	assert_true(await rig.use(rig.player(), &"cauterizing_brand", [rig.ally().cell]))
+	assert_eq(rig.resolver.recoveries_left(Enums.Team.PLAYER), 0, "The team's last Recovery")
+	assert_true(rig.resolver.can_use(rig.player(), brand), "The free replay still works")
+
+
+func test_a_fallen_kindleborne_discards_its_heat() -> void:
+	var rig := await _rig(["P . E"] as Array[String])
+	rig.resolver.use_decks(4)
+	rig.enemy().hp = 40
+	await rig.use(rig.player(), &"wracking_flame", [rig.enemy().cell])
+	assert_eq(rig.player().heat.size(), 2)
+	rig.resolver.lose_health(rig.player(), 99)
+	assert_true(rig.player().heat.is_empty())
+	var silver := rig.resolver.soulstream(Enums.Team.PLAYER).deck(Enums.Tier.SILVER)
+	assert_eq(silver.discard_pile.size(), 2, "Back in the discards")

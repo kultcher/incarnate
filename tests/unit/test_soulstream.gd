@@ -225,3 +225,14 @@ func test_the_ai_readies_cards_that_beat_the_median() -> void:
 	chosen = AiPlanner.choose_cards(rig.resolver, rig.player(), skill)
 	assert_eq(chosen.size(), 1, "5 + 4 gains no more than the 5 alone, so keep the 4")
 	assert_eq(chosen[0].value, 5)
+
+
+func test_the_ai_readies_cards_for_every_strike_of_a_path_skill() -> void:
+	var rush := preload("res://content/skills/bloodthane/bloody_rush.tres")
+	var rig := _rig(["P E E . ."] as Array[String], [rush])
+	rig.player().hand.append_array([Card.new(SI, 4), Card.new(SI, 4)])
+	var picks := TestRig.cells([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)])
+	assert_eq(AiPlanner.choose_cards(rig.resolver, rig.player(), rush, picks).size(), 2,
+			"Two foes on the path: a 4 for each strike")
+	assert_eq(AiPlanner.choose_cards(rig.resolver, rig.player(), rush).size(), 1,
+			"Without the picks, one strike's worth")

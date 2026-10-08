@@ -69,6 +69,15 @@ func card_tiers() -> Array[Enums.Tier]:
 	return all
 
 
+## Every card the skill will draw when used with [param picks] (one set per
+## strike for skills that strike several foes).
+func card_tiers_for(board: BoardState, caster: UnitState, picks: Array[Vector2i]) -> Array[Enums.Tier]:
+	var all: Array[Enums.Tier] = []
+	for effect in effects:
+		all.append_array(effect.card_tiers_for(board, caster, picks))
+	return all
+
+
 ## Standard skills (not Basic, Ultimate or Recovery). Adrenal Surge affects these.
 func is_standard() -> bool:
 	return slot not in [Enums.Slot.BASIC, Enums.Slot.ULTIMATE, Enums.Slot.RECOVERY]

@@ -110,14 +110,16 @@ static func next_action(board: BoardState, resolver: ActionResolver, unit: UnitS
 	return best_move(board, resolver, unit)
 
 
-## Held cards worth readying for [param skill], from [param unit]'s hand and
-## the shared row. Readied cards replace the skill's lowest-tier draws, so
+## Held cards worth readying for [param skill] used on [param picks], from
+## [param unit]'s hand and the shared row. A skill striking several foes
+## draws cards for each strike, so it can use more. Readied cards replace the skill's lowest-tier draws, so
 ## readying the best k cards gains their total minus the medians of the k
 ## lowest tiers; this picks the k that gains most (the fewest on a tie).
 ## Greedy: it doesn't save cards for later.
-static func choose_cards(resolver: ActionResolver, unit: UnitState, skill: SkillDef) -> Array[Card]:
+static func choose_cards(resolver: ActionResolver, unit: UnitState, skill: SkillDef,
+		picks: Array[Vector2i] = []) -> Array[Card]:
 	var chosen: Array[Card] = []
-	var slots := skill.card_tiers()
+	var slots := skill.card_tiers_for(resolver.board, unit, picks)
 	if slots.is_empty():
 		return chosen
 	slots.sort()
