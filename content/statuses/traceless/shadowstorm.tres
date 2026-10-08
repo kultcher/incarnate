@@ -8,6 +8,6 @@ script = ExtResource("2_v1xth")
 id = &"shadowstorm"
 display_name = "Shadowstorm"
 icon = ExtResource("1_guybj")
-description = "Any number of Shadows can copy each attack until end of turn."
+description = "Until end of turn, Shadows aren't used up when they use an inherited skill (each can use each inherited skill once)."
 duration = 1
 clock = 1

@@ -11,7 +11,10 @@ extends EffectDef
 
 func apply(ctx: ActionContext) -> void:
 	var reach := ctx.resolver.card_value(ctx.caster, tiers, bonus, false)
-	await ctx.resolver.apply_status(ctx.caster, status, ctx.caster, null, reach)
+	var inst := await ctx.resolver.apply_status(ctx.caster, status, ctx.caster, null, reach)
+	# A second Flickerstep before the first Flicker is used replaces its range.
+	if inst != null and inst.stacks != reach:
+		ctx.resolver.set_stacks(inst, reach)
 	ctx.resolver.announce(ctx.caster, "Flicker %d" % reach, Color(1.0, 0.7, 0.3))
 
 

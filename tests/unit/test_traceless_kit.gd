@@ -56,7 +56,7 @@ func test_shadows_vanish_when_the_traceless_dies() -> void:
 
 #endregion
 
-#region Displacer Strike and Shadowstrike
+#region Displacer Strike and inherited Shadow skills
 
 func test_displacer_strikes_then_shifts_when_already_adjacent() -> void:
 	var rig := await _rig([
@@ -91,7 +91,22 @@ func test_displacer_can_strike_without_moving_when_boxed_in() -> void:
 	assert_true(rig.player().shadows.is_empty(), "No shift, no Shadow")
 
 
-func test_a_shadow_copies_an_attack_then_fades() -> void:
+## Uses [param id] from the Traceless's Shadow on [param cell].
+func _shadow_use(rig: TestRig, cell: Vector2i, id: StringName, picks: Array) -> bool:
+	var proxy := rig.resolver.shadow_proxy(rig.player(), cell)
+	var typed: Array[Vector2i] = []
+	typed.assign(picks)
+	return await rig.resolver.request_shadow_skill(proxy, rig.skill(rig.player(), id), typed)
+
+
+func _inherited(rig: TestRig, cell: Vector2i) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for skill in rig.resolver.shadow_skill_list(rig.player(), cell):
+		out.append(skill.id)
+	return out
+
+
+func test_a_shadow_inherits_an_attack_and_uses_it_from_its_square() -> void:
 	var rig := await _rig([
 		"P E .",
 		". . .",
@@ -99,72 +114,75 @@ func test_a_shadow_copies_an_attack_then_fades() -> void:
 	var tl := rig.player()
 	rig.resolver.place_shadow(tl, Vector2i(1, 1))
 	rig.enemy().hp = 20
-	rig.answers.answers = [0]
 	assert_true(await rig.use(tl, &"gloom_edge", [Vector2i(1, 0)]))
-	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String])
-	assert_eq(rig.enemy().hp, 20 - 6 - 6, "Gloom Edge 6, and the copy 6")
-	assert_true(rig.enemy().has_status(&"blind"), "Struck by a copying Shadow: Blinded")
-	assert_true(tl.shadows.is_empty(), "The Shadow is used up")
+	assert_eq(rig.answers.asked.size(), 0, "No prompt: the Shadow just inherits it")
+	assert_eq(_inherited(rig, Vector2i(1, 1)), [&"gloom_edge"] as Array[StringName])
+	var points := tl.actions.move + tl.actions.skill + tl.actions.flex
+	assert_true(await _shadow_use(rig, Vector2i(1, 1), &"gloom_edge", [Vector2i(1, 0)]))
+	assert_eq(rig.enemy().hp, 20 - 6 - 6, "Gloom Edge 6, and the Shadow's 6")
+	assert_true(rig.enemy().has_status(&"blind"), "Struck by a Shadow's Gloom Edge: Blinded")
+	assert_true(tl.shadows.is_empty(), "The Shadow fades after one use")
+	assert_eq(tl.actions.move + tl.actions.skill + tl.actions.flex, points, "Free")
 	var strike_from_shadow := false
 	for e in rig.log.events:
 		if e.type == GameEvent.STRIKE and e.path == TestRig.cells([Vector2i(1, 1)]):
 			strike_from_shadow = true
-	assert_true(strike_from_shadow, "The copy's strike comes from the Shadow's square")
+	assert_true(strike_from_shadow, "The strike comes from the Shadow's square")
 
 
-func test_declining_keeps_the_shadow() -> void:
-	var rig := await _rig(["P E ."] as Array[String])
-	rig.resolver.place_shadow(rig.player(), Vector2i(2, 0))
-	rig.enemy().hp = 20
-	await rig.use(rig.player(), &"gloom_edge", [Vector2i(1, 0)])
-	assert_eq(rig.enemy().hp, 14)
-	assert_eq(rig.player().shadows.size(), 1)
-	assert_false(rig.enemy().has_status(&"blind"))
-
-
-func test_no_offer_when_no_shadow_is_in_reach() -> void:
-	var rig := await _rig(["P E . . . ."] as Array[String])
-	rig.resolver.place_shadow(rig.player(), Vector2i(5, 0))
-	await rig.use(rig.player(), &"gloom_edge", [Vector2i(1, 0)])
-	assert_eq(rig.answers.asked.size(), 0, "Gloom Edge copies reach 1 square")
-
-
-func test_a_shadow_cant_copy_the_use_that_made_it() -> void:
+func test_the_shadow_a_use_makes_doesnt_inherit_that_use() -> void:
 	var rig := await _rig([
 		". . . . . .",
 		"P E . . . .",
 	] as Array[String])
 	var tl := rig.player()
 	rig.enemy().hp = 20
-	rig.answers.answers = [0]
-	# Strike, shift to the far side: the Shadow left behind can't copy it.
+	assert_true(await rig.use(tl, &"mirage_shift", [Vector2i(5, 0)]))
+	# Displacer Strike shifts, leaving Shadow #2 at (0, 1).
 	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(2, 1)]))
-	assert_eq(rig.answers.asked.size(), 0, "No offer: the only Shadow came from this use")
-	assert_eq(rig.enemy().hp, 20 - 3)
-
-	# The next use of the same skill can be copied by it.
-	tl.start_turn()
-	rig.answers.answers = [0]
-	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(1, 0)]))
-	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "The older Shadow copies")
-	assert_eq(rig.enemy().hp, 20 - 3 - 3 - 3)
-	assert_eq(tl.shadows, TestRig.cells([Vector2i(2, 1)]), "This use's own Shadow is left")
+	assert_eq(_inherited(rig, Vector2i(5, 0)), [&"displacer_strike"] as Array[StringName],
+			"Shadow #1 inherits Displacer Strike")
+	assert_true(_inherited(rig, Vector2i(0, 1)).is_empty(), "Shadow #2 came from that use")
+	assert_true(await rig.use(tl, &"gloom_edge", [Vector2i(1, 1)]))
+	assert_eq(_inherited(rig, Vector2i(5, 0)), [&"displacer_strike", &"gloom_edge"] as Array[StringName])
+	assert_eq(_inherited(rig, Vector2i(0, 1)), [&"gloom_edge"] as Array[StringName],
+			"Both inherit Gloom Edge")
 
 
-func test_displacer_copies_reach_further() -> void:
-	var rig := await _rig([
-		". . . . . .",
-		"P E . . . .",
-	] as Array[String])
+func test_inherited_skills_last_until_end_of_turn() -> void:
+	var rig := await _rig(["P E ."] as Array[String])
+	rig.resolver.place_shadow(rig.player(), Vector2i(2, 0))
 	rig.enemy().hp = 20
-	rig.resolver.place_shadow(rig.player(), Vector2i(5, 0))
-	rig.answers.answers = [0]
-	assert_true(await rig.use(rig.player(), &"displacer_strike", [Vector2i(1, 1), Vector2i(0, 0)]))
-	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "5 squares away, reach 5")
-	assert_eq(rig.enemy().hp, 20 - 3 - 3)
+	await rig.use(rig.player(), &"gloom_edge", [Vector2i(1, 0)])
+	assert_false(_inherited(rig, Vector2i(2, 0)).is_empty())
+	await rig.new_round()
+	assert_true(_inherited(rig, Vector2i(2, 0)).is_empty())
+	assert_eq(rig.player().shadows.size(), 1, "The Shadow itself stays")
 
 
-func test_shadowstorm_lets_every_shadow_copy() -> void:
+func test_a_shadows_displacer_strike_shifts_two_further() -> void:
+	var rig := await _rig([
+		". . . . . . . E",
+		"P . . . . . . .",
+	] as Array[String])
+	var tl := rig.player()
+	rig.enemy().hp = 20
+	rig.resolver.place_shadow(tl, Vector2i(2, 0))
+	# The Traceless strikes nothing in reach, so give the Shadow the skill directly.
+	rig.resolver.inherit_skill(tl, rig.skill(tl, &"displacer_strike"))
+	var proxy := rig.resolver.shadow_proxy(tl, Vector2i(2, 0))
+	var skill := rig.skill(tl, &"displacer_strike")
+	assert_false(Targeting.valid_cells(rig.board, tl, skill, 0, [] as Array[Vector2i]).has(Vector2i(7, 0)),
+			"Out of the Traceless's reach")
+	assert_true(Targeting.valid_cells(rig.board, proxy, skill, 0, [] as Array[Vector2i]).has(Vector2i(7, 0)),
+			"In reach of the Shadow: shift 4, then strike")
+	assert_true(await _shadow_use(rig, Vector2i(2, 0), &"displacer_strike", [Vector2i(7, 0), Vector2i(6, 0)]))
+	assert_eq(rig.enemy().hp, 17)
+	assert_eq(tl.cell, Vector2i(0, 1), "The Traceless doesn't move")
+	assert_true(tl.shadows.is_empty(), "The Shadow moved, struck and faded; it left no new Shadow")
+
+
+func test_shadowstorm_shadows_arent_used_up() -> void:
 	var rig := await _rig([
 		". E .",
 		". . .",
@@ -172,18 +190,16 @@ func test_shadowstorm_lets_every_shadow_copy() -> void:
 	] as Array[String])
 	var tl := rig.player()
 	rig.enemy().hp = 40
-	rig.answers.answers = [0]
 	assert_true(await rig.use(tl, &"shadowstorm", [Vector2i(0, 0), Vector2i(2, 0), Vector2i(1, 1)]))
 	assert_eq(tl.shadows.size(), 3, "Three Shadows placed")
-	assert_true(tl.has_status(&"shadowstorm"))
 	assert_eq(tl.actions.skill, 1, "Free")
-	rig.answers.answers = [0, 0, 0]
+	assert_true(await rig.use(tl, &"gloom_edge", [Vector2i(1, 0)]) == false, "Not adjacent yet")
+	# Shift onto (1, 1) and strike; the Shadow left at (0, 2) pushes out the oldest.
 	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 0), Vector2i(1, 1)]))
-	# The shift's new Shadow pushed out the oldest, and can't copy the skill
-	# that made it.
-	assert_eq(rig.answers.asked.size(), 2, "Each other Shadow offered in turn")
-	assert_eq(rig.enemy().hp, 40 - 3 * 3, "Displacer 3, then two copies of 3")
-	assert_eq(tl.shadows, TestRig.cells([Vector2i(0, 2)]), "Displacer's own Shadow is left")
+	assert_true(await _shadow_use(rig, Vector2i(2, 0), &"displacer_strike", [Vector2i(1, 0), Vector2i(2, 0)]))
+	assert_eq(rig.enemy().hp, 40 - 3 - 3)
+	assert_true(tl.shadows.has(Vector2i(2, 0)), "Not used up under Shadowstorm")
+	assert_false(_inherited(rig, Vector2i(2, 0)).has(&"displacer_strike"), "But each skill once")
 
 
 func test_shadowstep_teleports_and_uses_up_the_shadow() -> void:

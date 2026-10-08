@@ -78,12 +78,16 @@ static func cheapest(unit: UnitState, amount: int) -> Array[Card]:
 func spend(unit: UnitState, cards: Array[Card], r: ActionResolver) -> int:
 	var stream := r.soulstream(unit.team)
 	var total := 0
+	var values: Array[String] = []
 	for card in cards:
 		if unit.heat.has(card):
 			unit.heat.erase(card)
 			total += card.value
+			values.append(str(card.value))
 			_discard(card, stream)
 	r.cards_changed(unit.team)
+	if not values.is_empty():
+		r.announce(unit, "Heat spent: %s" % ", ".join(values), Color(1.0, 0.7, 0.35))
 	return total
 
 

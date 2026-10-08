@@ -90,6 +90,24 @@ static func footprint_cells(anchor: Vector2i, footprint: int) -> Array[Vector2i]
 	return cells
 
 
+## Squares from [param cell] to the nearest square of a unit of
+## [param footprint] standing at [param anchor].
+static func footprint_distance(anchor: Vector2i, footprint: int, cell: Vector2i) -> int:
+	var best := 1 << 30
+	for c in footprint_cells(anchor, footprint):
+		best = mini(best, distance(c, cell))
+	return best
+
+
+## The square of [param unit] nearest [param cell].
+func nearest_cell(unit: UnitState, cell: Vector2i) -> Vector2i:
+	var best := unit.cell
+	for c in cells_of(unit):
+		if distance(c, cell) < distance(best, cell):
+			best = c
+	return best
+
+
 ## The cells [param unit] fills.
 func cells_of(unit: UnitState) -> Array[Vector2i]:
 	return footprint_cells(unit.cell, unit.def.footprint)

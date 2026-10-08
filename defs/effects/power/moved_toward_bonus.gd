@@ -9,8 +9,9 @@ extends PowerBonus
 func power(caster: UnitState, target: UnitState, _r: ActionResolver = null) -> int:
 	if not caster.last_action_was_move:
 		return 0
-	var closed := BoardState.distance(caster.turn_start_cell, target.cell) \
-			- BoardState.distance(caster.cell, target.cell)
+	var size := target.def.footprint
+	var closed := BoardState.footprint_distance(target.cell, size, caster.turn_start_cell) \
+			- BoardState.footprint_distance(target.cell, size, caster.cell)
 	return maxi(closed, 0) / squares
 
 

@@ -21,7 +21,7 @@ func foes_in_area(board: BoardState, caster: UnitState, picks: Array[Vector2i]) 
 		if unit != null and caster.is_foe(unit) and not foes.has(unit):
 			foes.append(unit)
 	foes.sort_custom(func(a: UnitState, b: UnitState) -> bool:
-		return BoardState.distance(caster.cell, a.cell) < BoardState.distance(caster.cell, b.cell))
+		return board.distance_to(a, caster.cell) < board.distance_to(b, caster.cell))
 	return foes
 
 
@@ -41,6 +41,13 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 
 func card_tiers() -> Array[Enums.Tier]:
 	return tiers
+
+
+func card_tiers_for(board: BoardState, caster: UnitState, picks: Array[Vector2i]) -> Array[Enums.Tier]:
+	var out: Array[Enums.Tier] = []
+	for i in maxi(foes_in_area(board, caster, picks).size(), 1):
+		out.append_array(tiers)
+	return out
 
 
 func has_ai_value() -> bool:

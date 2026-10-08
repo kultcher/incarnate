@@ -25,17 +25,18 @@ func apply(ctx: ActionContext) -> void:
 	var toward := await ctx.resolver.decide(request) != 1
 	var r := ctx.resolver
 	var forced: Array[UnitState] = []
-	if await r.force_unit(other, ctx.caster.cell, squares, toward) > 0:
+	var b := ctx.board
+	if await r.force_unit(other, b.nearest_cell(ctx.caster, other.cell), squares, toward) > 0:
 		forced.append(other)
-	if await r.force_unit(ctx.caster, other.cell, squares, toward) > 0:
+	if await r.force_unit(ctx.caster, b.nearest_cell(other, ctx.caster.cell), squares, toward) > 0:
 		forced.append(ctx.caster)
 	for unit in forced:
 		if not unit.is_alive():
 			continue
 		if ctx.caster.is_foe(unit):
-			r.lose_health(unit, amount, ctx.skill)
+			r.lose_health(unit, amount, ctx.skill, ctx.caster)
 		else:
-			r.heal(unit, amount)
+			r.heal(unit, amount, ctx.caster)
 
 
 func describe_values() -> Dictionary:

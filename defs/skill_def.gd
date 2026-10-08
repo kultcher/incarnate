@@ -34,12 +34,12 @@ extends Resource
 ## Extra rule for when the skill can be used (Stoke: enough Heat).
 @export var condition: SkillCondition
 
-@export_group("Shadow copies")
-## How far from a Shadow a copy of this attack can reach. 0 = Shadows can't
-## copy it. The copy strikes one foe for [member copy_tiers].
-@export var copy_range: int = 0
-@export var copy_tiers: Array[Enums.Tier] = []
-## Put on each foe a copy strikes (Gloom Edge: Blind).
+@export_group("Shadows")
+## The Traceless's Shadows inherit this skill when the Traceless uses it:
+## until end of turn, each Shadow (except one this use made) can use it from
+## its own square, once (see IllusiveShadowsBehavior).
+@export var shadow_use: bool = false
+## Put on each foe a Shadow's use of it strikes (Gloom Edge: Blind).
 @export var copy_status: StatusDef
 
 @export_group("Presentation")
@@ -56,8 +56,6 @@ func describe() -> String:
 		var values := effect.describe_values()
 		for key: String in values:
 			text = text.replace("{%s}" % key, str(values[key]))
-	if copy_range > 0:
-		text = text.replace("{copy}", Soulstream.describe(copy_tiers))
 	return text
 
 
@@ -66,6 +64,15 @@ func card_tiers() -> Array[Enums.Tier]:
 	var all: Array[Enums.Tier] = []
 	for effect in effects:
 		all.append_array(effect.card_tiers())
+	return all
+
+
+## Every card the skill will draw when used with [param picks] (one set per
+## strike for skills that strike several foes).
+func card_tiers_for(board: BoardState, caster: UnitState, picks: Array[Vector2i]) -> Array[Enums.Tier]:
+	var all: Array[Enums.Tier] = []
+	for effect in effects:
+		all.append_array(effect.card_tiers_for(board, caster, picks))
 	return all
 
 

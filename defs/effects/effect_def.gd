@@ -29,6 +29,12 @@ func card_tiers() -> Array[Enums.Tier]:
 	return []
 
 
+## The cards this effect will draw when used with [param picks]: one set
+## per strike for effects that strike several foes. card_tiers() by default.
+func card_tiers_for(_board: BoardState, _caster: UnitState, _picks: Array[Vector2i]) -> Array[Enums.Tier]:
+	return card_tiers()
+
+
 ## True if ai_score can report anything. Skills with no such effect are
 ## skipped by the AI (it doesn't know when to use them yet).
 func has_ai_value() -> bool:

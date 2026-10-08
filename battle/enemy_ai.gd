@@ -5,7 +5,7 @@ extends TurnDriver
 ## when autoplay (F9) is on.
 
 ## Safety cap so a planner bug can't loop forever.
-const MAX_ACTIONS_PER_UNIT := 8
+const MAX_ACTIONS_PER_UNIT := 16
 
 var board: BoardState
 var resolver: ActionResolver
@@ -33,6 +33,14 @@ func take_unit_turn(unit: UnitState) -> void:
 	for i in MAX_ACTIONS_PER_UNIT:
 		if is_over.call() or not unit.is_alive():
 			break
+		# Free first: a Shadow using an inherited skill.
+		var shadow_plan := AiPlanner.best_shadow_attack(board, resolver, unit)
+		if shadow_plan != null:
+			if not await resolver.request_shadow_skill(shadow_plan.shadow, shadow_plan.skill,
+					shadow_plan.picks):
+				push_warning("AI shadow plan was rejected: %s %s" % [unit, shadow_plan])
+				break
+			continue
 		var plan := AiPlanner.next_action(board, resolver, unit)
 		if plan == null:
 			break
@@ -41,7 +49,7 @@ func take_unit_turn(unit: UnitState) -> void:
 			ok = await resolver.request_move(unit, plan.move_to)
 		else:
 			ok = await resolver.request_skill(unit, plan.skill, plan.picks,
-					AiPlanner.choose_cards(resolver, unit, plan.skill))
+					AiPlanner.choose_cards(resolver, unit, plan.skill, plan.picks))
 		if not ok:
 			push_warning("AI plan was rejected: %s %s" % [unit, plan])
 			break

@@ -28,8 +28,17 @@ Incarnates have **40 health**, the scale the 2014 cards were written for.
 - **Cards** (bottom right): click a card in the selected unit's hand or the
   shared Soulstream row to ready it for that unit's next skill; click again
   to put it back. See below.
-- **Space** or **End Turn** ends your phase. **F9** toggles autoplay (the AI
-  plays your side, prompts included).
+- **Space** or **End Turn** ends your phase; if a unit still has actions
+  left you're asked first. **F9** toggles autoplay (the AI plays your side,
+  prompts included).
+- A green **FREE** badge marks a skill that a status makes free right now
+  (Potent, Spirit Flare's replay, Ignite, a Burnout echo).
+- Ultimates and Recovery skills ask for confirmation before they go off.
+- Automatic choices (a recharge, Heat spent, a knockback resisted) show as
+  floating text and in the log.
+- When the battle ends, the end screen (and the console) shows a report:
+  damage, healing, actions, squares moved and cards flipped per tier for
+  each unit. The Welcoming Dead share one damage row.
 
 ### Damage: Soulstream cards
 
@@ -85,24 +94,26 @@ do something.)
 
 **Illusive Shadows** (passive): every shift leaves a Shadow on the square you
 left (at most 3; a new one replaces the oldest). Shadows don't block and
-can't be struck. After you use an attack, you're asked whether a Shadow
-copies it at a foe in reach; that Shadow is then used up. A Shadow can't
-copy the same use of the skill that made it (a Displacer Strike's own
-Shadow can't copy that Displacer Strike). Each Shadow is +1
-Evasion (Probability Armor).
+can't be struck. When you use Displacer Strike, Gloom Edge or Phantom Dash,
+each Shadow already on the board **inherits** it until end of turn (the
+Shadow that same use made doesn't). Click a Shadow (they glow when one has
+a skill with a target) to see its skills and use one from its square, for
+free, as if it were the Traceless; the Shadow then fades. A Shadow's
+Displacer Strike shifts 2 squares further, and moves the Shadow. Each
+Shadow is +1 Evasion (Probability Armor).
 
 | Skill | Cost | Recharge | What it does |
 | --- | --- | --- | --- |
-| Displacer Strike | Skill | - | Shift up to 2 (through foes); strike an adjacent foe for 3 before or after. Copies reach 5 |
+| Displacer Strike | Skill | - | Shift up to 2 (through foes); strike an adjacent foe for 3 before or after. Shadows shift 4 |
 | Shadowstep | Free | - | Teleport to a Shadow, using it up |
-| Gloom Edge | Skill | 2 | 6 (Si+Si); a foe struck by a copy is Blinded |
+| Gloom Edge | Skill | 2 | 6 (Si+Si); a foe struck by a Shadow's Gloom Edge is Blinded |
 | Phantom Dash | Skill | 3 | Path of 2, +2 per foe passed through; strikes each foe passed for 3 |
 | Chimeric Cloak | Skill | 3 | Prepare: negate the next strike or harmful status from a foe this turn (you're asked) |
 | Mirage Shift | Maneuver | 3 | Shadow on an empty square within 6; swap with Shadows for free this turn |
 | Shadow Swap | Free | - | After Mirage Shift: swap places with a Shadow, which stays |
 | Tactical Distortion | Free | 3 | Mark a foe within 4: once this turn you may redirect its skill |
 | Perfect Decoy | Free, Recovery | - | This turn, the first lethal strike on any ally is prevented and they heal 7 |
-| Shadowstorm | Free, once | - | Put Shadows on any 3 empty squares; any number may copy each attack this turn |
+| Shadowstorm | Free, once | - | Put Shadows on any 3 empty squares; this turn Shadows don't fade, each can use each inherited skill once |
 
 Recovery skills: 2 per battle for the whole team. Statuses: **Provoked**
 (the AI goes for whoever provoked it), **Crippled** (-2 move until its next
@@ -128,7 +139,7 @@ saves it for a later unveil that turn.
 | Essence Shift | Maneuver | 3 | Teleport next to your Tethered ally, or they teleport next to you |
 | Well of Souls | Skill | 3 | You and your Tethered ally may each take a card from the shared row into your hand |
 | Conveyance | Recovery | - | Choose an ally within 5; each other ally (you included) may lose 1; they heal 6 (Si+Si) per health lost |
-| Anima Nexus | Free, once | - | This turn, everything that reaches your Tethered ally reaches every ally |
+| Anima Nexus | Free, once | - | This turn, everything that reaches your Tethered ally, and your heals and shields on any ally, reach every ally |
 
 **Shields** absorb damage from strikes (not health loss) until used up or the
 turn ends; more shielding adds to the same shield.
@@ -249,7 +260,7 @@ resolver calls: `on_turn_start`, `on_round_start`, `before_damage_taken`
 (cancel or change a strike: Chimeric Cloak), `after_damage_taken`,
 `after_damage_dealt` (Bound in Blood), `before_status_received` (block a
 debuff), `on_moved` (Shadows), `before_skill_targets` (Tactical Distortion),
-`after_skill` (Shadowstrike), `stat_bonus` (Evasion per Shadow).
+`after_skill` (Shadows inheriting a skill), `stat_bonus` (Evasion per Shadow).
 
 - `clock` picks what counts the duration down: the owner's turns, or rounds
   (for "until end of turn").
@@ -257,7 +268,7 @@ debuff), `on_moved` (Shadows), `before_skill_targets` (Tactical Distortion),
   `no_cooldown_next`.
 - Stats are always computed (`unit.get_stat(&"armor")`), never overwritten.
 - Statuses with a `link` end when the linked unit dies.
-- Work that should happen after the current action (Pact and Shadowstrike
+- Work that should happen after the current action (Pact
   prompts) goes on the resolver's follow-up queue.
 - Choices go through `resolver.decide()`: the PromptDialog for the player, an
   instant pick for the AI, autoplay and tests.
@@ -276,7 +287,8 @@ A skill is a `SkillDef` resource in `content/skills/<unit>/`. It has:
   list of card tiers; a `PowerBonus` adds skill-specific Power. Others heal,
   apply statuses, shift, force, teleport, place Shadows...
 - **cost** (Skill, Maneuver = move action, Free), **cooldown** (recharge),
-  `uses_per_battle`, `requires_status`, and the Shadow-copy fields.
+  `uses_per_battle`, `requires_status`, `shadow_use` (Shadows inherit it) and
+  `copy_status` (a status a Shadow's strike adds).
 - **description**: `{damage}` and similar placeholders are filled in from the
   effects ("6 (Silver + Silver)"), so the text always matches the numbers.
 

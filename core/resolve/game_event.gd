@@ -22,6 +22,7 @@ const SHADOWS_CHANGED := &"shadows_changed"
 const CARDS_CHANGED := &"cards_changed"
 const UNIT_SPAWNED := &"unit_spawned"
 const MARKS_CHANGED := &"marks_changed"
+const SHADOWS_READY := &"shadows_ready"
 
 var type: StringName
 var unit: UnitState
@@ -87,6 +88,13 @@ static func teleported(p_unit: UnitState, to: Vector2i) -> GameEvent:
 
 static func unit_spawned(p_unit: UnitState) -> GameEvent:
 	return _make(UNIT_SPAWNED, p_unit)
+
+
+## [param p_unit]'s Shadows that can use an inherited skill now ([member path]).
+static func shadows_ready(p_unit: UnitState, cells: Array[Vector2i]) -> GameEvent:
+	var e := _make(SHADOWS_READY, p_unit)
+	e.path = cells.duplicate()
+	return e
 
 
 static func marks_changed(id: StringName, cells: Array[Vector2i], p_icon: Texture2D) -> GameEvent:

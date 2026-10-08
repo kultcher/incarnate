@@ -2,7 +2,8 @@ class_name Tethers
 extends RefCounted
 ## The Soulweaver's Tether (Fates Intertwined). The Soulweaver carries
 ## TETHER linked to its ally; the ally carries TETHERED linked back, so either
-## one dying ends both. Under Anima Nexus, "a Tethered ally" means every ally.
+## one dying ends both. Under Anima Nexus, "a Tethered ally" means every ally,
+## and anything the Soulweaver does to one ally reaches every ally (fan_out).
 
 const TETHER := &"tether"
 const TETHERED := &"tethered"
@@ -20,6 +21,18 @@ static func allies_of(unit: UnitState, board: BoardState) -> Array[UnitState]:
 	for inst in unit.statuses:
 		if inst.def.id == TETHER and inst.link != null and inst.link.is_alive():
 			out.append(inst.link)
+	return out
+
+
+## Who an effect the Soulweaver aims at [param ally] reaches: just that ally,
+## or every ally under Anima Nexus (the Soulweaver itself only if aimed at).
+static func fan_out(caster: UnitState, ally: UnitState, board: BoardState) -> Array[UnitState]:
+	var out: Array[UnitState] = [ally]
+	if ally == null or ally == caster or caster.is_foe(ally) or not caster.has_status(NEXUS):
+		return out
+	for other in board.units():
+		if other != caster and other != ally and other.team == caster.team and other.is_alive():
+			out.append(other)
 	return out
 
 

@@ -58,5 +58,12 @@ func card_tiers() -> Array[Enums.Tier]:
 	return tiers
 
 
+func card_tiers_for(board: BoardState, caster: UnitState, picks: Array[Vector2i]) -> Array[Enums.Tier]:
+	var out: Array[Enums.Tier] = []
+	for i in maxi(foes_on_path(board, caster, picks).size(), 1):
+		out.append_array(tiers)
+	return out
+
+
 func has_ai_value() -> bool:
 	return true

@@ -274,7 +274,7 @@ func _deaths_caress() -> void:
 	for foe in _in_burst(b):
 		var loss := caress_base - board.distance_to(b, foe.cell)
 		if loss > 0 and foe.is_alive():
-			resolver.lose_health(foe, loss)
+			resolver.lose_health(foe, loss, null, b)
 
 
 func _unquenched() -> void:
@@ -313,6 +313,7 @@ func _grave_smash() -> void:
 			var other := board.unit_at(cell)
 			if other != null and other != b:
 				await resolver.displace(other, footprint)
+				resolver.announce(other, "Trampled", Color(1.0, 0.6, 0.5))
 		if not board.can_stand(b, step):
 			break
 		await resolver.move_along(b, [step] as Array[Vector2i], Enums.MoveKind.WALK)
@@ -360,7 +361,10 @@ func _spew_at(target: UnitState) -> void:
 		return
 	var rng := resolver.soulstream(Enums.Team.ENEMY).rng
 	var dir: Vector2i = BoardState.DIRECTIONS[rng.randi_range(0, 3)]
+	var before := target.cell
 	await resolver.move_along(target, [target.cell + dir] as Array[Vector2i], Enums.MoveKind.FORCED)
+	resolver.announce(target, "Knocked back" if target.cell != before else "Stood firm",
+			Color(1.0, 0.75, 0.5))
 
 
 func _welcoming_dead() -> void:

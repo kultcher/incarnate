@@ -18,8 +18,11 @@ func apply(ctx: ActionContext) -> void:
 	if shield_caster:
 		units.append(ctx.caster)
 	var ally := ctx.unit_at_step(target_step) if target_step >= 0 else null
-	if ally != null and not units.has(ally):
-		units.append(ally)
+	# Under Anima Nexus a shield aimed at one ally reaches every ally.
+	if ally != null:
+		for unit in Tethers.fan_out(ctx.caster, ally, ctx.board):
+			if not units.has(unit):
+				units.append(unit)
 	for unit in units:
 		var amount := r.card_value(ctx.caster, tiers)
 		await r.apply_status(unit, shield_status, ctx.caster, null, amount)

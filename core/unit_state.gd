@@ -24,6 +24,16 @@ var shadows: Array[Vector2i] = []
 ## The action (ActionResolver.action_number) each Shadow was made in,
 ## missing if none. A Shadow can't copy the same use of a skill that made it.
 var shadow_made_in: Dictionary[Vector2i, int] = {}
+## Skills each Shadow inherited this turn, and those it has used, by cell
+## (ids). Change them only through the resolver.
+var shadow_skills: Dictionary[Vector2i, Array] = {}
+var shadow_used: Dictionary[Vector2i, Array] = {}
+## Set on a stand-in for one of [member shadow_of]'s Shadows, built to use an
+## inherited skill from the Shadow's square (ActionResolver.shadow_proxy).
+## It isn't on the board; its strikes count as its owner's.
+var shadow_of: UnitState
+## The skills a stand-in can use (its Shadow's unused inherited skills).
+var proxy_skills: Array[SkillDef] = []
 ## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
 ## Change it only through the resolver.
 var hand: Array[Card] = []
@@ -134,7 +144,10 @@ func is_foe(other: UnitState) -> bool:
 
 
 ## The unit's own skills, then any its statuses grant (Elusive Infusion).
+## A Shadow's stand-in has only the skills that Shadow can use.
 func skills() -> Array[SkillDef]:
+	if shadow_of != null:
+		return proxy_skills
 	var granted: Array[SkillDef] = []
 	for inst in statuses:
 		var extra := inst.def.grants_skill

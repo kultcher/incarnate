@@ -1,8 +1,8 @@
 class_name ShadowstormEffect
 extends EffectDef
 ## Shadowstorm: the caster's Shadows move to the picked squares (new ones
-## appear if there are fewer Shadows than picks), and any number of them can
-## copy each attack until end of turn.
+## appear if there are fewer Shadows than picks), and until end of turn a
+## Shadow isn't used up when it uses an inherited skill.
 
 @export var status: StatusDef
 

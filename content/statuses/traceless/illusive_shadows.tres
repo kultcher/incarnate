@@ -13,7 +13,7 @@ id = &"illusive_shadows"
 display_name = "Illusive Shadows"
 icon = ExtResource("2_umd8y")
 description = "Passive. Shifting out of a square leaves a Shadow there (at most {max}; a new one replaces the oldest). Shadows don't block anything and can't be struck.
-Shadowstrike: after you use an attack, one Shadow may copy it, then fades.
+Shadowstrike: when you use Displacer Strike, Gloom Edge or Phantom Dash, each Shadow inherits it until end of turn (except one that use made). Click a Shadow to use its skills from its square; it fades after one use.
 Probability Armor: +1 Evasion (a dodge per round) for each Shadow."
 tags = Array[StringName]([&"passive"])
 show_on_unit = false

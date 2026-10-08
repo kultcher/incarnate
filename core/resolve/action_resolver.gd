@@ -39,6 +39,8 @@ var soulstreams: Dictionary[int, Soulstream] = {
 ## Health a unit of a team would lose on a cell when the enemy phase comes,
 ## (cell, team) -> int, set by a boss encounter. The AI steps out of it.
 var danger: Callable = func(_cell: Vector2i, _team: Enums.Team) -> int: return 0
+## Totals for the end-of-battle report.
+var stats := BattleStats.new()
 ## Marks on the board by kind (Restless Dead), as lists of cells. They
 ## don't block anything. Change them through add_mark / set_marks.
 var marks: Dictionary[StringName, Array] = {}
@@ -76,6 +78,8 @@ func request_move(unit: UnitState, to: Vector2i) -> bool:
 	unit.actions.pay(Enums.Cost.MOVE)
 	board.move_unit(unit, to)
 	unit.last_action_was_move = true
+	stats.record_action(unit)
+	stats.record_moved(unit, path.size())
 
 	_emit(GameEvent.unit_moved(unit, path))
 	_emit(GameEvent.actions_changed(unit))
@@ -138,9 +142,13 @@ func can_use_ignoring_points(caster: UnitState, skill: SkillDef) -> bool:
 		return false
 	if skill.requires_status != &"" and not caster.has_status(skill.requires_status):
 		return false
-	if skill.uses_per_battle > 0 and caster.uses.get(skill.id, 0) >= skill.uses_per_battle:
+	# A Burnout replay is a copy: it doesn't count against these limits, so
+	# they don't block it either.
+	var echo := _echo_for(caster, skill) != null
+	if not echo and skill.uses_per_battle > 0 \
+			and caster.uses.get(skill.id, 0) >= skill.uses_per_battle:
 		return false
-	if skill.slot == Enums.Slot.RECOVERY and recoveries_left(caster.team) <= 0:
+	if not echo and skill.slot == Enums.Slot.RECOVERY and recoveries_left(caster.team) <= 0:
 		return false
 	return true
 
@@ -205,6 +213,7 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 		await effect.apply(ctx)
 	if skill.has_tag(&"attack"):
 		caster.turn_attacks += 1
+	stats.record_action(caster)
 	# After the effects, so Blade Fury can see the move right before it.
 	caster.last_action_was_move = false
 
@@ -270,6 +279,11 @@ func gain_action(unit: UnitState, cost: Enums.Cost) -> void:
 ## statuses change or cancel it (Chimeric Cloak), deals the damage, then lets
 ## the attacker's statuses react (Bound in Blood).
 func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
+	if attacker != null and attacker.shadow_of != null:
+		# A Shadow's strike: its owner strikes, from the Shadow's square.
+		spec.origin = attacker.cell
+		spec.copy = true
+		attacker = attacker.shadow_of
 	var hit := Hit.new(attacker, target, spec)
 	if not target.is_alive():
 		hit.cancelled = true
@@ -305,7 +319,7 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 		return hit
 
 	_emit(GameEvent.strike(attacker, target, hit))
-	hit.dealt = lose_health(target, hit.amount, spec.skill)
+	hit.dealt = lose_health(target, hit.amount, spec.skill, attacker)
 	hit.killed = not target.is_alive()
 
 	if attacker != null:
@@ -325,6 +339,9 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 		for inst: StatusInstance in attacker.statuses.duplicate():
 			if inst.def.behavior != null and attacker.statuses.has(inst):
 				await inst.def.behavior.after_damage_dealt(inst, hit, self)
+	# Gloom Edge: a foe struck by a Shadow's use is Blinded.
+	if spec.copy and spec.skill != null and spec.skill.copy_status != null and target.is_alive():
+		await apply_status(target, spec.skill.copy_status, attacker)
 	return hit
 
 
@@ -340,10 +357,12 @@ func _try_dodge(attacker: UnitState, target: UnitState) -> bool:
 
 ## Health loss: no strike, no Armor, no reactions (Vampiric Pact, Violent
 ## Transfusion, drains). Returns the HP actually lost.
-func lose_health(target: UnitState, amount: int, skill: SkillDef = null) -> int:
+func lose_health(target: UnitState, amount: int, skill: SkillDef = null,
+		source: UnitState = null) -> int:
 	if not target.is_alive() or amount <= 0:
 		return 0
 	var dealt := mini(amount, target.hp)
+	stats.record_damage(source, target, dealt)
 	target.hp -= dealt
 	_emit(GameEvent.damaged(target, amount, target.hp, skill))
 	if not target.is_alive():
@@ -361,6 +380,7 @@ func heal(target: UnitState, amount: int, healer: UnitState = null) -> int:
 		return 0
 	target.hp += healed
 	_emit(GameEvent.healed(target, healed, target.hp))
+	stats.record_heal(healer, healed)
 	if healer != null:
 		for inst: StatusInstance in healer.statuses.duplicate():
 			if inst.def.behavior != null and healer.statuses.has(inst):
@@ -392,6 +412,9 @@ func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
 func _unveiled(user: UnitState, cards: Array[Card]) -> void:
 	if user == null or cards.is_empty():
 		return
+	if user.shadow_of != null:
+		user = user.shadow_of
+	stats.record_cards(user, cards)
 	for inst: StatusInstance in user.statuses.duplicate():
 		if inst.def.behavior != null and user.statuses.has(inst):
 			inst.def.behavior.on_cards_unveiled(inst, cards, self)
@@ -453,16 +476,20 @@ func _kill(unit: UnitState) -> void:
 			inst.def.behavior.on_owner_died(inst, cell, self)
 	board.remove_unit(unit)
 	unit.statuses.clear()
-	if not unit.hand.is_empty():
+	# Held cards (the hand, the Kindleborne's Heat) go back to the discards.
+	if not unit.hand.is_empty() or not unit.heat.is_empty():
 		var stream := soulstream(unit.team)
-		for card in unit.hand:
+		for card in unit.hand + unit.heat:
 			if stream.deck(card.tier) != null:
 				stream.deck(card.tier).discard(card)
 		unit.hand.clear()
+		unit.heat.clear()
 		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()
 		unit.shadow_made_in.clear()
+		unit.shadow_skills.clear()
+		unit.shadow_used.clear()
 		_emit(GameEvent.shadows_changed(unit))
 	_emit(GameEvent.died(unit))
 	# Linked statuses end with their link: a dead Bloodthane's Provoke leaves
@@ -479,6 +506,9 @@ func _kill(unit: UnitState) -> void:
 ## Shift along [param path] (each square next to the last). Passes through
 ## any unit; the last square must be empty. A held unit doesn't move.
 func shift_unit(unit: UnitState, path: Array[Vector2i]) -> void:
+	if unit.shadow_of != null:
+		_move_stand_in(unit, path)
+		return
 	if path.is_empty() or not unit.is_alive() or not board.can_stand(unit, path[-1]):
 		return
 	if Pathing.is_held(board, unit):
@@ -486,6 +516,7 @@ func shift_unit(unit: UnitState, path: Array[Vector2i]) -> void:
 		return
 	var from := unit.cell
 	board.move_unit(unit, path[-1])
+	stats.record_moved(unit, path.size())
 	_emit(GameEvent.unit_moved(unit, path))
 	await _after_moved(unit, Enums.MoveKind.SHIFT, from, path)
 
@@ -509,10 +540,14 @@ func move_along(unit: UnitState, path: Array[Vector2i], kind: Enums.MoveKind) ->
 
 ## Instantly to [param to], which must be empty.
 func teleport_unit(unit: UnitState, to: Vector2i) -> void:
+	if unit.shadow_of != null:
+		_move_stand_in(unit, [to] as Array[Vector2i])
+		return
 	if to == unit.cell or not unit.is_alive() or not board.can_stand(unit, to):
 		return
 	var from := unit.cell
 	board.move_unit(unit, to)
+	stats.record_moved(unit, BoardState.distance(from, to))
 	_emit(GameEvent.teleported(unit, to))
 	var path: Array[Vector2i] = [to]
 	await _after_moved(unit, Enums.MoveKind.TELEPORT, from, path)
@@ -520,6 +555,9 @@ func teleport_unit(unit: UnitState, to: Vector2i) -> void:
 
 ## Forced movement: up to [param squares] squares toward (or away from)
 ## [param reference], one square at a time, stopping at anything in the way.
+## Distances count from the unit's nearest square (Large units). To force
+## toward or away from a unit, pass its square nearest the moving unit
+## (BoardState.nearest_cell).
 ## Returns the squares actually moved.
 func force_unit(unit: UnitState, reference: Vector2i, squares: int, toward: bool) -> int:
 	return (await force_unit_path(unit, reference, squares, toward)).size()
@@ -538,12 +576,13 @@ func force_unit_path(unit: UnitState, reference: Vector2i, squares: int,
 	for i in squares:
 		var best := Vector2i(-1, -1)
 		var best_score := -INF
-		var here := BoardState.distance(at, reference)
+		var size := unit.def.footprint
+		var here := BoardState.footprint_distance(at, size, reference)
 		for dir in BoardState.DIRECTIONS:
 			var next := at + dir
 			if not board.can_stand(unit, next):
 				continue
-			var d := BoardState.distance(next, reference)
+			var d := BoardState.footprint_distance(next, size, reference)
 			var gain := here - d if toward else d - here
 			if gain <= 0:
 				continue
@@ -668,14 +707,14 @@ func place_shadow(owner: UnitState, cell: Vector2i, max_count: int = 3) -> void:
 	owner.shadows.append(cell)
 	_set_source(owner, cell)
 	while owner.shadows.size() > max_count:
-		owner.shadow_made_in.erase(owner.shadows.pop_front())
+		_forget_shadow(owner, owner.shadows.pop_front())
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func remove_shadow(owner: UnitState, cell: Vector2i) -> void:
 	if owner.shadows.has(cell):
 		owner.shadows.erase(cell)
-		owner.shadow_made_in.erase(cell)
+		_forget_shadow(owner, cell)
 		_emit(GameEvent.shadows_changed(owner))
 
 
@@ -685,22 +724,129 @@ func move_shadow(owner: UnitState, from: Vector2i, to: Vector2i) -> void:
 	if i < 0:
 		return
 	var made_in: int = owner.shadow_made_in.get(from, 0)
-	owner.shadow_made_in.erase(from)
+	var skills: Array = owner.shadow_skills.get(from, [])
+	var used: Array = owner.shadow_used.get(from, [])
+	_forget_shadow(owner, from)
 	if owner.shadows.has(to):
 		owner.shadows.remove_at(i)  # Already a Shadow there: the two merge.
 	else:
 		owner.shadows[i] = to
 		if made_in != 0:
 			owner.shadow_made_in[to] = made_in
+		if not skills.is_empty():
+			owner.shadow_skills[to] = skills
+			owner.shadow_used[to] = used
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func set_shadows(owner: UnitState, cells: Array[Vector2i]) -> void:
 	owner.shadows = cells.duplicate()
 	owner.shadow_made_in.clear()
+	owner.shadow_skills.clear()
+	owner.shadow_used.clear()
 	for cell in cells:
 		_set_source(owner, cell)
 	_emit(GameEvent.shadows_changed(owner))
+
+
+func _forget_shadow(owner: UnitState, cell: Vector2i) -> void:
+	owner.shadow_made_in.erase(cell)
+	owner.shadow_skills.erase(cell)
+	owner.shadow_used.erase(cell)
+
+
+## Each of [param owner]'s Shadows not made by the current use inherits
+## [param skill] until end of turn (Illusive Shadows).
+func inherit_skill(owner: UnitState, skill: SkillDef) -> void:
+	for cell in owner.shadows:
+		if action_number != 0 and owner.shadow_made_in.get(cell, 0) == action_number:
+			continue
+		var skills: Array = owner.shadow_skills.get(cell, [])
+		if not skills.has(skill.id):
+			skills.append(skill.id)
+		owner.shadow_skills[cell] = skills
+
+
+## End of turn: Shadows forget what they inherited.
+func clear_inherited(owner: UnitState) -> void:
+	owner.shadow_skills.clear()
+	owner.shadow_used.clear()
+
+
+## The skills the Shadow on [param cell] can still use this turn.
+func shadow_skill_list(owner: UnitState, cell: Vector2i) -> Array[SkillDef]:
+	var out: Array[SkillDef] = []
+	if not owner.is_alive() or not owner.shadows.has(cell):
+		return out
+	var ids: Array = owner.shadow_skills.get(cell, [])
+	var used: Array = owner.shadow_used.get(cell, [])
+	for skill in owner.skills():
+		if ids.has(skill.id) and not used.has(skill.id):
+			out.append(skill)
+	return out
+
+
+## A stand-in for the Shadow on [param cell], to target and resolve one of
+## its inherited skills from there. Not on the board.
+func shadow_proxy(owner: UnitState, cell: Vector2i) -> UnitState:
+	var proxy := UnitState.new(owner.def, owner.team)
+	proxy.cell = cell
+	proxy.turn_start_cell = cell
+	proxy.hp = owner.hp
+	proxy.shadow_of = owner
+	proxy.proxy_skills = shadow_skill_list(owner, cell)
+	proxy.actions.spend_all()
+	return proxy
+
+
+## True if the Shadow behind [param proxy] can use [param skill] now.
+func can_use_shadow(proxy: UnitState, skill: SkillDef) -> bool:
+	var owner := proxy.shadow_of
+	return owner != null and owner.is_alive() \
+			and shadow_skill_list(owner, proxy.cell).has(skill)
+
+
+## The Shadow behind [param proxy] uses [param skill] on [param picks]. Free;
+## the Shadow fades afterwards (unless its owner has Shadowstorm, in which
+## case that skill is used up for this Shadow instead).
+func request_shadow_skill(proxy: UnitState, skill: SkillDef, picks: Array[Vector2i]) -> bool:
+	var owner := proxy.shadow_of
+	if owner == null or not can_use_shadow(proxy, skill):
+		return false
+	if not Targeting.are_valid_picks(board, proxy, skill, picks):
+		return false
+	var start := proxy.cell
+	announce(owner, "Shadow: %s" % skill.display_name, Color(0.75, 0.6, 1.0))
+	_uses_so_far += 1
+	action_number = _uses_so_far
+	var ctx := ActionContext.new(proxy, skill, picks, board, self)
+	for effect in skill.effects:
+		await effect.apply(ctx)
+	await _drain_followups()
+	action_number = 0
+	if owner.is_alive() and owner.shadows.has(proxy.cell):
+		if owner.has_status(&"shadowstorm"):
+			var used: Array = owner.shadow_used.get(proxy.cell, [])
+			used.append(skill.id)
+			owner.shadow_used[proxy.cell] = used
+		else:
+			remove_shadow(owner, proxy.cell)
+	stats.record_action(owner)
+	if start != proxy.cell:
+		stats.record_moved(owner, BoardState.distance(start, proxy.cell))
+	await _finish_action()
+	return true
+
+
+## A stand-in moving moves its Shadow (no new Shadow is left behind).
+func _move_stand_in(proxy: UnitState, path: Array[Vector2i]) -> void:
+	if path.is_empty() or path[-1] == proxy.cell:
+		return
+	var to := path[-1]
+	if board.is_occupied(to) or board.blocks_move(to):
+		return
+	move_shadow(proxy.shadow_of, proxy.cell, to)
+	proxy.cell = to
 
 
 func _set_source(owner: UnitState, cell: Vector2i) -> void:
@@ -776,6 +922,7 @@ func start_round() -> void:
 	for unit in board.units():
 		await _tick(unit, Enums.StatusClock.ROUND)
 	await _drain_followups()
+	refresh_shadow_ready()
 
 
 ## Start-of-turn upkeep for one unit: points refresh, cooldowns tick, status
@@ -863,6 +1010,29 @@ func _emit(event: GameEvent) -> void:
 		events.enqueue(event)
 
 
+## Tells the board which Shadows can use an inherited skill on a target now.
+func refresh_shadow_ready() -> void:
+	for unit in board.units():
+		if unit.shadows.is_empty() and unit.shadow_skills.is_empty():
+			continue
+		var ready: Array[Vector2i] = []
+		for cell in unit.shadows:
+			if shadow_ready(unit, cell):
+				ready.append(cell)
+		_emit(GameEvent.shadows_ready(unit, ready))
+
+
+## True if the Shadow on [param cell] has an inherited skill with a target.
+func shadow_ready(owner: UnitState, cell: Vector2i) -> bool:
+	if shadow_skill_list(owner, cell).is_empty():
+		return false
+	var proxy := shadow_proxy(owner, cell)
+	for skill in proxy.skills():
+		if Targeting.has_any(board, proxy, skill):
+			return true
+	return false
+
+
 ## Ends a step of an encounter script like any other action: follow-ups,
 ## playback, then action_finished (the battle checks for an outcome).
 func finish_scripted_action() -> void:
@@ -871,6 +1041,7 @@ func finish_scripted_action() -> void:
 
 func _finish_action() -> void:
 	await _drain_followups()
+	refresh_shadow_ready()
 	if events != null:
 		await events.wait_idle()
 	action_finished.emit()

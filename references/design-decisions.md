@@ -11,6 +11,21 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (playtest fixes: Shadows, Nexus, QoL, battle report)
+
+### Michael's calls
+- **Shadows inherit skills.** When the Traceless uses a Shadow skill (Displacer Strike, Gloom Edge, Phantom Dash) while Shadows are out, each Shadow inherits it until end of turn. Click a Shadow to use one from its square, as the Traceless would. Shadows glow while one has a skill with a target. A Shadow made by a use doesn't inherit that use.
+- **A Shadow's Displacer Strike shifts 2 squares further** (the 2014 card's bonus).
+- **Anima Nexus: the broad version.** Infusions, Strength in Unity's recharge, Essence Shift and Well of Souls reach every ally; so do Spirit Flare's heal and Strength in Unity's shield on any ally.
+- **QoL:** End Turn asks first while a unit still has actions. The battle ends with a report (damage, healing, actions, squares moved, cards per tier; the Welcoming Dead share one damage row).
+- **Not this pass:** no balance changes; Kindleborne Ignite heat (first knob: damage from Ignited skills adds no Heat) and the Blade-card Pact trigger wait.
+
+### Claude's calls (provisional)
+- **A Shadow fades after using one inherited skill**, and using it is free (no action). Shadows that move (Displacer, Phantom Dash) move the Shadow and leave no new one.
+- **Shadowstorm:** this turn Shadows don't fade; each can use each skill it inherited once.
+- **Large-unit distance fix:** range, adjacency and forced movement now count from Golgothon's nearest square everywhere (Displacer targeting, Gloom Blind range, Verve Magnet, Dread Diffusion, area strikes). This was most of the "fewer copies than expected" in the playtest.
+- **The FREE badge**, Ultimate/Recovery confirmation, and floating text for automatic choices (recharges, Heat spent, Knocked back/Stood firm, Trampled).
+
 ## 2026-10-08 (Golgothon, milestone 9; Claude's calls, provisional)
 
 Full extraction and every pick: `references/golgothon-reference.md`.

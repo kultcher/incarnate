@@ -52,3 +52,4 @@ func _recharge_one(soulweaver: UnitState, unit: UnitState, r: ActionResolver) ->
 		if pick < 0 or pick >= waiting.size():
 			pick = request.ai_choice
 	r.recharge_skill(unit, waiting[pick])
+	r.announce(unit, "%s recharged" % waiting[pick].display_name, Color(0.6, 1.0, 0.85))

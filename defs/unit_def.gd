@@ -25,6 +25,9 @@ extends Resource
 @export_range(1, 3) var footprint: int = 1
 ## Forced movement against it is this many squares shorter (minimum 1).
 @export var sturdy: int = 0
+## The battle report sums all units of this kind into one damage-only row
+## (the Welcoming Dead).
+@export var report_as_group: bool = false
 @export_group("")
 ## Flex points per turn. Incarnates get 1; most monsters get 0, so they can
 ## move and attack but never attack twice.

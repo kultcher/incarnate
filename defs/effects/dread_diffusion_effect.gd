@@ -30,7 +30,7 @@ func apply(ctx: ActionContext) -> void:
 			continue
 		await r.strike(ctx.caster, foe, StrikeSpec.cards(splash_tiers, ctx.skill, false))
 		if foe.is_alive() and target.is_alive():
-			await r.force_unit(foe, target.cell, splash_force, false)
+			await r.force_unit(foe, ctx.board.nearest_cell(target, foe.cell), splash_force, false)
 
 
 func describe_values() -> Dictionary:

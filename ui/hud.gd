@@ -20,6 +20,9 @@ var prompt: PromptDialog
 var player_stream: Soulstream
 
 const SKILL_BUTTON_SIZE := Vector2(64, 64)
+## The battle report's columns.
+const REPORT_COLUMNS: Array[String] = ["Unit", "Damage", "Healing", "Actions", "Moved",
+		"Bronze", "Silver", "Gold"]
 ## Strikes kept in the log under the round counter.
 const LOG_LINES := 5
 
@@ -29,6 +32,12 @@ var _points_label: Label
 var _hint_label: Label
 ## Rules check for the skill buttons (the resolver's can_use), set by Battle.
 var can_use: Callable
+## What a skill costs a unit right now (ActionResolver.cost_of), set by Battle.
+## Skills made free by a status (Potent, Ignite, a Burnout replay) get a
+## "FREE" badge.
+var cost_of: Callable
+## The battle's totals, for the report on the end screen. Set by Battle.
+var stats: BattleStats
 var _skill_bar: HBoxContainer
 var _tooltip: Label
 var _shown: UnitState
@@ -39,6 +48,7 @@ var _banner_tween: Tween
 var _autoplay_label: Label
 var _end_screen: Control
 var _end_title: Label
+var _report: GridContainer
 var _round: int = 0
 var _my_phase: bool = true
 var _targeting: SkillDef
@@ -206,6 +216,7 @@ func _on_battle_ended(outcome: Enums.Outcome) -> void:
 			_end_title.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
 		_:
 			_end_title.text = "Draw"
+	_fill_report()
 	_end_screen.visible = true
 	_end_screen.modulate.a = 0.0
 	create_tween().tween_property(_end_screen, "modulate:a", 1.0, 0.4)
@@ -271,6 +282,19 @@ func _build_end_screen() -> void:
 	_end_title.add_theme_constant_override("outline_size", 12)
 	_end_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_end_title)
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.06, 0.05, 0.08, 0.85)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(12)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(panel)
+	_report = GridContainer.new()
+	_report.columns = REPORT_COLUMNS.size()
+	_report.add_theme_constant_override("h_separation", 22)
+	_report.add_theme_constant_override("v_separation", 4)
+	panel.add_child(_report)
 	var again := Button.new()
 	again.text = "Play Again"
 	again.custom_minimum_size = Vector2(180, 48)
@@ -283,6 +307,34 @@ func _build_end_screen() -> void:
 	menu.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	menu.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://ui/main_menu.tscn"))
 	box.add_child(menu)
+
+
+## The end screen's table: one row per unit (the Welcoming Dead summed,
+## damage only), from the BattleStats.
+func _fill_report() -> void:
+	for child in _report.get_children():
+		child.queue_free()
+	if stats == null:
+		return
+	for title in REPORT_COLUMNS:
+		var head := _label(14)
+		head.text = title
+		head.modulate = Color(1, 0.9, 0.6)
+		_report.add_child(head)
+	for row in stats.rows():
+		var cells: Array[String] = [row.name, str(row.damage)]
+		if row.group:
+			cells.append_array(["-", "-", "-", "-", "-", "-"])
+		else:
+			cells.append_array([str(row.healing), str(row.actions), str(row.moved),
+					str(row.cards[0]), str(row.cards[1]), str(row.cards[2])])
+		for i in cells.size():
+			var cell := _label(14)
+			cell.text = cells[i]
+			if i > 0:
+				cell.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			cell.modulate = Color(0.75, 0.9, 1.0) if row.team == Enums.Team.PLAYER else Color(1.0, 0.75, 0.7)
+			_report.add_child(cell)
 
 
 func _show_unit(unit: UnitState) -> void:
@@ -344,6 +396,15 @@ func _on_targeting_ended() -> void:
 
 func _refresh_unit() -> void:
 	var unit := _shown
+	if unit.shadow_of != null:
+		_unit_label.text = "Shadow of the %s" % unit.shadow_of.def.display_name
+		_points_label.text = "Free: use one inherited skill from this square (the Shadow then fades)."
+		_build_skill_bar()
+		_build_status_strip()
+		_refresh_tray()
+		if _targeting == null:
+			_hint_label.text = "Pick an inherited skill. Right-click to deselect."
+		return
 	_unit_label.text = "%s   HP %d/%d   Speed %d" % [
 		unit.def.display_name, unit.hp, unit.get_stat(&"max_hp"), unit.get_stat(&"move")]
 	var a := unit.actions
@@ -397,6 +458,16 @@ func _skill_button(index: int, skill: SkillDef) -> Button:
 	hotkey.text = str((index + 1) % 10) if index < 10 else ""
 	hotkey.position = Vector2(4, 0)
 	b.add_child(hotkey)
+	var made_free: bool = usable and skill.cost != Enums.Cost.FREE and cost_of.is_valid() \
+			and cost_of.call(_shown, skill) == Enums.Cost.FREE and _shown.shadow_of == null
+	if made_free:
+		var badge := _label(12)
+		badge.text = "FREE"
+		badge.add_theme_color_override("font_color", Color(0.5, 1.0, 0.6))
+		badge.position = Vector2(20, 46)
+		b.add_child(badge)
+		b.modulate = Color(1.15, 1.3, 1.15)
+		b.tooltip_text = "Free right now. " + b.tooltip_text
 	if cooldown > 0:
 		var cd := _label(28)
 		cd.text = str(cooldown)
@@ -411,7 +482,8 @@ func _refresh_tray() -> void:
 	_tray.visible = player_stream != null
 	if player_stream == null:
 		return
-	_tray.show_cards(_shown, player_stream.row, _readied, _my_phase and _shown != null)
+	var holder := _shown if _shown == null or _shown.shadow_of == null else null
+	_tray.show_cards(holder, player_stream.row, _readied, _my_phase and holder != null)
 
 
 func _on_cards_readied(cards: Array[Card]) -> void:
