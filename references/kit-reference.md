@@ -23,6 +23,7 @@ Michael's direction (see `references/design-decisions.md`) replaced the preceden
   - **Shadowstorm** creates Shadows to fill 3 squares.
   - **Shadow copies of area skills** (Phantom Dash) strike a single foe.
   - **Phantom Dash** leaves one Shadow, not two.
+  - **A Shadow can't copy the skill that made it** (Michael, 2026-10-08), ever. See the decisions log.
   - **Perfect Decoy** has no teleport yet.
   - **Chimeric Cloak** doesn't stop health loss.
   - **Blind** makes the next strike count as dodged; the 25% miss chance is gone.

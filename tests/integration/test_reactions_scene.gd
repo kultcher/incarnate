@@ -95,25 +95,32 @@ func test_gate_cloak_negates_a_claw_in_the_enemy_phase() -> void:
 		await wait_process_frames(1)
 
 
-func test_gate_a_shadow_copies_displacer_strike() -> void:
+func test_gate_a_shadow_copies_the_next_attack() -> void:
 	var c := battle.controller
 	var tl := _unit(&"traceless")
 	var foe := _at(Vector2i(6, 8))
+	foe.hp = 20
 	await c.click_cell(tl.cell)
 	await c.click_cell(Vector2i(5, 8))
 	c.begin_targeting_index(_index(tl, &"displacer_strike"))
 	await c.click_cell(foe.cell)
-	c.click_cell(Vector2i(7, 8))  # Shift through the Shambler; blocks on the prompt.
-	await wait_until(func() -> bool: return battle.hud.prompt.is_open(), 5.0, "Shadowstrike prompt")
-	assert_eq(battle.hud.prompt._title.text, "Shadowstrike")
+	await c.click_cell(Vector2i(7, 8))  # Shift through the Shambler.
+	await _idle()
+	assert_false(battle.hud.prompt.is_open(), "A Shadow can't copy the skill that made it")
 	assert_eq(tl.shadows, [Vector2i(5, 8)] as Array[Vector2i])
 	assert_not_null(battle.arena.shadows.ghost_at(tl, Vector2i(5, 8)), "Ghost drawn on the Shadow")
+	assert_eq(foe.hp, 17)
+
+	c.begin_targeting_index(_index(tl, &"gloom_edge"))
+	c.click_cell(foe.cell)  # Blocks on the prompt.
+	await wait_until(func() -> bool: return battle.hud.prompt.is_open(), 5.0, "Shadowstrike prompt")
+	assert_eq(battle.hud.prompt._title.text, "Shadowstrike")
 	var choices := IllusiveShadowsBehavior.copy_choices(battle.board, tl,
-			tl.skills()[_index(tl, &"displacer_strike")])
-	assert_eq(choices[0][1], foe, "Nearest foe listed first")
+			tl.skills()[_index(tl, &"gloom_edge")])
+	assert_eq(choices[0][1], foe, "The foe beside the Shadow")
 	battle.hud.prompt.pick(0)
 	await _idle()
-	assert_eq(foe.hp, 2, "8 - 3 - 3")
+	assert_eq(foe.hp, 5, "17 - 6 - 6")
 	assert_true(tl.shadows.is_empty(), "Used up")
 
 

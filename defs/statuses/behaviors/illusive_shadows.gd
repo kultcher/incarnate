@@ -7,7 +7,8 @@ extends StatusBehavior
 ##   Shadowstrike       After the Traceless uses an attack, one Shadow may
 ##                      copy it: it strikes one foe within the skill's
 ##                      copy_range of the Shadow, then is used up. Under
-##                      Shadowstorm, any number of Shadows may copy.
+##                      Shadowstorm, any number of Shadows may copy. A
+##                      Shadow can't copy the skill that made it.
 ##   Probability Armor  +1 Evasion (a dodge per round) per Shadow.
 ## (Shadowstep, the teleport, is its own free skill.)
 
@@ -31,6 +32,8 @@ func stat_bonus(inst: StatusInstance, stat: StringName) -> int:
 func after_skill(inst: StatusInstance, ctx: ActionContext, r: ActionResolver) -> void:
 	var skill := ctx.skill
 	if not skill.has_tag(&"attack") or skill.copy_range <= 0 or inst.owner.shadows.is_empty():
+		return
+	if copy_choices(r.board, inst.owner, skill).is_empty():
 		return
 	r.queue_followup(_offer_copies.bind(inst, skill, r))
 
@@ -90,7 +93,7 @@ static func copy_choices(board: BoardState, owner: UnitState, skill: SkillDef,
 		used: Array[Vector2i] = []) -> Array:
 	var choices: Array = []
 	for shadow in owner.shadows:
-		if used.has(shadow):
+		if used.has(shadow) or owner.shadow_sources.get(shadow, &"") == skill.id:
 			continue
 		var foes: Array[UnitState] = []
 		for unit in board.units():

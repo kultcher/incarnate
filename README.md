@@ -82,7 +82,9 @@ do something.)
 **Illusive Shadows** (passive): every shift leaves a Shadow on the square you
 left (at most 3; a new one replaces the oldest). Shadows don't block and
 can't be struck. After you use an attack, you're asked whether a Shadow
-copies it at a foe in reach; that Shadow is then used up. Each Shadow is +1
+copies it at a foe in reach; that Shadow is then used up. A Shadow can't
+copy the skill that made it (Displacer Strike's own Shadow can't copy
+Displacer Strike). Each Shadow is +1
 Evasion (Probability Armor).
 
 | Skill | Cost | Recharge | What it does |

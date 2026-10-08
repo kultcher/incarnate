@@ -129,16 +129,40 @@ func test_no_offer_when_no_shadow_is_in_reach() -> void:
 	assert_eq(rig.answers.asked.size(), 0, "Gloom Edge copies reach 1 square")
 
 
-func test_displacer_copies_reach_further_and_the_new_shadow_can_copy() -> void:
+func test_a_shadow_cant_copy_the_skill_that_made_it() -> void:
+	var rig := await _rig([
+		". . . . . .",
+		"P E . . . .",
+	] as Array[String])
+	var tl := rig.player()
+	rig.enemy().hp = 20
+	rig.answers.answers = [0]
+	# Strike, shift to the far side: the Shadow left behind can't copy it.
+	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(2, 1)]))
+	assert_eq(rig.answers.asked.size(), 0, "No offer: the only Shadow came from this skill")
+	assert_eq(rig.enemy().hp, 20 - 3)
+	assert_eq(tl.shadow_sources.get(Vector2i(0, 1)), &"displacer_strike")
+
+	# Not on a later use either; another attack it can copy.
+	tl.start_turn()
+	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 1), Vector2i(1, 0)]))
+	assert_eq(rig.answers.asked.size(), 0, "Neither Shadow can copy Displacer Strike")
+	tl.start_turn()
+	rig.answers.answers = [0]
+	assert_true(await rig.use(tl, &"gloom_edge", [Vector2i(1, 1)]))
+	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "Gloom Edge can be copied")
+
+
+func test_displacer_copies_reach_further() -> void:
 	var rig := await _rig([
 		". . . . . .",
 		"P E . . . .",
 	] as Array[String])
 	rig.enemy().hp = 20
+	rig.resolver.place_shadow(rig.player(), Vector2i(5, 0))
 	rig.answers.answers = [0]
-	# Strike, shift to the far side: the Shadow left behind copies at once.
-	assert_true(await rig.use(rig.player(), &"displacer_strike", [Vector2i(1, 1), Vector2i(2, 1)]))
-	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String])
+	assert_true(await rig.use(rig.player(), &"displacer_strike", [Vector2i(1, 1), Vector2i(0, 0)]))
+	assert_eq(rig.answers.titles(), ["Shadowstrike"] as Array[String], "5 squares away, reach 5")
 	assert_eq(rig.enemy().hp, 20 - 3 - 3)
 
 
@@ -157,9 +181,11 @@ func test_shadowstorm_lets_every_shadow_copy() -> void:
 	assert_eq(tl.actions.skill, 1, "Free")
 	rig.answers.answers = [0, 0, 0]
 	assert_true(await rig.use(tl, &"displacer_strike", [Vector2i(1, 0), Vector2i(1, 1)]))
-	assert_eq(rig.answers.asked.size(), 3, "Each Shadow offered in turn")
-	assert_eq(rig.enemy().hp, 40 - 3 * 4, "Displacer 3, then three copies of 3")
-	assert_true(tl.shadows.is_empty(), "All three used up (the shift's new Shadow pushed out the oldest)")
+	# The shift's new Shadow pushed out the oldest, and can't copy the skill
+	# that made it.
+	assert_eq(rig.answers.asked.size(), 2, "Each other Shadow offered in turn")
+	assert_eq(rig.enemy().hp, 40 - 3 * 3, "Displacer 3, then two copies of 3")
+	assert_eq(tl.shadows, TestRig.cells([Vector2i(0, 2)]), "Displacer's own Shadow is left")
 
 
 func test_shadowstep_teleports_and_uses_up_the_shadow() -> void:

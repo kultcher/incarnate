@@ -40,6 +40,8 @@ var soulstreams: Dictionary[int, Soulstream] = {
 var recoveries_used: Dictionary[int, int] = {}
 
 var _followups: Array[Callable] = []
+## The skill being resolved, while one is (Shadows remember what made them).
+var _acting_skill: SkillDef
 
 
 func _ready() -> void:
@@ -139,6 +141,7 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	_emit(GameEvent.actions_changed(caster))
 
 	var ctx := ActionContext.new(caster, skill, picks, board, self)
+	_acting_skill = skill
 	for effect in skill.effects:
 		await effect.apply(ctx)
 	# After the effects, so Blade Fury can see the move right before it.
@@ -151,6 +154,7 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 
 	# Shadow copies (follow-ups) may still use readied cards.
 	await _drain_followups()
+	_acting_skill = null
 	if stream.release() > 0:
 		_emit(GameEvent.cards_changed(caster.team))
 	await _finish_action()
@@ -358,6 +362,7 @@ func _kill(unit: UnitState) -> void:
 		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()
+		unit.shadow_sources.clear()
 		_emit(GameEvent.shadows_changed(unit))
 	_emit(GameEvent.died(unit))
 	# Linked statuses end with their link: a dead Bloodthane's Provoke leaves
@@ -453,36 +458,54 @@ func _after_moved(unit: UnitState, kind: Enums.MoveKind, from: Vector2i,
 #region Shadows
 
 ## Puts one of [param owner]'s Shadows on [param cell]. Past
-## [param max_count], the oldest fades.
+## [param max_count], the oldest fades. The Shadow remembers the skill being
+## resolved (if any) as the one that made it.
 func place_shadow(owner: UnitState, cell: Vector2i, max_count: int = 3) -> void:
 	if owner.shadows.has(cell):
 		return
 	owner.shadows.append(cell)
+	_set_source(owner, cell)
 	while owner.shadows.size() > max_count:
-		owner.shadows.pop_front()
+		owner.shadow_sources.erase(owner.shadows.pop_front())
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func remove_shadow(owner: UnitState, cell: Vector2i) -> void:
 	if owner.shadows.has(cell):
 		owner.shadows.erase(cell)
+		owner.shadow_sources.erase(cell)
 		_emit(GameEvent.shadows_changed(owner))
 
 
+## The Shadow keeps the skill that made it.
 func move_shadow(owner: UnitState, from: Vector2i, to: Vector2i) -> void:
 	var i := owner.shadows.find(from)
 	if i < 0:
 		return
+	var source: StringName = owner.shadow_sources.get(from, &"")
+	owner.shadow_sources.erase(from)
 	if owner.shadows.has(to):
 		owner.shadows.remove_at(i)  # Already a Shadow there: the two merge.
 	else:
 		owner.shadows[i] = to
+		if source != &"":
+			owner.shadow_sources[to] = source
 	_emit(GameEvent.shadows_changed(owner))
 
 
 func set_shadows(owner: UnitState, cells: Array[Vector2i]) -> void:
 	owner.shadows = cells.duplicate()
+	owner.shadow_sources.clear()
+	for cell in cells:
+		_set_source(owner, cell)
 	_emit(GameEvent.shadows_changed(owner))
+
+
+func _set_source(owner: UnitState, cell: Vector2i) -> void:
+	if _acting_skill != null:
+		owner.shadow_sources[cell] = _acting_skill.id
+	else:
+		owner.shadow_sources.erase(cell)
 
 #endregion
 

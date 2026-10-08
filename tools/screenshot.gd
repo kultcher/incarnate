@@ -86,10 +86,14 @@ func _ready() -> void:
 			if shot == "traceless":
 				battle.hud._tooltip.text = battle.hud._skill_text(tl.skills()[3])
 			else:
+				battle.board.unit_at(Vector2i(6, 8)).hp = 20
 				await c.click_cell(Vector2i(5, 8))
 				c.begin_targeting_index(_index(tl, &"displacer_strike"))
 				await c.click_cell(Vector2i(6, 8))
-				c.click_cell(Vector2i(7, 8))
+				await c.click_cell(Vector2i(7, 8))
+				# Its own Shadow can't copy Displacer Strike; Gloom Edge it can.
+				c.begin_targeting_index(_index(tl, &"gloom_edge"))
+				c.click_cell(Vector2i(6, 8))
 				while not battle.hud.prompt.is_open():
 					await get_tree().process_frame
 				await get_tree().create_timer(0.4).timeout

@@ -11,6 +11,12 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (Traceless rules note)
+
+- **A Shadow can't copy the skill that made it** (Michael). For example, the Shadow Displacer Strike's shift leaves behind can't copy that Displacer Strike.
+  - *Claude's reading (provisional):* a Shadow remembers which skill made it for as long as it lasts. So it can't copy that skill on a later use either, but it can copy any other attack. The narrower alternative is "can't copy the same use that made it".
+  - Shadows made outside a skill (none in the current kits) can copy anything. Shadow Swap keeps a Shadow's maker.
+
 ## 2026-10-08 (Soulstream baseline, milestone 6)
 
 ### Michael's calls
