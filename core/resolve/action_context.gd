@@ -7,6 +7,10 @@ var skill: SkillDef
 var picks: Array[Vector2i] = []
 var board: BoardState
 var resolver: ActionResolver
+## The skill was made free by Ignite (Kindleborne's Rising Heat).
+var ignited: bool = false
+## The skill is a free replay of an Ignited skill (Burnout).
+var copied: bool = false
 ## Units standing on each pick when the skill was used. Kept so a pick still
 ## means the same unit even if something moves during resolution.
 var _picked_units: Array[UnitState] = []

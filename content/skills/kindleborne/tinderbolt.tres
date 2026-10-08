@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_um3cj"]
+[ext_resource type="Script" path="res://defs/effects/power/prior_attacks_bonus.gd" id="2_6apbm"]
+[ext_resource type="Script" path="res://defs/effects/damage_effect.gd" id="3_7uud5"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_12wuw"]
+[ext_resource type="Texture2D" path="res://art/icons/tinderbolt.png" id="5_r4ol6"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_r0sjw"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_rgjgf"]
+
+[sub_resource type="Resource" id="Resource_jq42a"]
+script = ExtResource("2_6apbm")
+
+[sub_resource type="Resource" id="Resource_q2ou4"]
+script = ExtResource("3_7uud5")
+tiers = Array[int]([0])
+melee = false
+power_bonus = SubResource("Resource_jq42a")
+
+[sub_resource type="Resource" id="Resource_4f4o7"]
+script = ExtResource("7_rgjgf")
+shape = 2
+range_max = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("6_r0sjw")
+id = &"tinderbolt"
+display_name = "Tinderbolt"
+icon = ExtResource("5_r4ol6")
+description = "Strike a foe within 4 for {damage}, with +{per_attack} Power for each attack skill you've already used this turn."
+tags = Array[StringName]([&"attack", &"ranged"])
+targets = Array[ExtResource("7_rgjgf")]([SubResource("Resource_4f4o7")])
+effects = Array[ExtResource("1_um3cj")]([SubResource("Resource_q2ou4")])
+hit_sound = ExtResource("4_12wuw")

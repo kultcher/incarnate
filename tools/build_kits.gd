@@ -2,7 +2,8 @@ extends SceneTree
 ## Writes the Incarnate kits (2014 version) as .tres files: statuses, Pacts,
 ## skills, and the units' skill lists.
 ##   godot --headless --path . --script res://tools/build_kits.gd -- soulweaver
-## Name the kits to write (bloodthane, traceless, soulweaver, enemies), or
+## Name the kits to write (bloodthane, traceless, soulweaver, kindleborne,
+## enemies), or
 ## none for all of them. The .tres files are the source of truth once
 ## written; edit them in the editor. Re-running this overwrites them.
 ##
@@ -33,6 +34,8 @@ func _initialize() -> void:
 		_traceless(common)
 	if all or wanted.has("soulweaver"):
 		_soulweaver()
+	if all or wanted.has("kindleborne"):
+		_kindleborne()
 	if all or wanted.has("enemies"):
 		_enemies()
 	print("build_kits: done")
@@ -699,6 +702,206 @@ func _infusion(display: String, icon: String, text: String) -> InfusionDef:
 	inf.icon = _icon(icon)
 	inf.description = text
 	return inf
+
+#endregion
+
+#region Kindleborne
+
+func _kindleborne() -> void:
+	var sdir := "res://content/statuses/kindleborne/"
+	var kdir := "res://content/skills/kindleborne/"
+	DirAccess.make_dir_recursive_absolute(sdir)
+	DirAccess.make_dir_recursive_absolute(kdir)
+	var shield: StatusDef = load("res://content/statuses/common/shield.tres")
+
+	# --- Statuses ---
+	var ignite := _status(&"ignite", "Ignited", "rising_heat",
+			"Your next skill this turn that costs an action is free.")
+	ignite.tags = [&"ignite"]
+	_save(ignite, sdir + "ignite.tres")
+
+	var echo := _status(&"burnout_echo", "Burnout", "burnout",
+			"You may use the skill you just Ignited once more this turn, free and ignoring its " \
+			+ "recharge. Cards it unveils don't become Heat.")
+	echo.tags = [&"echo"]
+	echo.stacking = Enums.Stacking.INDEPENDENT
+	_save(echo, sdir + "burnout_echo.tres")
+
+	var burnout_status := _status(&"burnout", "Burnout", "burnout",
+			"The next Ignited skills this turn (one per stack) can each be replayed once for free.")
+	burnout_status.stacking = Enums.Stacking.ADD
+	burnout_status.max_stacks = 3
+	_save(burnout_status, sdir + "burnout.tres")
+
+	var feint := _status(&"feint", "Feint", "rising_heat",
+			"+1 Evasion (a dodge) until end of turn.")
+	feint.stat_mods = { &"evasion": 1 }
+	feint.stacking = Enums.Stacking.ADD
+	feint.max_stacks = 9
+	_save(feint, sdir + "feint.tres")
+
+	var ember_behavior := RetaliateBehavior.new()
+	ember_behavior.tiers = _tiers([SI])
+	var ember := _status(&"ember_shield", "Ember Shield", "ember_shield",
+			"This turn, whenever a foe strikes you, you strike it back for {retaliate}.")
+	ember.behavior = ember_behavior
+	_save(ember, sdir + "ember_shield.tres")
+
+	var brand := _status(&"cauterizing_brand", "Cauterizing Brand", "cauterizing_brand",
+			"Loses {loss} more health each time a strike damages it this turn. At end of turn, " \
+			+ "heals {heal}.")
+	brand.behavior = CauterizingBrandBehavior.new()
+	_save(brand, sdir + "cauterizing_brand.tres")
+
+	# Flickerstep's teleport is a granted skill: its range is the card drawn.
+	var flicker_step := TargetStep.new()
+	flicker_step.rule = StatusRangeRule.new()
+	flicker_step.highlight = Enums.Highlight.MOVE
+	flicker_step.prompt = "Pick a square to teleport to"
+	var flicker_effect := TeleportEffect.new()
+	flicker_effect.unit_step = -1
+	flicker_effect.dest_step = 0
+	flicker_effect.consume_status = &"flicker"
+	var flicker_skill := _skill(&"flicker", "Flicker", "flickerstep",
+			"Free, once (after Flickerstep). Teleport to an empty square within the range " \
+			+ "Flickerstep drew.",
+			Enums.Slot.MOBILITY, Enums.Cost.FREE, 0, [&"teleport"], [flicker_step], [flicker_effect])
+	flicker_skill.requires_status = &"flicker"
+	_save(flicker_skill, kdir + "flicker.tres")
+
+	var flicker := _status(&"flicker", "Flicker", "flickerstep",
+			"You may teleport up to this many squares (Flicker on your bar), once this turn.")
+	flicker.grants_skill = flicker_skill
+	flicker.max_stacks = 99
+	_save(flicker, sdir + "flicker.tres")
+
+	var heat_behavior := RisingHeatBehavior.new()
+	heat_behavior.ignite_status = ignite
+	heat_behavior.echo_status = echo
+	var rising := _status(&"rising_heat", "Rising Heat", "rising_heat",
+			"Passive. Every card your skills unveil is stored as Heat (up to {max}; the lowest " \
+			+ "drop out). Use Stoke (free) to discard Heat: Ignite ({ignite}+, 1 more for each " \
+			+ "Ignite this turn) makes your next skill this turn free; Dissipate ({dissipate}+) " \
+			+ "heals you and gives +1 Evasion this turn. Stoke discards your lowest Heat first.",
+			0, Enums.StatusClock.OWNER_TURN)
+	rising.behavior = heat_behavior
+	rising.tags = [&"passive"]
+	rising.show_on_unit = false
+	_save(rising, sdir + "rising_heat.tres")
+
+	# --- Skills ---
+	var stoke_effect := StokeEffect.new()
+	stoke_effect.feint_status = feint
+	var stoke := _skill(&"stoke", "Stoke", "rising_heat",
+			"Free. Spend Heat: Ignite (discard {ignite}+, 1 more for each Ignite this turn) to make " \
+			+ "your next skill this turn free, or Dissipate (discard {dissipate}+) to heal 3 (Silver) " \
+			+ "and gain +1 Evasion this turn. Your lowest Heat cards go first.",
+			Enums.Slot.BASIC, Enums.Cost.FREE, 0, [&"utility"], [], [stoke_effect])
+	stoke.condition = HeatCondition.new()
+	stoke.description = stoke.description.replace("{ignite}", "5").replace("{dissipate}", "5")
+	_save(stoke, kdir + "stoke.tres")
+
+	var tinder_damage := _damage(_tiers([BR]), PriorAttacksBonus.new())
+	tinder_damage.melee = false
+	var tinderbolt := _skill(&"tinderbolt", "Tinderbolt", "tinderbolt",
+			"Strike a foe within 4 for {damage}, with +{per_attack} Power for each attack skill " \
+			+ "you've already used this turn.",
+			Enums.Slot.BASIC, Enums.Cost.SKILL, 0, [&"attack", &"ranged"],
+			[_step(Enums.TargetShape.WITHIN, Enums.TargetFilter.ENEMY, "Pick a foe within 4", 4)],
+			[tinder_damage])
+	_save(tinderbolt, kdir + "tinderbolt.tres")
+
+	var wracking_damage := _damage(_tiers([SI, SI]), HeatBonus.new())
+	wracking_damage.melee = false
+	var wracking := _skill(&"wracking_flame", "Wracking Flame", "wracking_flame",
+			"Strike a foe within 4 for {damage}, with Power equal to your highest Heat card.",
+			Enums.Slot.ATTACK, Enums.Cost.SKILL, 2, [&"attack", &"ranged"],
+			[_step(Enums.TargetShape.WITHIN, Enums.TargetFilter.ENEMY, "Pick a foe within 4", 4)],
+			[wracking_damage])
+	_save(wracking, kdir + "wracking_flame.tres")
+
+	var stoking_damage := _damage(_tiers([SI, SI]))
+	stoking_damage.melee = false
+	var stoking := _skill(&"stoking_blast", "Stoking Blast", "stoking_blast",
+			"Strike a foe within 4 for {damage}. If you Ignited Stoking Blast, it recharges by 1.",
+			Enums.Slot.ATTACK, Enums.Cost.SKILL, 2, [&"attack", &"ranged"],
+			[_step(Enums.TargetShape.WITHIN, Enums.TargetFilter.ENEMY, "Pick a foe within 4", 4)],
+			[stoking_damage, RechargeIfIgnitedEffect.new()])
+	_save(stoking, kdir + "stoking_blast.tres")
+
+	var wave := WaveArea.new()
+	var wave_effect := AreaStrikeEffect.new()
+	wave_effect.area = wave
+	var wave_step := TargetStep.new()
+	wave_step.rule = DirectionRule.new()
+	wave_step.prompt = "Pick a direction (a square next to you)"
+	var cinder := _skill(&"cinder_wave", "Cinder Wave", "cinder_wave",
+			"Strike each foe in a wave {width} squares wide and {depth} deep, in a direction you " \
+			+ "pick, for {damage}.",
+			Enums.Slot.AREA, Enums.Cost.SKILL, 2, [&"attack", &"area", &"ranged"],
+			[wave_step], [wave_effect])
+	cinder.area = wave
+	_save(cinder, kdir + "cinder_wave.tres")
+
+	var ember_shield_effect := ShieldEffect.new()
+	ember_shield_effect.shield_status = shield
+	ember_shield_effect.target_step = -1
+	var ember_skill := _skill(&"ember_shield", "Ember Shield", "ember_shield",
+			"Shield yourself against {shield} damage. This turn, whenever a foe strikes you, you " \
+			+ "strike it back for {retaliate}.",
+			Enums.Slot.DEFENSE, Enums.Cost.SKILL, 3, [&"shield"], [],
+			[ember_shield_effect, _apply(ember)])
+	_save(ember_skill, kdir + "ember_shield.tres")
+
+	var flickerstep_effect := FlickerstepEffect.new()
+	flickerstep_effect.status = flicker
+	var flickerstep := _skill(&"flickerstep", "Flickerstep", "flickerstep",
+			"Maneuver. Unveil {reach}: this turn you may teleport up to that many squares (Flicker, " \
+			+ "free). Whenever you Ignite, Flickerstep recharges by 1.",
+			Enums.Slot.MOBILITY, Enums.Cost.MOVE, 4, [&"maneuver", &"recharge_on_ignite"], [],
+			[flickerstep_effect])
+	_save(flickerstep, kdir + "flickerstep.tres")
+
+	var augur := _skill(&"ash_augur", "Ash Augur", "ash_augur",
+			"Free. Swap each Bronze or Silver card in your Heat for the top card of the next " \
+			+ "tier's deck.",
+			Enums.Slot.UTILITY, Enums.Cost.FREE, 3, [&"utility"], [], [AshAugurEffect.new()])
+	_save(augur, kdir + "ash_augur.tres")
+
+	var brand_skill := _skill(&"cauterizing_brand", "Cauterizing Brand", "cauterizing_brand",
+			"An ally within 5 (you included) loses {loss} more health each time a strike damages " \
+			+ "them this turn. At end of turn, they heal {heal}.",
+			Enums.Slot.RECOVERY, Enums.Cost.SKILL, 0, [&"recovery", &"heal"],
+			[_step(Enums.TargetShape.WITHIN, Enums.TargetFilter.ALLY_OR_SELF,
+					"Pick an ally within 5 (you included)", 5, Enums.Highlight.AID)],
+			[_apply(brand, 0)])
+	brand_skill.targets[0].range_min = 0
+	_save(brand_skill, kdir + "cauterizing_brand.tres")
+
+	var burnout := _skill(&"burnout", "Burnout", "burnout",
+			"Ultimate. Free. The next 3 times you Ignite a skill this turn, you may use it once " \
+			+ "more for free (ignoring its recharge). Cards those replays unveil don't become Heat.",
+			Enums.Slot.ULTIMATE, Enums.Cost.FREE, 0, [&"ultimate"], [], [_apply(burnout_status)])
+	(burnout.effects[0] as ApplyStatusEffect).stacks = 3
+	burnout.uses_per_battle = 1
+	_save(burnout, kdir + "burnout.tres")
+
+	var unit: UnitDef
+	if ResourceLoader.exists("res://content/units/kindleborne.tres"):
+		unit = load("res://content/units/kindleborne.tres")
+	else:
+		unit = UnitDef.new()
+		unit.id = &"kindleborne"
+		unit.display_name = "Kindleborne"
+		unit.max_hp = 12
+		unit.move = 4
+		unit.sheet = load("res://art/units/kindleborne.png")
+		unit.sheet_columns = 4
+		unit.idle_column = 0
+	unit.skills = [tinderbolt, stoke, wracking, stoking, cinder, ember_skill, flickerstep, augur,
+			brand_skill, burnout]
+	unit.passives = [rising]
+	_save(unit, "res://content/units/kindleborne.tres")
 
 #endregion
 

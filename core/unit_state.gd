@@ -27,6 +27,9 @@ var shadow_made_in: Dictionary[Vector2i, int] = {}
 ## Soulstream cards this Incarnate holds (see Soulstream). Enemies hold none.
 ## Change it only through the resolver.
 var hand: Array[Card] = []
+## Kindleborne's stored Heat cards (Rising Heat). Change it only through the
+## resolver or the Rising Heat behavior.
+var heat: Array[Card] = []
 
 #region This turn
 ## Reset at the start of the unit's turn.
@@ -41,6 +44,8 @@ var turn_strikes: Dictionary[int, int] = {}
 var last_action_was_move: bool = false
 ## Dodges spent since the unit's turn started.
 var dodges_used: int = 0
+## Attack skills used this turn (Tinderbolt).
+var turn_attacks: int = 0
 #endregion
 
 
@@ -161,6 +166,7 @@ func start_turn() -> void:
 	turn_strikes.clear()
 	last_action_was_move = false
 	dodges_used = 0
+	turn_attacks = 0
 
 
 func _to_string() -> String:

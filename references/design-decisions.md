@@ -11,6 +11,25 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (Kindleborne kit, milestone 8; Claude's calls, provisional)
+
+Source: the Master sheet (newest), with the 2014 cards where the sheet is silent. Alpha-only sheet skills are left out. The squad is now four Incarnates; the Kindleborne starts at (1, 7) in the test arena with a recolored Soulweaver sprite as a placeholder.
+
+- **Rising Heat stores automatically.** Every card a Kindleborne skill unveils goes into Heat (the "may" never mattered, since storing costs nothing); past 5, the lowest drop back to the discards. Heat cards are held, so they leave the discard pile. This includes Dissipate's heal, Ember Shield's strike-backs and Cauterizing Brand's draws.
+- **Stoke** is a free skill that spends Heat: you pick Ignite or Dissipate, and the cheapest set of your lowest cards that covers the cost is discarded (this keeps your best card for Wracking Flame). Ignite and Dissipate each cost 5; Ignite costs 1 more for each Ignite this turn.
+- **Ignite** makes the next skill that costs an action free (move actions included). "Ignited" skills get their bonus (Stoking Blast recharges by 1). Every Ignite recharges Flickerstep by 1.
+- **Dissipate:** heal 3 (Si) and **Feint = +1 Evasion** until end of turn.
+- **Heat chains:** each attack refills some Heat, so with a full store the AI can Ignite several times in one turn (the rising cost ends it). The designer note's "less snowbally alternative" (store only the highest card per skill, max 3, discard 3) is available if this proves too strong.
+- **Tinderbolt** counts attack skills used earlier this turn.
+- **Cinder Wave:** a "wave 4" is 3 squares wide and 4 deep, starting next to the Kindleborne in a direction you pick (click a neighbouring square). Hovering shows the area. It ignores obstacles.
+- **Ember Shield** shields at once (like Strength in Unity) and strikes back after the foe's action, for each strike that lands.
+- **Flickerstep** (sheet: (G)+2) unveils a Gold card when used; Flicker, a free one-use teleport with that range, appears on the bar for the rest of the turn.
+- **Ash Augur:** Bronze becomes Silver and Silver becomes Gold (the old card is discarded, the new one comes off the top of the next deck); Gold stays.
+- **Cauterizing Brand** can target the Kindleborne too. The extra loss triggers on strikes that deal damage, not on health loss.
+- **Burnout** (sheet version): after each of the next 3 Ignited skills, that skill can be used once more this turn, free and ignoring its recharge, with new targets. Replays don't count as Ignited and their cards don't become Heat.
+- **The AI** Ignites when it's out of actions with an attack ready, Dissipates when hurt, and uses the attacks and Cinder Wave. It doesn't use Ember Shield, Flickerstep, Ash Augur, Cauterizing Brand or Burnout yet.
+- **Skill bars** can now hold more than 10 skills (the 11th has no hotkey).
+
 ## 2026-10-08 (Soulweaver kit, milestone 7; Claude's calls, provisional)
 
 Source: the 2014 cards where they exist (Soul Echo, Dread Diffusion, Strength in Unity, Essence Shift, Well of Souls, Conveyance, Anima Nexus; their recharges), the Master sheet otherwise (Fates Intertwined, the Infusions, Spirit Flare). Alpha-only sheet skills are left out, as for the other kits.

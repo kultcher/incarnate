@@ -18,6 +18,8 @@ extends Node
 ##   logged     after Blade Fury with a readied card: the strike log
 ##   soulweaver the Soulweaver Tethered to the Bloodthane, its bar and a tooltip
 ##   infusion   the Fates Intertwined prompt after Spirit Flare
+##   wave       the Kindleborne aiming Cinder Wave (area preview), Heat shown
+##   stoke      the Kindleborne's Stoke prompt (Ignite or Dissipate)
 
 
 func _ready() -> void:
@@ -122,6 +124,20 @@ func _ready() -> void:
 				while not battle.hud.prompt.is_open():
 					await get_tree().process_frame
 				await get_tree().create_timer(0.4).timeout
+		"wave", "stoke":
+			var kb := _find(battle, &"kindleborne")
+			for v: int in [5, 3, 2]:
+				kb.heat.append(Card.new(Enums.Tier.SILVER if v < 5 else Enums.Tier.GOLD, v))
+			await c.click_cell(kb.cell)
+			await c.click_cell(Vector2i(3, 7))
+			if shot == "wave":
+				c.begin_targeting_index(_index(kb, &"cinder_wave"))
+				c._update_hover(Vector2i(4, 7), true)
+			else:
+				c.begin_targeting_index(_index(kb, &"stoke"))
+				while not battle.hud.prompt.is_open():
+					await get_tree().process_frame
+				await get_tree().create_timer(0.3).timeout
 		"enemy":
 			# Walk Bloodthane forward, then hand over to the enemies.
 			await c.click_cell(Vector2i(4, 7))

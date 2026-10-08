@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/conditions/heat_condition.gd" id="1_j7pje"]
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="2_qs3yo"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/feint.tres" id="3_dlm6i"]
+[ext_resource type="Script" path="res://defs/effects/stoke_effect.gd" id="4_4hohf"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="5_k0phc"]
+[ext_resource type="Texture2D" path="res://art/icons/rising_heat.png" id="6_gjccg"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="7_mmf8r"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="8_mfpbl"]
+
+[sub_resource type="Resource" id="Resource_26djl"]
+script = ExtResource("1_j7pje")
+
+[sub_resource type="Resource" id="Resource_gf1lb"]
+script = ExtResource("4_4hohf")
+feint_status = ExtResource("3_dlm6i")
+
+[resource]
+script = ExtResource("7_mmf8r")
+id = &"stoke"
+display_name = "Stoke"
+icon = ExtResource("6_gjccg")
+description = "Free. Spend Heat: Ignite (discard 5+, 1 more for each Ignite this turn) to make your next skill this turn free, or Dissipate (discard 5+) to heal 3 (Silver) and gain +1 Evasion this turn. Your lowest Heat cards go first."
+cost = 2
+tags = Array[StringName]([&"utility"])
+effects = Array[ExtResource("2_qs3yo")]([SubResource("Resource_gf1lb")])
+condition = SubResource("Resource_26djl")
+hit_sound = ExtResource("5_k0phc")

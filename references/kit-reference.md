@@ -219,8 +219,10 @@ The two eras differ most here.
   - The Infusion trigger now works on real unveils: any card a Soulweaver skill uses (Michael, 2026-10-08).
   - Basic: **Spirit Flare** (Alpha). Cards: Soul Echo/Cascade, Dread Diffusion/Expulsion, Strength in Unity/Unbreakable Union, Essence Shift/Meld, Well/Sea of Souls, Conveyance, Anima Nexus.
   - Some card names differ from the sheet (Soul Spike/Lance in the sheet, Soul Echo/Cascade on the cards).
-- **Kindleborne: Rising Heat.** Store unveiled cards as Heat (max 5); discard 5+ value to **Ignite** (next skill free) or **Dissipate** (heal (Si), +1 Feint).
-  - Built entirely on unveils, so it needs the most translation. Under the Hold'em Soulstream, Heat could be stored hand cards.
+- **Kindleborne: built in M8 (2026-10-08).** See the decisions log for the calls made. Built: Rising Heat (with the Stoke skill for Ignite and Dissipate), Tinderbolt, Wracking Flame, Stoking Blast, Cinder Wave, Ember Shield, Flickerstep, Ash Augur, Cauterizing Brand, Burnout. Not built: the Alpha-only sheet skills (Fiery Burst, Choking Ash, Frictious Feet, Hearthfire), Heroic versions and Talents.
+  - Rising Heat: store unveiled cards as Heat (max 5); discard 5+ value to **Ignite** (next skill free) or **Dissipate** (heal (Si), +1 Feint).
+  - **Card vs sheet:** where they differ, the newer sheet wins, per section 1. Flickerstep: sheet (G)+2, card (G)(G)+1. Cauterizing Brand: sheet (G)(G)(G), card (G)(G)(Si). Burnout: sheet "copy the next 3 Ignited skills", card "on each Ignite, strike a foe for the Heat discarded".
+  - *Note:* the Soulweaver port took Well of Souls' recharge from its card (3; sheet 4) and Soul Echo from its card (the sheet's Soul Spike needs the Attunement grid).
 - **Techsage: Modular Technology.** Gain 1 Energy per turn; spend it on Mods (Power Cycler, Reflex Armor, Ballistic Shaper). Several slots are blank; the roster decision says the Techsage may be set aside.
 - **Golgothon (boss):**
   - Basics with targeting rules: **Grave Smash** (move 4 toward the foe who dealt the most damage this turn; strike (B)(B)(B) + Daze, else Carrion Spew); **Carrion Spew** (highest-health foe in range 6, (B)(B), force 1 in a random direction).

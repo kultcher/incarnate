@@ -370,7 +370,7 @@ func _skill_button(index: int, skill: SkillDef) -> Button:
 			_tooltip.text = "")
 
 	var hotkey := _label(14)
-	hotkey.text = str((index + 1) % 10)
+	hotkey.text = str((index + 1) % 10) if index < 10 else ""
 	hotkey.position = Vector2(4, 0)
 	b.add_child(hotkey)
 	if cooldown > 0:

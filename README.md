@@ -6,9 +6,9 @@ Godot 4.7, GDScript, Compatibility renderer.
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review: https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
 
-## Status: milestone 7 (the Soulweaver's kit, 2014 version)
+## Status: milestone 8 (the Kindleborne's kit, 2014 version: all four Incarnates)
 
-Run the project (F5) to open the test arena: your three Incarnates against
+Run the project (F5) to open the test arena: your four Incarnates against
 three Shamblers.
 
 - Left-click one of your units to select it. Blue cells are where it can
@@ -129,9 +129,30 @@ saves it for a later unveil that turn.
 **Shields** absorb damage from strikes (not health loss) until used up or the
 turn ends; more shielding adds to the same shield.
 
+### Kindleborne
+
+**Rising Heat** (passive): every card your skills unveil is stored as
+**Heat** (shown under your hand; up to 5, the lowest drop out). **Stoke**
+(free) spends Heat, lowest cards first: **Ignite** (5+, one more for each
+Ignite this turn) makes your next skill this turn cost no action;
+**Dissipate** (5+) heals 3 (Si) and gives +1 Evasion this turn.
+
+| Skill | Cost | Recharge | What it does |
+| --- | --- | --- | --- |
+| Tinderbolt | Skill | - | Strike a foe within 4 for 2 (Br), +1 Power per attack skill already used this turn |
+| Stoke | Free | - | Ignite or Dissipate (needs 5+ Heat) |
+| Wracking Flame | Skill | 2 | Strike a foe within 4 for 6 (Si+Si), +Power equal to your highest Heat card |
+| Stoking Blast | Skill | 2 | Strike a foe within 4 for 6 (Si+Si); recharges by 1 if Ignited |
+| Cinder Wave | Skill | 2 | Strike each foe in a wave 3 wide and 4 deep for 3 (Si). Hover a direction to see it |
+| Ember Shield | Skill | 3 | Shield yourself against 4 (G); this turn, strike back for 3 (Si) whenever a foe strikes you |
+| Flickerstep | Maneuver | 4 | Unveil (G): teleport up to its value + 2 this turn (Flicker, free). Recharges by 1 whenever you Ignite |
+| Ash Augur | Free | 3 | Each Bronze or Silver Heat card becomes the top card of the next tier's deck |
+| Cauterizing Brand | Recovery | - | An ally (or you) loses 3 (Si) more each time a strike damages them this turn; at end of turn, heal 12 (G+G+G) |
+| Burnout | Free, once | - | The next 3 skills you Ignite this turn can each be used once more for free, ignoring recharge |
+
 **Shamblers:** 8 HP, move 3, Claw for 3 (Silver), one attack per turn.
-They're training dummies: with the Soulweaver's kit the AI clears them in
-1-2 rounds.
+They're training dummies: four Incarnates clear them in round 1. The
+Kindleborne's sprite is a recolored Soulweaver for now.
 
 Not in yet: Heroic versions, Talents, suit bonuses, Perfect Decoy's
 teleport, and Titan Charge and the other Alpha-only skills. The AI uses

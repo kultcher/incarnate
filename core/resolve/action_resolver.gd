@@ -43,6 +43,8 @@ var _followups: Array[Callable] = []
 ## Counts skill uses this battle; 0 while none is resolving. Shadows
 ## remember the use that made them.
 var action_number: int = 0
+## The skill being resolved is a Burnout replay (its cards can't become Heat).
+var action_is_copy: bool = false
 var _uses_so_far: int = 0
 
 
@@ -84,26 +86,47 @@ func can_use(caster: UnitState, skill: SkillDef) -> bool:
 	return caster.actions.can_pay(cost_of(caster, skill)) and can_use_ignoring_points(caster, skill)
 
 
-## What [param skill] costs [param unit] now: free for a basic attack while
-## it has a free_basic status (Potent Infusion), else the skill's own cost.
+## What [param skill] costs [param unit] now: free while a status makes it
+## free (see _free_source), else the skill's own cost.
 func cost_of(unit: UnitState, skill: SkillDef) -> Enums.Cost:
-	if _free_basic(unit, skill) != null:
+	if _free_source(unit, skill) != null:
 		return Enums.Cost.FREE
 	return skill.cost
 
 
-func _free_basic(unit: UnitState, skill: SkillDef) -> StatusInstance:
-	if skill.slot != Enums.Slot.BASIC or not skill.has_tag(&"attack") \
-			or skill.cost == Enums.Cost.FREE:
+## The status that would make [param skill] free for [param unit], used up
+## when the skill is: a Burnout replay of that skill (tag echo), a free
+## basic attack (tag free_basic: Potent Infusion, Spirit Flare), or Ignite
+## (tag ignite: the next skill that costs an action).
+func _free_source(unit: UnitState, skill: SkillDef) -> StatusInstance:
+	if skill.cost == Enums.Cost.FREE:
 		return null
-	return unit.find_status_tag(&"free_basic")
+	var echo := _echo_for(unit, skill)
+	if echo != null:
+		return echo
+	if skill.slot == Enums.Slot.BASIC and skill.has_tag(&"attack"):
+		var basic := unit.find_status_tag(&"free_basic")
+		if basic != null:
+			return basic
+	return unit.find_status_tag(&"ignite")
+
+
+## A Burnout replay of [param skill] waiting on [param unit] (free, and it
+## ignores the skill's recharge).
+func _echo_for(unit: UnitState, skill: SkillDef) -> StatusInstance:
+	for inst in unit.statuses:
+		if inst.def.has_tag(&"echo") and inst.data.get("skill", &"") == skill.id:
+			return inst
+	return null
 
 
 ## Every rule of can_use except action points (the AI plans a move first).
 func can_use_ignoring_points(caster: UnitState, skill: SkillDef) -> bool:
 	if not caster.is_alive() or not caster.skills().has(skill):
 		return false
-	if caster.cooldown_left(skill) > 0:
+	if caster.cooldown_left(skill) > 0 and _echo_for(caster, skill) == null:
+		return false
+	if skill.condition != null and not skill.condition.allows(caster, self):
 		return false
 	if skill.requires_status != &"" and not caster.has_status(skill.requires_status):
 		return false
@@ -141,15 +164,18 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	if not cards.is_empty():
 		stream.ready_cards(caster, cards)
 		_emit(GameEvent.cards_changed(caster.team))
-	var free := _free_basic(caster, skill)
+	var free := _free_source(caster, skill)
+	var ignited := free != null and free.def.has_tag(&"ignite")
+	var copied := free != null and free.def.has_tag(&"echo")
 	if free != null:
 		await remove_status(free)
 	else:
 		caster.actions.pay(skill.cost)
-	await _start_cooldown(caster, skill)
-	caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
-	if skill.slot == Enums.Slot.RECOVERY:
-		recoveries_used[caster.team] = recoveries_used.get(caster.team, 0) + 1
+	if not copied:
+		await _start_cooldown(caster, skill)
+		caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
+		if skill.slot == Enums.Slot.RECOVERY:
+			recoveries_used[caster.team] = recoveries_used.get(caster.team, 0) + 1
 
 	# Statuses on the caster may change its targets (Tactical Distortion).
 	for inst: StatusInstance in caster.statuses.duplicate():
@@ -162,10 +188,15 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	_emit(GameEvent.actions_changed(caster))
 
 	var ctx := ActionContext.new(caster, skill, picks, board, self)
+	ctx.ignited = ignited
+	ctx.copied = copied
 	_uses_so_far += 1
 	action_number = _uses_so_far
+	action_is_copy = copied
 	for effect in skill.effects:
 		await effect.apply(ctx)
+	if skill.has_tag(&"attack"):
+		caster.turn_attacks += 1
 	# After the effects, so Blade Fury can see the move right before it.
 	caster.last_action_was_move = false
 
@@ -177,6 +208,7 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
 	# Shadow copies (follow-ups) may still use readied cards.
 	await _drain_followups()
 	action_number = 0
+	action_is_copy = false
 	if stream.release() > 0:
 		_emit(GameEvent.cards_changed(caster.team))
 	await _finish_action()
@@ -366,6 +398,11 @@ func soulstream(team: Enums.Team) -> Soulstream:
 func use_decks(seed_value: int) -> void:
 	soulstream(Enums.Team.PLAYER).use_decks(seed_value)
 	soulstream(Enums.Team.ENEMY).use_decks(seed_value + 1)
+
+
+## Tells the HUD that [param team]'s hands, row or Heat changed.
+func cards_changed(team: Enums.Team) -> void:
+	_emit(GameEvent.cards_changed(team))
 
 
 ## Hand income: one card for [param unit] if its hand has room.

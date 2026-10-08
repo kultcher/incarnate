@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Resource" path="res://content/skills/kindleborne/flicker.tres" id="1_phtny"]
+[ext_resource type="Texture2D" path="res://art/icons/flickerstep.png" id="2_cacjl"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="3_dk4bu"]
+
+[resource]
+script = ExtResource("3_dk4bu")
+id = &"flicker"
+display_name = "Flicker"
+icon = ExtResource("2_cacjl")
+description = "You may teleport up to this many squares (Flicker on your bar), once this turn."
+duration = 1
+clock = 1
+max_stacks = 99
+grants_skill = ExtResource("1_phtny")

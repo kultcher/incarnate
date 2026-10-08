@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_66ybd"]
+[ext_resource type="Script" path="res://defs/effects/power/heat_bonus.gd" id="2_6dqgy"]
+[ext_resource type="Script" path="res://defs/effects/damage_effect.gd" id="3_t6jfo"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="4_7dsn0"]
+[ext_resource type="Texture2D" path="res://art/icons/wracking_flame.png" id="5_26v4q"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_x4d0p"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="7_aiyda"]
+
+[sub_resource type="Resource" id="Resource_2cfgf"]
+script = ExtResource("2_6dqgy")
+
+[sub_resource type="Resource" id="Resource_3q612"]
+script = ExtResource("3_t6jfo")
+tiers = Array[int]([1, 1])
+melee = false
+power_bonus = SubResource("Resource_2cfgf")
+
+[sub_resource type="Resource" id="Resource_lp6ax"]
+script = ExtResource("7_aiyda")
+shape = 2
+range_max = 4
+prompt = "Pick a foe within 4"
+
+[resource]
+script = ExtResource("6_x4d0p")
+id = &"wracking_flame"
+display_name = "Wracking Flame"
+icon = ExtResource("5_26v4q")
+description = "Strike a foe within 4 for {damage}, with Power equal to your highest Heat card."
+slot = 1
+cooldown = 2
+tags = Array[StringName]([&"attack", &"ranged"])
+targets = Array[ExtResource("7_aiyda")]([SubResource("Resource_lp6ax")])
+effects = Array[ExtResource("1_66ybd")]([SubResource("Resource_3q612")])
+hit_sound = ExtResource("4_7dsn0")

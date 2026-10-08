@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/burnout.png" id="1_m85hs"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_hi5vg"]
+
+[resource]
+script = ExtResource("2_hi5vg")
+id = &"burnout"
+display_name = "Burnout"
+icon = ExtResource("1_m85hs")
+description = "The next Ignited skills this turn (one per stack) can each be replayed once for free."
+duration = 1
+clock = 1
+stacking = 1
+max_stacks = 3

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_nr6uq"]
+[ext_resource type="Script" path="res://defs/effects/teleport_effect.gd" id="2_ecaom"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_vjata"]
+[ext_resource type="Texture2D" path="res://art/icons/flickerstep.png" id="4_coimh"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_an6j2"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_plwj4"]
+[ext_resource type="Script" path="res://defs/targeting/status_range_rule.gd" id="7_eje5l"]
+
+[sub_resource type="Resource" id="Resource_we6wa"]
+script = ExtResource("2_ecaom")
+unit_step = -1
+dest_step = 0
+consume_status = &"flicker"
+
+[sub_resource type="Resource" id="Resource_vi4m5"]
+script = ExtResource("7_eje5l")
+
+[sub_resource type="Resource" id="Resource_4dov4"]
+script = ExtResource("6_plwj4")
+highlight = 1
+rule = SubResource("Resource_vi4m5")
+prompt = "Pick a square to teleport to"
+
+[resource]
+script = ExtResource("5_an6j2")
+id = &"flicker"
+display_name = "Flicker"
+icon = ExtResource("4_coimh")
+description = "Free, once (after Flickerstep). Teleport to an empty square within the range Flickerstep drew."
+slot = 4
+cost = 2
+tags = Array[StringName]([&"teleport"])
+targets = Array[ExtResource("6_plwj4")]([SubResource("Resource_4dov4")])
+effects = Array[ExtResource("1_nr6uq")]([SubResource("Resource_we6wa")])
+requires_status = &"flicker"
+hit_sound = ExtResource("3_vjata")

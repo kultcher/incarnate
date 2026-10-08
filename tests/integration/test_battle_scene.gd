@@ -24,7 +24,7 @@ func _unit_named(display_name: String) -> UnitState:
 
 
 func test_spawns_units_on_their_cells() -> void:
-	assert_eq(battle.board.units().size(), 6)
+	assert_eq(battle.board.units().size(), 7, "Four Incarnates, three Shamblers")
 	assert_eq(_unit_named("Bloodthane").cell, Vector2i(2, 7))
 	assert_false(is_instance_valid(battle.arena.spawns_root), "Spawn markers are removed")
 

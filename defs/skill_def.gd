@@ -20,6 +20,8 @@ extends Resource
 ## Set for skills that shift along a path the player clicks out square by
 ## square (Bloody Rush, Phantom Dash). Used instead of [member targets].
 @export var path: PathSpec
+## The squares the skill hits, shown while hovering a pick (Cinder Wave).
+@export var area: SkillArea
 @export var effects: Array[EffectDef] = []
 
 @export_group("Rules")
@@ -29,6 +31,8 @@ extends Resource
 @export var uses_per_battle: int = 0
 ## Whenever a foe strikes the caster, this skill recharges by 1 (Rage Strike).
 @export var recharge_when_struck: bool = false
+## Extra rule for when the skill can be used (Stoke: enough Heat).
+@export var condition: SkillCondition
 
 @export_group("Shadow copies")
 ## How far from a Shadow a copy of this attack can reach. 0 = Shadows can't

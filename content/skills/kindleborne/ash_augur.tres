@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SkillDef" format=3]
+
+[ext_resource type="Script" path="res://defs/effects/effect_def.gd" id="1_0ijvp"]
+[ext_resource type="Script" path="res://defs/effects/ash_augur_effect.gd" id="2_tsrno"]
+[ext_resource type="AudioStream" path="res://audio/strike_hit.wav" id="3_ka8yd"]
+[ext_resource type="Texture2D" path="res://art/icons/ash_augur.png" id="4_vx71s"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_ojjq5"]
+[ext_resource type="Script" path="res://defs/target_step.gd" id="6_onorp"]
+
+[sub_resource type="Resource" id="Resource_c66ql"]
+script = ExtResource("2_tsrno")
+
+[resource]
+script = ExtResource("5_ojjq5")
+id = &"ash_augur"
+display_name = "Ash Augur"
+icon = ExtResource("4_vx71s")
+description = "Free. Swap each Bronze or Silver card in your Heat for the top card of the next tier's deck."
+slot = 5
+cost = 2
+cooldown = 3
+tags = Array[StringName]([&"utility"])
+effects = Array[ExtResource("1_0ijvp")]([SubResource("Resource_c66ql")])
+hit_sound = ExtResource("3_ka8yd")

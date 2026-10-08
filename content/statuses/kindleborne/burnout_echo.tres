@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/burnout.png" id="1_py7lf"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_no7u6"]
+
+[resource]
+script = ExtResource("2_no7u6")
+id = &"burnout_echo"
+display_name = "Burnout"
+icon = ExtResource("1_py7lf")
+description = "You may use the skill you just Ignited once more this turn, free and ignoring its recharge. Cards it unveils don't become Heat."
+duration = 1
+clock = 1
+stacking = 2
+tags = Array[StringName]([&"echo"])

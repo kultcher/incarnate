@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="UnitDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_grhiq"]
+[ext_resource type="Resource" path="res://content/statuses/kindleborne/rising_heat.tres" id="2_040q3"]
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="3_rxd6n"]
+[ext_resource type="Texture2D" path="res://art/units/kindleborne.png" id="4_rfbnh"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_kjwis"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/tinderbolt.tres" id="6_h8par"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/stoke.tres" id="7_rf231"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/wracking_flame.tres" id="8_24ivh"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/stoking_blast.tres" id="9_3x8vd"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/cinder_wave.tres" id="10_8xm5g"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/ember_shield.tres" id="11_fri7r"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/flickerstep.tres" id="12_a5hy8"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/ash_augur.tres" id="13_t25pc"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/cauterizing_brand.tres" id="14_2svyq"]
+[ext_resource type="Resource" path="res://content/skills/kindleborne/burnout.tres" id="15_dmreo"]
+
+[resource]
+script = ExtResource("3_rxd6n")
+id = &"kindleborne"
+display_name = "Kindleborne"
+skills = Array[ExtResource("5_kjwis")]([ExtResource("6_h8par"), ExtResource("7_rf231"), ExtResource("8_24ivh"), ExtResource("9_3x8vd"), ExtResource("10_8xm5g"), ExtResource("11_fri7r"), ExtResource("12_a5hy8"), ExtResource("13_t25pc"), ExtResource("14_2svyq"), ExtResource("15_dmreo")])
+passives = Array[ExtResource("1_grhiq")]([ExtResource("2_040q3")])
+sheet = ExtResource("4_rfbnh")
+sheet_columns = 4
+idle_column = 0
