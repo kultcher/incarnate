@@ -57,6 +57,10 @@ enum TargetFilter {
 ## tier step is exactly +/-1 to a card's value.
 enum Tier { BRONZE, SILVER, GOLD }
 
+## Soulstream card suits, from the 2014 cards. Nothing reads them yet; suit
+## bonuses (a Blade for Bound in Blood, Heroic versions) come later.
+enum Suit { BLADE, ORB, PORTAL, WARD }
+
 ## What counts down a status's duration.
 enum StatusClock {
 	OWNER_TURN,  ## The start of each of its owner's turns.

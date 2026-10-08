@@ -1,6 +1,6 @@
 extends Node
-## Dev tool: plays 20 AI-vs-AI battles on the test arena with random card
-## draws and prints outcomes and skill use (a quick balance check).
+## Dev tool: plays 20 AI-vs-AI battles on the test arena with shuffled
+## Soulstream decks and prints outcomes and skill use (a quick balance check).
 ##   godot --headless --path . res://tools/dev/autoplay_stats.tscn
 
 var _uses: Dictionary = {}
@@ -13,11 +13,10 @@ func _ready() -> void:
 	for i in n:
 		var battle: Battle = load("res://battle/battle.tscn").instantiate()
 		battle.autoplay = true
+		battle.card_seed = i + 1
 		Engine.time_scale = 50.0
 		add_child(battle)
 		await get_tree().process_frame
-		battle.resolver.soulstream.mode = Soulstream.Mode.RANDOM
-		battle.resolver.soulstream.rng.seed = i
 		EventBus.skill_used.connect(_on_skill)
 		var outcome: Enums.Outcome = await battle.battle_controller.battle_ended
 		EventBus.skill_used.disconnect(_on_skill)

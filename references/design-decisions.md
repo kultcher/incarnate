@@ -5,11 +5,37 @@ A running log of settled design calls. The newest entries go at the top.
 Working docs:
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review (archive review and verdicts): https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
-- **Canonical kit reference: `claude/kit-reference.md`** (full Master sheet transcription in `claude/kit-reference-master-sheet.md`)
+- **Canonical kit reference: `references/kit-reference.md`** (full Master sheet transcription in `references/kit-reference-master-sheet.md`)
 - Old design archive: Google Drive folder "BFTA Random"
 - Canonical sources: Incarnate > References > "BFTA (flat damage era_)" (booklets and cards), plus the BFTA Master sheet
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
+
+## 2026-10-08 (Soulstream baseline, milestone 6)
+
+### Michael's calls
+- **Build the Soulstream baseline now:** drawing for damage, hands and the shared row.
+- **Heroic versions are on hold.** "Heroic when the used cards include both Heroic suit symbols" doesn't work as-is, because not every skill draws cards. Michael will rethink it.
+- **Deck makeup** (from memory; exact numbers didn't survive): each tier is weighted toward its median, and high values are a little rarer than low ones. Per suit in each tier: **5 low, 6 median, 4 high**.
+- **Bloodthane picks settled:** Ultimate is Bloodrage (sheet); Recovery is the sheet Violent Transfusion.
+
+### Claude's implementation calls (provisional)
+- **Suits:** Blade, Orb, Portal and Ward, from the 2014 card art. The Pure Soul and Recovery Charge specials are left out (they tie to Attunement, which is out of scope). Nothing reads suits yet.
+- **Decks:** one deck per tier per side. 4 suits × (5 + 6 + 4) = 60 cards; Silver, for example, is 20 twos, 24 threes and 16 fours. Blind draws and spent cards go to the discards, which are reshuffled in when the deck runs out. Enemies draw from their own decks and hold no cards.
+- **Income** (start of the player phase):
+  - Each Incarnate draws 1 card from the **Silver** deck into its hand, up to 2.
+  - The shared row gets 1 card from a **random tier**, up to 3.
+  - Full hands and a full row draw nothing. Unspent cards carry over.
+  - The battle starts with 1 card in each hand and 1 in the row.
+- **Using cards: readying.** Before a skill, click cards in the selected unit's hand or the shared row to ready them. The skill's draws use readied cards first, and the rest are drawn blind. Readied cards the skill doesn't need go back where they came from.
+  - **Any card can stand in for any tier.** The tier only decides what a blind draw can be. This keeps the rule short and leaves room for suit tradeoffs later (spending a low Blade in a Gold slot to trigger a Pact).
+  - **Readied cards replace the lowest-tier draws first,** where a known card gains the most (a 5 replacing a Bronze gains 3, replacing a Gold only 1).
+  - **One skill can use several readied cards across strikes:** Bloody Rush with two readied cards uses them on its first two strikes. Shadow copies made during that action can use readied cards too.
+  - **Heals and health loss use readied cards as well** (Violent Transfusion, Acute Coagulant's first heal). Status ticks in later rounds always draw blind.
+  - Readied cards clear when you select a different unit or end the turn.
+- **The AI** (enemies, and your side under autoplay) readies the best cards from the hand and the row when that beats blind draws on average: it readies the best k cards for the k that gains most over the medians. It doesn't save cards for later, so under autoplay the first unit to act may take the shared row.
+- **Display:** a tray at the bottom right shows the shared row and the selected unit's hand. A strike log under the round counter shows each strike's cards, e.g. "Silver Blade 4 (held) + Silver Orb 3, +1 Power".
+- **Tests** keep median values (every card is its tier's median) so numbers stay exact. Battles use shuffled decks with a random seed (`Battle.card_seed` fixes it).
 
 ## 2026-10-07 (Soulstream direction and stats; Michael, with Claude's proposals he accepted)
 
@@ -34,8 +60,8 @@ Working docs:
   - A one-card strike becomes a **graze**: it deals 1 and keeps its riders.
   - Dodges are used automatically on the first eligible strikes.
 - **Accuracy cancels Evasion point for point:** each point means the defender needs one more dodge to dodge that strike. Its redraw-keep-better bonus waits for the Soulstream.
-- **Heroic versions** are not in yet. The proposal on the table: a skill turns Heroic when the cards it used include both of its Heroic suit symbols.
-- **Soulstream economy proposal (not built yet):**
+- **Heroic versions** are not in yet. The proposal on the table: a skill turns Heroic when the cards it used include both of its Heroic suit symbols. *(On hold since 2026-10-08.)*
+- **Soulstream economy proposal** *(built in M6 on 2026-10-08, see the top entry)*:
   - Each Incarnate gets +1 card per turn, holding up to 2.
   - The shared Soulstream gets +1 card per round, up to about 3, and unspent cards carry over.
   - Enemies draw from their own deck.
@@ -61,13 +87,11 @@ Working docs:
 
 Partly superseded by the entry above: the kits follow the 2014 cards and Master sheet, not the booklets, and cards use the median values. Rending Claws and Probability Armor (Evasion) are settled.
 
-- **Canonical source** (Michael): the flat-damage-era folder. Where copies disagree, Claude picks one and notes the alternative in `claude/kit-reference.md` for later resolution.
+- **Canonical source** (Michael): the flat-damage-era folder. Where copies disagree, Claude picks one and notes the alternative in `references/kit-reference.md` for later resolution.
 - **The folder holds two eras** (Claude's finding):
   - The booklets (~Sept 2013) use flat damage.
   - The cards (Jan–Feb 2014) and the Master sheet (May 2014) use card-unveil damage.
-- **Still open:**
-  - BT Ultimate: Bloodlust (booklet) or Bloodrage (sheet). M5 uses Bloodrage.
-  - BT Recovery: booklet or sheet Violent Transfusion. M5 uses the sheet version.
+- **Settled 2026-10-08:** BT Ultimate is Bloodrage (sheet); BT Recovery is the sheet Violent Transfusion.
 
 ## 2026-10-07 (milestone 4, provisional; Claude's calls, open to change)
 
@@ -124,5 +148,6 @@ Superseded in M5 by the 2014 kits (see the top entry): Bound in Blood uses the 2
 ## Still open
 - Co-op multiplayer: ever in scope?
 - The campaign's shape (authored bosses, gauntlet/affix modes, progression between fights).
-- The Soulstream's exact rules: the proposals in the top entry (Heroic by suit match, hand and shared-row income) are not confirmed yet.
-- BT Ultimate (Bloodlust vs Bloodrage) and BT Recovery version.
+- Heroic versions: how they trigger, given that not every skill draws cards.
+- What suits do: suit bonuses, and Bound in Blood's Blade trigger (the two-strike stand-in is still in use).
+- Soulstream tuning: the income tiers, whether any card should fill any tier, and whether players should be able to discard or swap held cards.

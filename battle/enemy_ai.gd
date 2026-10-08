@@ -40,7 +40,8 @@ func take_unit_turn(unit: UnitState) -> void:
 		if plan.is_move():
 			ok = await resolver.request_move(unit, plan.move_to)
 		else:
-			ok = await resolver.request_skill(unit, plan.skill, plan.picks)
+			ok = await resolver.request_skill(unit, plan.skill, plan.picks,
+					AiPlanner.choose_cards(resolver, unit, plan.skill))
 		if not ok:
 			push_warning("AI plan was rejected: %s %s" % [unit, plan])
 			break

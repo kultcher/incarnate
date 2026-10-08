@@ -14,6 +14,7 @@ extends TurnDriver
 ##                           again (or press Enter) to stop early
 ##   Right click / Esc       undo the last pick, cancel targeting, deselect
 ##   Space / End Turn button end the player's phase
+##   Click a card (HUD)      ready it for the selected unit's next skill
 
 ## Emitted when the player ends their phase (or the battle ends during it).
 signal turn_ended
@@ -29,6 +30,9 @@ var state: State = State.INACTIVE
 var selected: UnitState
 var skill: SkillDef
 var picks: Array[Vector2i] = []
+## Cards from the selected unit's hand or the shared row, readied for its
+## next skill. Cleared when the skill is used or another unit is selected.
+var readied: Array[Card] = []
 var _reach: Pathing.Reach
 var _valid: Array[Vector2i] = []
 var _hover_cell := Vector2i(-1, -1)
@@ -90,6 +94,7 @@ func is_active() -> bool:
 
 func _finish_turn() -> void:
 	_end_targeting()
+	_clear_readied()
 	if selected != null:
 		var view := presenter.view_for(selected)
 		if view != null:
@@ -128,6 +133,8 @@ func select(unit: UnitState) -> void:
 	_end_targeting()
 	if selected != null and presenter.view_for(selected) != null:
 		presenter.view_for(selected).set_selected(false)
+	if unit != selected:
+		_clear_readied()
 	selected = unit
 	state = State.UNIT_SELECTED
 	presenter.view_for(unit).set_selected(true)
@@ -139,6 +146,7 @@ func deselect() -> void:
 	if state == State.BUSY or state == State.INACTIVE:
 		return
 	_end_targeting()
+	_clear_readied()
 	if selected != null and presenter.view_for(selected) != null:
 		presenter.view_for(selected).set_selected(false)
 	selected = null
@@ -219,9 +227,42 @@ func _use_skill() -> void:
 	board_view.clear_highlights()
 	var used_skill := skill
 	var used_picks: Array[Vector2i] = picks.duplicate()
+	var used_cards := _valid_readied()
 	_end_targeting()
-	await resolver.request_skill(selected, used_skill, used_picks)
+	_clear_readied()
+	await resolver.request_skill(selected, used_skill, used_picks, used_cards)
 	_after_action()
+
+
+## Readies [param card] for the selected unit's next skill, or puts it back.
+## Only the selected unit's hand and the shared row can be readied.
+func toggle_card(card: Card) -> void:
+	if selected == null or state == State.BUSY or state == State.INACTIVE:
+		return
+	if readied.has(card):
+		readied.erase(card)
+	elif selected.hand.has(card) or resolver.soulstream(selected.team).row.has(card):
+		readied.append(card)
+	else:
+		return
+	EventBus.cards_readied.emit(readied)
+
+
+## Readied cards still in the hand or the row (a card may have been spent).
+func _valid_readied() -> Array[Card]:
+	var out: Array[Card] = []
+	var row := resolver.soulstream(selected.team).row
+	for card in readied:
+		if selected.hand.has(card) or row.has(card):
+			out.append(card)
+	return out
+
+
+func _clear_readied() -> void:
+	if readied.is_empty():
+		return
+	readied.clear()
+	EventBus.cards_readied.emit(readied)
 
 
 func _show_targeting() -> void:

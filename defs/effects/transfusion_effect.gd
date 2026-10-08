@@ -12,7 +12,7 @@ func apply(ctx: ActionContext) -> void:
 	var ally := ctx.unit_at_step(1)
 	if foe == null:
 		return
-	var lost := ctx.resolver.lose_health(foe, ctx.resolver.card_value(null, tiers), ctx.skill)
+	var lost := ctx.resolver.lose_health(foe, ctx.resolver.card_value(ctx.caster, tiers, 0, false), ctx.skill)
 	if ally != null and ally.is_alive():
 		ctx.resolver.heal(ally, lost + (kill_bonus if not foe.is_alive() else 0))
 
@@ -34,6 +34,10 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 	var lost := mini(Soulstream.median_sum(tiers), score.hp_of(foe))
 	score.damage(foe, Soulstream.median_sum(tiers))
 	score.heal(ally, lost)
+
+
+func card_tiers() -> Array[Enums.Tier]:
+	return tiers
 
 
 func has_ai_value() -> bool:

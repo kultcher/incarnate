@@ -11,6 +11,7 @@ var battle: Battle
 func before_each() -> void:
 	Engine.time_scale = SPEED
 	battle = load("res://battle/battle.tscn").instantiate()
+	battle.median_cards = true  # Exact damage numbers.
 	add_child_autofree(battle)
 	await wait_process_frames(2)
 

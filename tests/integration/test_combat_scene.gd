@@ -10,6 +10,7 @@ var battle: Battle
 func before_each() -> void:
 	Engine.time_scale = SPEED
 	battle = load("res://battle/battle.tscn").instantiate()
+	battle.median_cards = true  # Exact damage numbers.
 	add_child_autofree(battle)
 	await wait_process_frames(2)
 
@@ -114,3 +115,34 @@ func test_killing_blow_removes_the_shambler_and_its_view() -> void:
 	assert_eq(battle.presenter.played[-1], GameEvent.DIED)
 	await wait_process_frames(2)
 	assert_false(is_instance_valid(view), "View faded out and was freed")
+
+
+func test_a_readied_card_is_spent_by_the_next_skill() -> void:
+	var bt := _unit(&"bloodthane")
+	var c := battle.controller
+	var stream := battle.resolver.soulstream(Enums.Team.PLAYER)
+	assert_eq(bt.hand.size(), 1, "One card dealt at the start of the phase")
+	assert_eq(stream.row.size(), 1, "One card in the shared row")
+	var held := bt.hand[0]
+	await c.click_cell(bt.cell)
+	await c.click_cell(Vector2i(5, 8))
+	c.toggle_card(held)
+	assert_eq(c.readied, [held] as Array[Card])
+	assert_true(battle.hud._readied.has(held), "The HUD shows it readied")
+	c.begin_targeting_index(_index(bt, &"blade_fury"))
+	await c.click_cell(Vector2i(6, 8))
+	assert_false(bt.hand.has(held), "Spent on the strike")
+	assert_true(c.readied.is_empty())
+	assert_string_contains(battle.hud._log_label.text, "(held)")
+
+
+func test_switching_units_unreadies_cards() -> void:
+	var bt := _unit(&"bloodthane")
+	var tl := _unit(&"traceless")
+	var c := battle.controller
+	await c.click_cell(bt.cell)
+	c.toggle_card(bt.hand[0])
+	await c.click_cell(tl.cell)
+	assert_true(c.readied.is_empty())
+	c.toggle_card(bt.hand[0])
+	assert_true(c.readied.is_empty(), "Can't ready another unit's card")

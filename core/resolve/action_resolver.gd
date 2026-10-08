@@ -30,8 +30,12 @@ var events: EventSink
 var player_decisions: DecisionProvider
 ## Answers everyone else's decisions.
 var ai_decisions := DecisionProvider.new()
-## Where card values come from (medians for now).
-var soulstream := Soulstream.new()
+## Each side's Soulstream (decks, and the Incarnates' shared row), by team.
+## Medians until use_decks() is called, so rules tests get fixed numbers.
+var soulstreams: Dictionary[int, Soulstream] = {
+	Enums.Team.PLAYER: Soulstream.new(),
+	Enums.Team.ENEMY: Soulstream.new(),
+}
 ## Recovery skills used this battle, by team.
 var recoveries_used: Dictionary[int, int] = {}
 
@@ -101,14 +105,23 @@ func has_targets(caster: UnitState, skill: SkillDef) -> bool:
 
 
 ## Uses [param skill] with one picked cell per targeting step (or the path's
-## squares, for path skills). Returns false and changes nothing if anything
-## is illegal.
-func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i]) -> bool:
+## squares, for path skills). [param cards] are readied from the caster's
+## hand or the shared row: the skill's draws use them first (see
+## Soulstream.draw_for), and any it doesn't use go back. Returns false and
+## changes nothing if anything is illegal.
+func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i],
+		cards: Array[Card] = []) -> bool:
 	if not can_use(caster, skill):
 		return false
 	if not Targeting.are_valid_picks(board, caster, skill, picks):
 		return false
+	var stream := soulstream(caster.team)
+	if not stream.can_ready(caster, cards):
+		return false
 
+	if not cards.is_empty():
+		stream.ready_cards(caster, cards)
+		_emit(GameEvent.cards_changed(caster.team))
 	caster.actions.pay(skill.cost)
 	await _start_cooldown(caster, skill)
 	caster.uses[skill.id] = caster.uses.get(skill.id, 0) + 1
@@ -136,6 +149,10 @@ func request_skill(caster: UnitState, skill: SkillDef, picks: Array[Vector2i]) -
 			if inst.def.behavior != null and caster.statuses.has(inst):
 				await inst.def.behavior.after_skill(inst, ctx, self)
 
+	# Shadow copies (follow-ups) may still use readied cards.
+	await _drain_followups()
+	if stream.release() > 0:
+		_emit(GameEvent.cards_changed(caster.team))
 	await _finish_action()
 	return true
 
@@ -191,7 +208,7 @@ func strike(attacker: UnitState, target: UnitState, spec: StrikeSpec) -> Hit:
 	if not target.is_alive():
 		hit.cancelled = true
 		return hit
-	hit.cards = soulstream.draw_all(spec.tiers)
+	hit.cards = _stream_of(attacker, target).draw_for(spec.tiers)
 	if attacker != null:
 		hit.power = spec.power + attacker.get_stat(&"power") + attacker.get_stat(&"strike_power")
 	else:
@@ -285,19 +302,60 @@ func heal_cards(healer: UnitState, target: UnitState, tiers: Array[Enums.Tier],
 	return heal(target, card_value(healer, tiers, bonus))
 
 
-## The value of a set of cards drawn now, plus the user's Power.
-func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0) -> int:
+## The value of a set of cards drawn now from [param user]'s Soulstream,
+## plus its Power unless [param with_power] is false (Violent Transfusion).
+func card_value(user: UnitState, tiers: Array[Enums.Tier], bonus: int = 0,
+		with_power: bool = true) -> int:
 	var total := bonus
-	for card in soulstream.draw_all(tiers):
+	for card in _stream_of(user, null).draw_for(tiers):
 		total += card.value
-	if user != null and not tiers.is_empty():
+	if user != null and with_power and not tiers.is_empty():
 		total += user.get_stat(&"power")
 	return total
+
+
+## The Soulstream [param team] draws from.
+func soulstream(team: Enums.Team) -> Soulstream:
+	return soulstreams[team]
+
+
+## Real shuffled decks for both sides (battles); tests keep the medians.
+func use_decks(seed_value: int) -> void:
+	soulstream(Enums.Team.PLAYER).use_decks(seed_value)
+	soulstream(Enums.Team.ENEMY).use_decks(seed_value + 1)
+
+
+## Hand income: one card for [param unit] if its hand has room.
+func deal_card(unit: UnitState) -> void:
+	if unit.is_alive() and soulstream(unit.team).deal_to(unit) != null:
+		_emit(GameEvent.cards_changed(unit.team))
+
+
+## Row income: one card into [param team]'s shared row if it has room.
+func refill_row(team: Enums.Team) -> void:
+	if soulstream(team).refill_row() != null:
+		_emit(GameEvent.cards_changed(team))
+
+
+## A strike with no attacker (none yet) draws from the side opposing its target.
+func _stream_of(user: UnitState, target: UnitState) -> Soulstream:
+	if user != null:
+		return soulstream(user.team)
+	if target != null and target.team == Enums.Team.PLAYER:
+		return soulstream(Enums.Team.ENEMY)
+	return soulstream(Enums.Team.PLAYER)
 
 
 func _kill(unit: UnitState) -> void:
 	board.remove_unit(unit)
 	unit.statuses.clear()
+	if not unit.hand.is_empty():
+		var stream := soulstream(unit.team)
+		for card in unit.hand:
+			if stream.deck(card.tier) != null:
+				stream.deck(card.tier).discard(card)
+		unit.hand.clear()
+		_emit(GameEvent.cards_changed(unit.team))
 	if not unit.shadows.is_empty():
 		unit.shadows.clear()
 		_emit(GameEvent.shadows_changed(unit))

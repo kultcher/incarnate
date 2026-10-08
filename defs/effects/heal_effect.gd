@@ -27,5 +27,9 @@ func ai_score(score: AiScore, board: BoardState, caster: UnitState,
 	score.heal(target, amount)
 
 
+func card_tiers() -> Array[Enums.Tier]:
+	return tiers
+
+
 func has_ai_value() -> bool:
 	return true

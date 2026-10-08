@@ -1,10 +1,10 @@
 # Incarnate: Canonical Kit Reference
 
-Canonical source: the "BFTA (flat damage era?)" folder under Incarnate > References, plus the BFTA Master sheet from the same period. Where copies disagree, this doc picks one and records the other under **Alt**. Every pick is open until Michael resolves it. The full Master sheet is transcribed in `claude/kit-reference-master-sheet.md`.
+Canonical source: the "BFTA (flat damage era?)" folder under Incarnate > References, plus the BFTA Master sheet from the same period. Where copies disagree, this doc picks one and records the other under **Alt**. Every pick is open until Michael resolves it. The full Master sheet is transcribed in `references/kit-reference-master-sheet.md`.
 
 ## 0. As built in milestone 5 (2026-10-07). Read this first
 
-Michael's direction (see `claude/design-decisions.md`) replaced the precedence rule and number translation in sections 1 and 3:
+Michael's direction (see `references/design-decisions.md`) replaced the precedence rule and number translation in sections 1 and 3:
 
 - **The kits follow the 2014 cards and the Master sheet.** The booklets are background only.
 - **Card damage stays.**
@@ -31,7 +31,8 @@ Michael's direction (see `claude/design-decisions.md`) replaced the precedence r
 - **Not built:**
   - Heroic versions and Talents.
   - Alpha-only skills: Plasma Boil, Crimson Haze, Synaptic Flood, Titan Charge.
-  - Suit bonuses.
+  - Suit bonuses. Since M6 (2026-10-08) cards have suits and come from real decks, but nothing reads the suit yet.
+- **Settled 2026-10-08 (Michael):** Bloodthane's Ultimate is **Bloodrage** (sheet), and his Recovery is the **sheet Violent Transfusion**. The booklet alternatives below stay for reference only.
 
 ## 1. Sources and what each one is
 
@@ -156,12 +157,12 @@ The Soulstream deck tiers are Bronze 0–1, Silver 0–2 and Gold 1–3, each pl
 
 - **Recovery, chosen: Violent Transfusion (Master/cards).** Target foe loses (G)(G); target ally is healed that much, +2 if the foe was slain. Range 5.
   - **Alt, booklet:** target foe loses 4; *you* gain 2 health for every health you've caused that foe to lose this turn; free if you just activated a Pact.
-  - Open: the booklet version ties into Pacts and fits the flat era better. It may be the better pick alongside the booklet Bound in Blood.
+  - Settled 2026-10-08: the sheet version stays.
 - **Ultimate: Bloodrage (Master/cards).** Free. Gain a skill action; this turn your strikes get +X Power, X = total damage you've dealt this turn.
   - Designer note: "OP. Change to damage of your last strike".
   - **Alt, booklet: Bloodlust.** Free. Choose a foe; this turn, every strike against it strikes again for the same amount; you also gain the Active benefits of all three Pacts this turn.
   - **Alt, BT PNG: Bloodrage v2.** +1 Action; whenever you play an attack skill, play a copy as a free action.
-  - Recommendation: **Bloodlust**, since it pairs with the booklet Pacts.
+  - Settled 2026-10-08: **Bloodrage** (sheet) stays.
 - **Talents (Master):**
   - **Blood Potence:** healing stores Potence stacks; your next strike spends them for +1 Power each.
   - **Lethal Predator:** strikes against foes below half health get Keen +3; recharge a skill when you slay.

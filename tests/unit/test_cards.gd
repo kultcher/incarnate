@@ -29,10 +29,9 @@ func test_medians_are_two_three_four() -> void:
 	assert_eq(Soulstream.describe([GO, SI] as Array[Enums.Tier]), "7 (Gold + Silver)")
 
 
-func test_random_draws_stay_in_the_tier_range() -> void:
+func test_deck_draws_stay_in_the_tier_range() -> void:
 	var s := Soulstream.new()
-	s.mode = Soulstream.Mode.RANDOM
-	s.rng.seed = 7
+	s.use_decks(7)
 	for tier: Enums.Tier in [BR, SI, GO]:
 		for i in 50:
 			var v := s.draw(tier).value

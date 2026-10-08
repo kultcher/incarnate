@@ -23,6 +23,12 @@ func ai_score(_score: AiScore, _board: BoardState, _caster: UnitState,
 	pass
 
 
+## The Soulstream cards one use of this effect draws (one strike's worth for
+## effects that strike several foes). The AI readies held cards for these.
+func card_tiers() -> Array[Enums.Tier]:
+	return []
+
+
 ## True if ai_score can report anything. Skills with no such effect are
 ## skipped by the AI (it doesn't know when to use them yet).
 func has_ai_value() -> bool:
