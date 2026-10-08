@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_gnrba"]
+[ext_resource type="Resource" path="res://content/statuses/golgothon/drag_you_down.tres" id="2_4ka5u"]
+[ext_resource type="Resource" path="res://content/statuses/golgothon/restless.tres" id="3_3ptr3"]
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="4_o64k4"]
+[ext_resource type="Texture2D" path="res://art/units/monster_a.png" id="5_tto6v"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="6_srdbk"]
+
+[resource]
+script = ExtResource("4_o64k4")
+id = &"welcoming_dead"
+display_name = "Welcoming Dead"
+max_hp = 5
+move = 0
+flex_points = 0
+passives = Array[ExtResource("1_gnrba")]([ExtResource("2_4ka5u"), ExtResource("3_3ptr3")])
+sheet = ExtResource("5_tto6v")
+display_height = 66.0

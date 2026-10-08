@@ -14,6 +14,10 @@ const HIGHLIGHT_SOURCE := 0
 
 var pick_marks: PickMarks
 var shadows: ShadowLayer
+## Board marks (Restless Dead).
+var marks: MarkLayer
+## What the boss will do this turn (its intent), drawn over the board.
+var intents: IntentLayer
 
 
 func _ready() -> void:
@@ -26,6 +30,16 @@ func _ready() -> void:
 	shadows.name = "Shadows"
 	shadows.board_view = self
 	add_child(shadows)
+	marks = MarkLayer.new()
+	marks.name = "Marks"
+	marks.board_view = self
+	add_child(marks)
+	move_child(marks, units_root.get_index())
+	intents = IntentLayer.new()
+	intents.name = "Intents"
+	intents.board_view = self
+	intents.z_index = 5
+	add_child(intents)
 
 
 func cell_to_local(cell: Vector2i) -> Vector2:

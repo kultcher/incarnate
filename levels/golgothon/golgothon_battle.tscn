@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://battle/battle.tscn" id="1_battle"]
+[ext_resource type="PackedScene" path="res://levels/golgothon/golgothon_arena.tscn" id="2_level"]
+
+[node name="Battle" instance=ExtResource("1_battle")]
+level_scene = ExtResource("2_level")

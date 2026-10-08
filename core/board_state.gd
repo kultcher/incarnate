@@ -2,7 +2,8 @@ class_name BoardState
 extends RefCounted
 ## The only object that knows what is on each cell.
 ## Pathing, targeting, the AI and the highlights all ask this; nothing else
-## tracks occupancy.
+## tracks occupancy. A Large unit (footprint 2) fills a 2x2 block of cells;
+## its own cell is the block's top-left square.
 
 const DIRECTIONS: Array[Vector2i] = [
 	Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT,
@@ -11,6 +12,8 @@ const DIRECTIONS: Array[Vector2i] = [
 var size: Vector2i
 var _terrain: Dictionary[Vector2i, Terrain] = {}
 var _occupant: Dictionary[Vector2i, UnitState] = {}
+## Every unit on the board, in the order they were placed.
+var _units: Array[UnitState] = []
 
 
 func _init(p_size: Vector2i = Vector2i.ZERO) -> void:
@@ -78,6 +81,59 @@ static func distance(a: Vector2i, b: Vector2i) -> int:
 	return absi(a.x - b.x) + absi(a.y - b.y)
 
 
+## The cells a unit with [param footprint] fills when its cell is [param anchor].
+static func footprint_cells(anchor: Vector2i, footprint: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for dy in footprint:
+		for dx in footprint:
+			cells.append(anchor + Vector2i(dx, dy))
+	return cells
+
+
+## The cells [param unit] fills.
+func cells_of(unit: UnitState) -> Array[Vector2i]:
+	return footprint_cells(unit.cell, unit.def.footprint)
+
+
+## Squares from [param cell] to the nearest square of [param unit].
+func distance_to(unit: UnitState, cell: Vector2i) -> int:
+	var best := 1 << 30
+	for c in cells_of(unit):
+		best = mini(best, distance(c, cell))
+	return best
+
+
+## Squares between the nearest squares of two units (1 = adjacent).
+func gap(a: UnitState, b: UnitState) -> int:
+	var best := 1 << 30
+	for c in cells_of(a):
+		best = mini(best, distance_to(b, c))
+	return best
+
+
+## The squares next to [param unit] (outside it), for Large units too.
+func cells_around(unit: UnitState) -> Array[Vector2i]:
+	var own := cells_of(unit)
+	var out: Array[Vector2i] = []
+	for c in own:
+		for n in neighbors(c):
+			if not own.has(n) and not out.has(n):
+				out.append(n)
+	return out
+
+
+## True if [param unit] could stand with its cell at [param anchor]: every
+## square on the board, not blocked, and empty or its own.
+func can_stand(unit: UnitState, anchor: Vector2i) -> bool:
+	for c in footprint_cells(anchor, unit.def.footprint):
+		if blocks_move(c):
+			return false
+		var other: UnitState = _occupant.get(c)
+		if other != null and other != unit:
+			return false
+	return true
+
+
 # --- Units ---------------------------------------------------------------
 
 func unit_at(cell: Vector2i) -> UnitState:
@@ -89,28 +145,31 @@ func is_occupied(cell: Vector2i) -> bool:
 
 
 func units() -> Array[UnitState]:
-	var result: Array[UnitState] = []
-	result.assign(_occupant.values())
-	return result
+	return _units.duplicate()
 
 
 func place_unit(unit: UnitState, cell: Vector2i) -> void:
 	assert(in_bounds(cell), "Cell %s is off the board." % cell)
-	assert(not blocks_move(cell), "Cell %s is blocked terrain." % cell)
-	assert(not is_occupied(cell), "Cell %s is already occupied." % cell)
-	_occupant[cell] = unit
+	assert(can_stand(unit, cell), "Unit can't stand at %s." % cell)
+	for c in footprint_cells(cell, unit.def.footprint):
+		_occupant[c] = unit
+	_units.append(unit)
 	unit.cell = cell
 	unit.turn_start_cell = cell
 
 
 func move_unit(unit: UnitState, to: Vector2i) -> void:
 	assert(_occupant.get(unit.cell) == unit, "Unit is not where it thinks it is.")
-	assert(to == unit.cell or not is_occupied(to), "Destination %s is occupied." % to)
-	_occupant.erase(unit.cell)
-	_occupant[to] = unit
+	assert(can_stand(unit, to), "Unit can't stand at %s." % to)
+	for c in cells_of(unit):
+		_occupant.erase(c)
+	for c in footprint_cells(to, unit.def.footprint):
+		_occupant[c] = unit
 	unit.cell = to
 
 
 func remove_unit(unit: UnitState) -> void:
-	if _occupant.get(unit.cell) == unit:
-		_occupant.erase(unit.cell)
+	for c in cells_of(unit):
+		if _occupant.get(c) == unit:
+			_occupant.erase(c)
+	_units.erase(unit)

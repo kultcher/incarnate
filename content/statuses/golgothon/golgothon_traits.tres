@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/behaviors/golgothon_traits.gd" id="1_1cfix"]
+[ext_resource type="Texture2D" path="res://art/icons/deaths_grasp.png" id="2_knau7"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="3_q0jjv"]
+
+[sub_resource type="Resource" id="Resource_v76ju"]
+script = ExtResource("1_1cfix")
+
+[resource]
+script = ExtResource("3_q0jjv")
+id = &"golgothon_traits"
+display_name = "Graveyard Elemental"
+icon = ExtResource("2_knau7")
+description = "Large (2x2). Resolve {resolve}: a debuff only takes hold on its {resolve}nd application. Sturdy 1: forced movement against him is 1 square shorter. Trample: he walks through units, pushing them aside."
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_v76ju")

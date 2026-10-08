@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Incarnate"
 config/description="Tactical boss-fight game. Rebuild of Boss Fight: Tactics Arena."
-run/main_scene="res://battle/battle.tscn"
+run/main_scene="res://ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]

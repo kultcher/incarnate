@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitDef" format=3]
+
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="1_3amqs"]
+[ext_resource type="Resource" path="res://content/statuses/golgothon/golgothon_traits.tres" id="2_euaq7"]
+[ext_resource type="Script" path="res://defs/unit_def.gd" id="3_wyr4b"]
+[ext_resource type="Texture2D" path="res://art/units/golgothon.png" id="4_wgfbb"]
+[ext_resource type="Script" path="res://defs/skill_def.gd" id="5_7nu6y"]
+
+[resource]
+script = ExtResource("3_wyr4b")
+id = &"golgothon"
+display_name = "Golgothon"
+max_hp = 300
+footprint = 2
+sturdy = 1
+flex_points = 0
+passives = Array[ExtResource("1_3amqs")]([ExtResource("2_euaq7")])
+sheet = ExtResource("4_wgfbb")
+sheet_columns = 1
+idle_column = 0
+sheet_rows = Array[StringName]([&"down"])
+display_height = 150.0

@@ -20,6 +20,7 @@
 script = ExtResource("3_rxd6n")
 id = &"kindleborne"
 display_name = "Kindleborne"
+max_hp = 40
 skills = Array[ExtResource("5_kjwis")]([ExtResource("6_h8par"), ExtResource("7_rf231"), ExtResource("8_24ivh"), ExtResource("9_3x8vd"), ExtResource("10_8xm5g"), ExtResource("11_fri7r"), ExtResource("12_a5hy8"), ExtResource("13_t25pc"), ExtResource("14_2svyq"), ExtResource("15_dmreo")])
 passives = Array[ExtResource("1_grhiq")]([ExtResource("2_040q3")])
 sheet = ExtResource("4_rfbnh")

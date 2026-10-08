@@ -125,6 +125,19 @@ func _play(event: GameEvent) -> void:
 			if jumper != null:
 				await jumper.teleport_to(board_view.cell_to_local(event.path[0]))
 			EventBus.unit_moved.emit(event.unit, event.path)
+		GameEvent.UNIT_SPAWNED:
+			var view := UnitView.new()
+			view.setup(event.unit)
+			view.position = board_view.cell_to_local(event.unit.cell)
+			view.modulate.a = 0.0
+			board_view.units_root.add_child(view)
+			register(event.unit, view)
+			var fade := view.create_tween()
+			fade.tween_property(view, "modulate:a", 1.0, 0.25)
+			await fade.finished
+			EventBus.unit_spawned.emit(event.unit)
+		GameEvent.MARKS_CHANGED:
+			board_view.marks.set_marks(StringName(event.text), event.path, event.icon)
 		GameEvent.CARDS_CHANGED:
 			EventBus.cards_changed.emit(event.team)
 		GameEvent.SHADOWS_CHANGED:

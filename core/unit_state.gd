@@ -155,12 +155,14 @@ func strikes_on(foe: UnitState) -> int:
 	return turn_strikes.get(foe.id, 0)
 
 
-## Start-of-turn upkeep: refresh action points, tick cooldowns down, forget
-## last turn. Status hooks and durations are run by ActionResolver.start_turn.
-func start_turn() -> void:
+## Start-of-turn upkeep: refresh action points, tick cooldowns down (unless
+## [param tick_cooldowns] is false: Daze), forget last turn. Status hooks and
+## durations are run by ActionResolver.start_turn.
+func start_turn(tick_cooldowns: bool = true) -> void:
 	actions.refresh()
-	for key: StringName in cooldowns.keys():
-		cooldowns[key] = maxi(cooldowns[key] - 1, 0)
+	if tick_cooldowns:
+		for key: StringName in cooldowns.keys():
+			cooldowns[key] = maxi(cooldowns[key] - 1, 0)
 	turn_start_cell = cell
 	turn_damage = 0
 	turn_strikes.clear()

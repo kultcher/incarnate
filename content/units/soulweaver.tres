@@ -20,6 +20,7 @@
 script = ExtResource("1_def")
 id = &"soulweaver"
 display_name = "Soulweaver"
+max_hp = 40
 skills = Array[ExtResource("3_skill_def")]([ExtResource("7_di48i"), ExtResource("8_5gp0n"), ExtResource("9_4gdi0"), ExtResource("10_hl2ck"), ExtResource("11_a5xil"), ExtResource("12_14upf"), ExtResource("13_xhas4"), ExtResource("14_0lkey"), ExtResource("15_0tvbw")])
 passives = Array[ExtResource("1_y70is")]([ExtResource("2_mu3r4"), ExtResource("3_dd6yn")])
 sheet = ExtResource("2_sheet")

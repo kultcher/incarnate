@@ -20,6 +20,8 @@ const FLOATING_TEXT := &"floating_text"
 const TELEPORTED := &"teleported"
 const SHADOWS_CHANGED := &"shadows_changed"
 const CARDS_CHANGED := &"cards_changed"
+const UNIT_SPAWNED := &"unit_spawned"
+const MARKS_CHANGED := &"marks_changed"
 
 var type: StringName
 var unit: UnitState
@@ -43,6 +45,9 @@ var outcome: Enums.Outcome = Enums.Outcome.NONE
 var status: StatusInstance
 var text: String = ""
 var color := Color.WHITE
+## MARKS_CHANGED: the marks' icon ([member text] is the mark id, [member path]
+## its cells).
+var icon: Texture2D
 
 
 static func unit_moved(p_unit: UnitState, p_path: Array[Vector2i]) -> GameEvent:
@@ -77,6 +82,18 @@ static func strike(attacker: UnitState, p_target: UnitState, hit: Hit) -> GameEv
 static func teleported(p_unit: UnitState, to: Vector2i) -> GameEvent:
 	var e := _make(TELEPORTED, p_unit)
 	e.path = [to]
+	return e
+
+
+static func unit_spawned(p_unit: UnitState) -> GameEvent:
+	return _make(UNIT_SPAWNED, p_unit)
+
+
+static func marks_changed(id: StringName, cells: Array[Vector2i], p_icon: Texture2D) -> GameEvent:
+	var e := _make(MARKS_CHANGED, null)
+	e.text = String(id)
+	e.path = cells.duplicate()
+	e.icon = p_icon
 	return e
 
 

@@ -12,6 +12,9 @@ extends RefCounted
 const KILL_BONUS := AiScore.KILL_BONUS
 ## Stop enumerating target combinations past this many per skill.
 const MAX_COMBOS := 400
+## Score lost per point of health a cell would cost in the enemy phase
+## (ActionResolver.danger: Death's Caress).
+const DANGER_WEIGHT := 3.0
 
 
 ## One thing to do: a skill with its picks, or a move.
@@ -56,6 +59,7 @@ static func best_move(board: BoardState, resolver: ActionResolver, unit: UnitSta
 	var distance := _distance_to_foes(board, unit)
 	var home := unit.cell
 	var here_distance: int = distance.get(home, 999)
+	var danger_here: int = resolver.danger.call(home, unit.team)
 
 	var best: Plan = null
 	var best_attack_here := 0.0
@@ -73,13 +77,15 @@ static func best_move(board: BoardState, resolver: ActionResolver, unit: UnitSta
 			board.move_unit(unit, home)
 			if attack != null:
 				score = 100.0 + attack.score
+		var danger: int = resolver.danger.call(cell, unit.team)
 		if score == 0.0:
-			# No attack from there: get closer. Only worth it if it's closer.
+			# No attack from there: get closer (or out of danger).
 			var d: int = distance.get(cell, 999)
-			if d >= here_distance:
+			if d >= here_distance and danger >= danger_here:
 				continue
 			score = 50.0 - d
 		score -= reach.cost[cell] * 0.01  # Prefer shorter walks.
+		score -= danger * DANGER_WEIGHT
 		if best == null or score > best.score:
 			best = Plan.new()
 			best.move_to = cell
@@ -87,8 +93,11 @@ static func best_move(board: BoardState, resolver: ActionResolver, unit: UnitSta
 
 	if best == null:
 		return null
-	# Don't walk away from a spot where the best attack is already available.
-	if best_attack_here > 0.0 and best.score < 100.0 + best_attack_here:
+	# Don't walk away from a spot that's as good: the best attack is already
+	# available here, or it's no safer elsewhere.
+	var stay := 100.0 + best_attack_here if best_attack_here > 0.0 else 50.0 - here_distance
+	stay -= danger_here * DANGER_WEIGHT
+	if (best_attack_here > 0.0 or danger_here > 0) and best.score < stay:
 		return null
 	return best
 
@@ -212,7 +221,7 @@ static func _distance_to_foes(board: BoardState, unit: UnitState) -> Dictionary[
 	for other in board.units():
 		if other.team == unit.team:
 			continue
-		for cell in board.neighbors(other.cell):
+		for cell in board.cells_around(other):
 			if not dist.has(cell) and _walkable(board, unit, cell):
 				dist[cell] = 0
 				frontier.append(cell)

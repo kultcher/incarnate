@@ -1,0 +1,87 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://view/board_view.gd" id="1_bcfq7"]
+[ext_resource type="TileSet" path="res://art/tiles/terrain_tileset.tres" id="2_4cend"]
+[ext_resource type="TileSet" path="res://art/tiles/highlight_tileset.tres" id="3_3irdn"]
+[ext_resource type="Script" path="res://battle/unit_spawn.gd" id="4_tk3dn"]
+[ext_resource type="Resource" path="res://content/units/golgothon.tres" id="5_0mpom"]
+[ext_resource type="Resource" path="res://content/units/bloodthane.tres" id="6_i5uj7"]
+[ext_resource type="Resource" path="res://content/units/traceless.tres" id="7_p7klf"]
+[ext_resource type="Resource" path="res://content/units/soulweaver.tres" id="8_eitl5"]
+[ext_resource type="Resource" path="res://content/units/kindleborne.tres" id="9_4f4p5"]
+[ext_resource type="Script" path="res://levels/golgothon/golgothon_encounter.gd" id="10_185rn"]
+[ext_resource type="Resource" path="res://content/units/welcoming_dead.tres" id="11_7sqxf"]
+[ext_resource type="Resource" path="res://content/statuses/golgothon/unquenched.tres" id="12_jr4hw"]
+[ext_resource type="Resource" path="res://content/statuses/common/daze.tres" id="13_wv2lo"]
+[ext_resource type="Texture2D" path="res://art/icons/restless_dead.png" id="14_edjtc"]
+[ext_resource type="Texture2D" path="res://art/icons/deaths_grasp.png" id="15_pcmif"]
+[ext_resource type="Texture2D" path="res://art/icons/deaths_caress.png" id="16_huwi2"]
+[ext_resource type="Texture2D" path="res://art/icons/unquenched.png" id="17_52f2h"]
+[ext_resource type="Texture2D" path="res://art/icons/grave_smash.png" id="18_owere"]
+[ext_resource type="Texture2D" path="res://art/icons/carrion_spew.png" id="19_n2ps7"]
+[ext_resource type="Texture2D" path="res://art/icons/welcoming_dead.png" id="20_2wjkc"]
+
+[node name="GolgothonArena" type="Node2D" unique_id=270774974]
+script = ExtResource("1_bcfq7")
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=11246036]
+tile_map_data = PackedByteArray("AAAAAAAAAAAVAA0AAAABAAAAAAAWAA0AAAACAAAAAAAWAA0AAAADAAAAAAAWAA0AAAAEAAAAAAAWAA0AAAAFAAAAAAAWAA0AAAAGAAAAAAAWAA0AAAAHAAAAAAAWAA0AAAAIAAAAAAAWAA0AAAAJAAAAAAAXAA0AAAAAAAEAAAAVAA4AAAABAAEAAAAWAA4AAAACAAEAAAAWAA4AAAADAAEAAAAWAA4AAAAEAAEAAAAWAA4AAAAFAAEAAAAWAA4AAAAGAAEAAAAWAA4AAAAHAAEAAAAWAA4AAAAIAAEAAAAWAA4AAAAJAAEAAAAXAA4AAAAAAAIAAAAVAA4AAAABAAIAAAAWAA4AAAACAAIAAAAWAA4AAAADAAIAAAAWAA4AAAAEAAIAAAAWAA4AAAAFAAIAAAAWAA4AAAAGAAIAAAAWAA4AAAAHAAIAAAAWAA4AAAAIAAIAAAAWAA4AAAAJAAIAAAAXAA4AAAAAAAMAAAAVAA4AAAABAAMAAAAWAA4AAAACAAMAAAAWAA4AAAADAAMAAAAWAA4AAAAEAAMAAAAWAA4AAAAFAAMAAAAWAA4AAAAGAAMAAAAWAA4AAAAHAAMAAAAWAA4AAAAIAAMAAAAWAA4AAAAJAAMAAAAXAA4AAAAAAAQAAAAVAA4AAAABAAQAAAAWAA4AAAACAAQAAAAWAA4AAAADAAQAAAAWAA4AAAAEAAQAAAAWAA4AAAAFAAQAAAAWAA4AAAAGAAQAAAAWAA4AAAAHAAQAAAAWAA4AAAAIAAQAAAAWAA4AAAAJAAQAAAAXAA4AAAAAAAUAAAAVAA4AAAABAAUAAAAWAA4AAAACAAUAAAAWAA4AAAADAAUAAAAWAA4AAAAEAAUAAAAWAA4AAAAFAAUAAAAWAA4AAAAGAAUAAAAWAA4AAAAHAAUAAAAWAA4AAAAIAAUAAAAWAA4AAAAJAAUAAAAXAA4AAAAAAAYAAAAVAA4AAAABAAYAAAAWAA4AAAACAAYAAAAWAA4AAAADAAYAAAAWAA4AAAAEAAYAAAAWAA4AAAAFAAYAAAAWAA4AAAAGAAYAAAAWAA4AAAAHAAYAAAAWAA4AAAAIAAYAAAAWAA4AAAAJAAYAAAAXAA4AAAAAAAcAAAAVAA4AAAABAAcAAAAWAA4AAAACAAcAAAAWAA4AAAADAAcAAAAWAA4AAAAEAAcAAAAWAA4AAAAFAAcAAAAWAA4AAAAGAAcAAAAWAA4AAAAHAAcAAAAWAA4AAAAIAAcAAAAWAA4AAAAJAAcAAAAXAA4AAAAAAAgAAAAVAA4AAAABAAgAAAAWAA4AAAACAAgAAAAWAA4AAAADAAgAAAAWAA4AAAAEAAgAAAAWAA4AAAAFAAgAAAAWAA4AAAAGAAgAAAAWAA4AAAAHAAgAAAAWAA4AAAAIAAgAAAAWAA4AAAAJAAgAAAAXAA4AAAAAAAkAAAAVAA8AAAABAAkAAAAWAA8AAAACAAkAAAAWAA8AAAADAAkAAAAWAA8AAAAEAAkAAAAWAA8AAAAFAAkAAAAWAA8AAAAGAAkAAAAWAA8AAAAHAAkAAAAWAA8AAAAIAAkAAAAWAA8AAAAJAAkAAAAXAA8AAAA=")
+tile_set = ExtResource("2_4cend")
+
+[node name="Grid" type="TileMapLayer" parent="." unique_id=613897943]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAGAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAABAAEAAAAAAAAAAAACAAEAAAAAAAAAAAADAAEAAAAAAAAAAAAEAAEAAAAAAAAAAAAFAAEAAAAAAAAAAAAGAAEAAAAAAAAAAAAHAAEAAAAAAAAAAAAIAAEAAAAAAAAAAAAJAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAABAAIAAAAAAAAAAAACAAIAAAAAAAAAAAADAAIAAAAAAAAAAAAEAAIAAAAAAAAAAAAFAAIAAAAAAAAAAAAGAAIAAAAAAAAAAAAHAAIAAAAAAAAAAAAIAAIAAAAAAAAAAAAJAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAABAAMAAAAAAAAAAAACAAMAAAAAAAAAAAADAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAHAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAAAAQAAAAAAAAAAAABAAQAAAAAAAAAAAACAAQAAAAAAAAAAAADAAQAAAAAAAAAAAAEAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAJAAQAAAAAAAAAAAAAAAUAAAAAAAAAAAABAAUAAAAAAAAAAAACAAUAAAAAAAAAAAADAAUAAAAAAAAAAAAEAAUAAAAAAAAAAAAFAAUAAAAAAAAAAAAGAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAAIAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAAAAYAAAAAAAAAAAABAAYAAAAAAAAAAAACAAYAAAAAAAAAAAADAAYAAAAAAAAAAAAEAAYAAAAAAAAAAAAFAAYAAAAAAAAAAAAGAAYAAAAAAAAAAAAHAAYAAAAAAAAAAAAIAAYAAAAAAAAAAAAJAAYAAAAAAAAAAAAAAAcAAAAAAAAAAAABAAcAAAAAAAAAAAACAAcAAAAAAAAAAAADAAcAAAAAAAAAAAAEAAcAAAAAAAAAAAAFAAcAAAAAAAAAAAAGAAcAAAAAAAAAAAAHAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAAJAAcAAAAAAAAAAAAAAAgAAAAAAAAAAAABAAgAAAAAAAAAAAACAAgAAAAAAAAAAAADAAgAAAAAAAAAAAAEAAgAAAAAAAAAAAAFAAgAAAAAAAAAAAAGAAgAAAAAAAAAAAAHAAgAAAAAAAAAAAAIAAgAAAAAAAAAAAAJAAgAAAAAAAAAAAAAAAkAAAAAAAAAAAABAAkAAAAAAAAAAAACAAkAAAAAAAAAAAADAAkAAAAAAAAAAAAEAAkAAAAAAAAAAAAFAAkAAAAAAAAAAAAGAAkAAAAAAAAAAAAHAAkAAAAAAAAAAAAIAAkAAAAAAAAAAAAJAAkAAAAAAAAAAAA=")
+tile_set = ExtResource("3_3irdn")
+
+[node name="Highlights" type="TileMapLayer" parent="." unique_id=494494830]
+modulate = Color(1, 1, 1, 0.9)
+tile_set = ExtResource("3_3irdn")
+
+[node name="Obstacles" type="TileMapLayer" parent="." unique_id=602899266]
+tile_set = ExtResource("2_4cend")
+
+[node name="Overlay" type="TileMapLayer" parent="." unique_id=1149657113]
+tile_set = ExtResource("3_3irdn")
+
+[node name="Units" type="Node2D" parent="." unique_id=874809502]
+y_sort_enabled = true
+
+[node name="Spawns" type="Node2D" parent="." unique_id=2036883456]
+
+[node name="Golgothon" type="Marker2D" parent="Spawns" unique_id=1603159782]
+position = Vector2(288, 96)
+script = ExtResource("4_tk3dn")
+def = ExtResource("5_0mpom")
+team = 1
+
+[node name="Bloodthane" type="Marker2D" parent="Spawns" unique_id=1861825558]
+position = Vector2(288, 480)
+script = ExtResource("4_tk3dn")
+def = ExtResource("6_i5uj7")
+
+[node name="Traceless" type="Marker2D" parent="Spawns" unique_id=1623372864]
+position = Vector2(352, 480)
+script = ExtResource("4_tk3dn")
+def = ExtResource("7_p7klf")
+
+[node name="Soulweaver" type="Marker2D" parent="Spawns" unique_id=1422876655]
+position = Vector2(224, 544)
+script = ExtResource("4_tk3dn")
+def = ExtResource("8_eitl5")
+
+[node name="Kindleborne" type="Marker2D" parent="Spawns" unique_id=1828619785]
+position = Vector2(416, 544)
+script = ExtResource("4_tk3dn")
+def = ExtResource("9_4f4p5")
+
+[node name="Encounter" type="Node" parent="." unique_id=1728681421]
+script = ExtResource("10_185rn")
+minion_def = ExtResource("11_7sqxf")
+unquenched_status = ExtResource("12_jr4hw")
+daze_status = ExtResource("13_wv2lo")
+mark_icon = ExtResource("14_edjtc")
+grasp_icon = ExtResource("15_pcmif")
+caress_icon = ExtResource("16_huwi2")
+unquenched_icon = ExtResource("17_52f2h")
+smash_icon = ExtResource("18_owere")
+spew_icon = ExtResource("19_n2ps7")
+summon_icon = ExtResource("20_2wjkc")

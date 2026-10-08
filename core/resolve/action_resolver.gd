@@ -36,6 +36,13 @@ var soulstreams: Dictionary[int, Soulstream] = {
 	Enums.Team.PLAYER: Soulstream.new(),
 	Enums.Team.ENEMY: Soulstream.new(),
 }
+## Health a unit of a team would lose on a cell when the enemy phase comes,
+## (cell, team) -> int, set by a boss encounter. The AI steps out of it.
+var danger: Callable = func(_cell: Vector2i, _team: Enums.Team) -> int: return 0
+## Marks on the board by kind (Restless Dead), as lists of cells. They
+## don't block anything. Change them through add_mark / set_marks.
+var marks: Dictionary[StringName, Array] = {}
+var _mark_icons: Dictionary[StringName, Texture2D] = {}
 ## Recovery skills used this battle, by team.
 var recoveries_used: Dictionary[int, int] = {}
 
@@ -78,7 +85,8 @@ func request_move(unit: UnitState, to: Vector2i) -> bool:
 
 
 func can_move(unit: UnitState) -> bool:
-	return unit.is_alive() and unit.actions.can_pay(Enums.Cost.MOVE)
+	return unit.is_alive() and unit.actions.can_pay(Enums.Cost.MOVE) \
+			and not Pathing.is_held(board, unit)
 
 
 ## True if [param caster] could start [param skill] now (ignores targets).
@@ -439,6 +447,10 @@ func _stream_of(user: UnitState, target: UnitState) -> Soulstream:
 
 
 func _kill(unit: UnitState) -> void:
+	var cell := unit.cell
+	for inst: StatusInstance in unit.statuses.duplicate():
+		if inst.def.behavior != null:
+			inst.def.behavior.on_owner_died(inst, cell, self)
 	board.remove_unit(unit)
 	unit.statuses.clear()
 	if not unit.hand.is_empty():
@@ -465,9 +477,12 @@ func _kill(unit: UnitState) -> void:
 #region Movement
 
 ## Shift along [param path] (each square next to the last). Passes through
-## any unit; the last square must be empty.
+## any unit; the last square must be empty. A held unit doesn't move.
 func shift_unit(unit: UnitState, path: Array[Vector2i]) -> void:
-	if path.is_empty() or not unit.is_alive():
+	if path.is_empty() or not unit.is_alive() or not board.can_stand(unit, path[-1]):
+		return
+	if Pathing.is_held(board, unit):
+		announce(unit, "Held", Color(0.8, 0.7, 0.6))
 		return
 	var from := unit.cell
 	board.move_unit(unit, path[-1])
@@ -475,9 +490,26 @@ func shift_unit(unit: UnitState, path: Array[Vector2i]) -> void:
 	await _after_moved(unit, Enums.MoveKind.SHIFT, from, path)
 
 
+## Moves [param unit] square by square along [param path] (scripted
+## movement: a boss's walk, a minion's step, a random push). Stops at the
+## first square it can't stand on.
+func move_along(unit: UnitState, path: Array[Vector2i], kind: Enums.MoveKind) -> void:
+	var walked: Array[Vector2i] = []
+	for cell in path:
+		if not board.can_stand(unit, cell):
+			break
+		walked.append(cell)
+	if walked.is_empty() or not unit.is_alive():
+		return
+	var from := unit.cell
+	board.move_unit(unit, walked[-1])
+	_emit(GameEvent.unit_moved(unit, walked))
+	await _after_moved(unit, kind, from, walked)
+
+
 ## Instantly to [param to], which must be empty.
 func teleport_unit(unit: UnitState, to: Vector2i) -> void:
-	if to == unit.cell or not unit.is_alive():
+	if to == unit.cell or not unit.is_alive() or not board.can_stand(unit, to):
 		return
 	var from := unit.cell
 	board.move_unit(unit, to)
@@ -499,6 +531,8 @@ func force_unit_path(unit: UnitState, reference: Vector2i, squares: int,
 	var path: Array[Vector2i] = []
 	if not unit.is_alive():
 		return path
+	if squares > 0:
+		squares = maxi(1, squares - unit.def.sturdy)
 	var at := unit.cell
 	var last_dir := Vector2i.ZERO
 	for i in squares:
@@ -507,7 +541,7 @@ func force_unit_path(unit: UnitState, reference: Vector2i, squares: int,
 		var here := BoardState.distance(at, reference)
 		for dir in BoardState.DIRECTIONS:
 			var next := at + dir
-			if board.blocks_move(next) or (board.is_occupied(next) and board.unit_at(next) != unit):
+			if not board.can_stand(unit, next):
 				continue
 			var d := BoardState.distance(next, reference)
 			var gain := here - d if toward else d - here
@@ -546,6 +580,80 @@ func _after_moved(unit: UnitState, kind: Enums.MoveKind, from: Vector2i,
 			await remove_status(inst)
 		elif inst.def.behavior != null:
 			await inst.def.behavior.on_moved(inst, kind, from, path, self)
+
+#endregion
+
+#region Summons and marks
+
+## Puts a new unit of [param def] on [param cell] for [param team] (a boss's
+## summon). Its passives are applied. Returns null if it can't stand there.
+func summon(def: UnitDef, team: Enums.Team, cell: Vector2i) -> UnitState:
+	var unit := UnitState.new(def, team)
+	if not board.can_stand(unit, cell):
+		return null
+	board.place_unit(unit, cell)
+	_emit(GameEvent.unit_spawned(unit))
+	for passive in def.passives:
+		await apply_status(unit, passive, unit)
+	return unit
+
+
+## The open square nearest [param from] (by steps over open ground first,
+## then by straight distance) where [param unit] could stand, avoiding
+## [param avoid]. (-1, -1) if there is none.
+func nearest_open(unit: UnitState, from: Vector2i, avoid: Array[Vector2i] = []) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_d := 1 << 30
+	for y in board.size.y:
+		for x in board.size.x:
+			var cell := Vector2i(x, y)
+			if not board.can_stand(unit, cell):
+				continue
+			var clash := false
+			for c in BoardState.footprint_cells(cell, unit.def.footprint):
+				if avoid.has(c):
+					clash = true
+			if clash:
+				continue
+			var d := BoardState.distance(cell, from)
+			if d < best_d:
+				best_d = d
+				best = cell
+	return best
+
+
+## Forces [param unit] into the nearest open square, avoiding [param avoid]
+## (Trample: units in a Large unit's way are pushed aside).
+func displace(unit: UnitState, avoid: Array[Vector2i]) -> void:
+	var to := nearest_open(unit, unit.cell, avoid)
+	if to == Vector2i(-1, -1) or not unit.is_alive():
+		return
+	var from := unit.cell
+	board.move_unit(unit, to)
+	var path: Array[Vector2i] = [to]
+	_emit(GameEvent.unit_moved(unit, path))
+	await _after_moved(unit, Enums.MoveKind.FORCED, from, path)
+
+
+func add_mark(id: StringName, cell: Vector2i, icon: Texture2D = null) -> void:
+	var cells: Array[Vector2i] = []
+	cells.assign(marks.get(id, []))
+	if not cells.has(cell):
+		cells.append(cell)
+	set_marks(id, cells, icon)
+
+
+func set_marks(id: StringName, cells: Array[Vector2i], icon: Texture2D = null) -> void:
+	if icon != null:
+		_mark_icons[id] = icon
+	marks[id] = cells.duplicate()
+	_emit(GameEvent.marks_changed(id, cells, _mark_icons.get(id)))
+
+
+func marks_of(id: StringName) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	cells.assign(marks.get(id, []))
+	return cells
 
 #endregion
 
@@ -673,7 +781,15 @@ func start_round() -> void:
 ## Start-of-turn upkeep for one unit: points refresh, cooldowns tick, status
 ## hooks run, then owner-turn durations count down.
 func start_turn(unit: UnitState) -> void:
-	unit.start_turn()
+	# Daze: this turn's cooldown tick doesn't happen, and a stack clears.
+	var daze := unit.find_status_tag(&"daze")
+	unit.start_turn(daze == null)
+	if daze != null:
+		announce(unit, "Dazed", Color(0.85, 0.8, 0.6))
+		if daze.stacks > 1:
+			set_stacks(daze, daze.stacks - 1)
+		else:
+			await remove_status(daze)
 	_emit(GameEvent.actions_changed(unit))
 	for inst: StatusInstance in unit.statuses.duplicate():
 		if not unit.is_alive():
@@ -745,6 +861,12 @@ func _drain_followups() -> void:
 func _emit(event: GameEvent) -> void:
 	if events != null:
 		events.enqueue(event)
+
+
+## Ends a step of an encounter script like any other action: follow-ups,
+## playback, then action_finished (the battle checks for an outcome).
+func finish_scripted_action() -> void:
+	await _finish_action()
 
 
 func _finish_action() -> void:

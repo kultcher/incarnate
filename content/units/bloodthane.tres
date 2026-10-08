@@ -19,6 +19,7 @@
 script = ExtResource("1_def")
 id = &"bloodthane"
 display_name = "Bloodthane"
+max_hp = 40
 skills = Array[ExtResource("5_skill_def")]([ExtResource("6_gwyhw"), ExtResource("7_b85gt"), ExtResource("8_1bxis"), ExtResource("9_fva7t"), ExtResource("10_dje20"), ExtResource("11_qw77l"), ExtResource("12_1qkyw"), ExtResource("13_ua217"), ExtResource("14_5m6ws")])
 passives = Array[ExtResource("1_6rbws")]([ExtResource("2_qw84c")])
 sheet = ExtResource("2_sheet")

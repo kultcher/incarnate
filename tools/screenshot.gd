@@ -20,13 +20,19 @@ extends Node
 ##   infusion   the Fates Intertwined prompt after Spirit Flare
 ##   wave       the Kindleborne aiming Cinder Wave (area preview), Heat shown
 ##   stoke      the Kindleborne's Stoke prompt (Ignite or Dissipate)
+##   golgothon  the boss fight, round 1: his intents listed and drawn
+##   caress     the boss fight, a Death's Caress turn: the loss per square
+##   swarm      the boss fight after his first enemy phase (Welcoming Dead)
 
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out := args[0] if args.size() > 0 else "user://screenshot.png"
 	var shot := args[1] if args.size() > 1 else "select"
-	var battle: Battle = load("res://battle/battle.tscn").instantiate()
+	var scene := "res://battle/battle.tscn"
+	if shot in ["golgothon", "caress", "swarm"]:
+		scene = "res://levels/golgothon/golgothon_battle.tscn"
+	var battle: Battle = load(scene).instantiate()
 	battle.autoplay = shot == "end"
 	battle.card_seed = 4  # The same cards every time.
 	if shot == "end":
@@ -46,10 +52,25 @@ func _ready() -> void:
 		await battle.battle_controller.battle_ended
 		Engine.time_scale = 1.0
 		await get_tree().create_timer(0.6).timeout
+	elif scene != "res://battle/battle.tscn":
+		await get_tree().create_timer(1.2).timeout
 	else:
 		await c.click_cell(bt.cell)
 
 	match shot:
+		"golgothon":
+			await c.click_cell(bt.cell)
+		"caress":
+			battle.encounter.round_number = 3
+			battle.encounter.refresh_intents()
+			await c.click_cell(bt.cell)
+		"swarm":
+			Engine.time_scale = 6.0
+			c.request_end_turn()
+			while not c.is_active():
+				await get_tree().process_frame
+			Engine.time_scale = 1.0
+			await get_tree().create_timer(1.0).timeout
 		"select":
 			# Pretend the mouse is over a cell to show the path preview.
 			c._update_hover(Vector2i(4, 5), true)

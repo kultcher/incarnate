@@ -19,6 +19,8 @@ signal unit_damaged(unit: UnitState, amount: int)
 ## A strike landed: [param text] is its breakdown ("Silver Blade 4 + ...").
 signal strike_shown(attacker: UnitState, target: UnitState, amount: int, text: String)
 signal unit_died(unit: UnitState)
+## A unit joined the battle mid-fight (a summon).
+signal unit_spawned(unit: UnitState)
 signal unit_healed(unit: UnitState, amount: int)
 ## A unit gained, lost or changed a status.
 signal statuses_changed(unit: UnitState)
@@ -29,3 +31,5 @@ signal cards_readied(cards: Array[Card])
 ## The player is choosing step [param step] of [param skill]'s targets.
 signal targeting_started(unit: UnitState, skill: SkillDef, step: int)
 signal targeting_ended()
+## What the encounter's next enemy phase will do (empty: nothing to show).
+signal intents_changed(intents: Array[Intent])

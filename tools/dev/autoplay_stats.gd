@@ -1,7 +1,8 @@
 extends Node
-## Dev tool: plays 20 AI-vs-AI battles on the test arena with shuffled
-## Soulstream decks and prints outcomes and skill use (a quick balance check).
-##   godot --headless --path . res://tools/dev/autoplay_stats.tscn
+## Dev tool: plays 20 AI-vs-AI battles with shuffled Soulstream decks and
+## prints outcomes and skill use (a quick balance check). The test arena by
+## default; pass "golgothon" for the boss fight, and a count if you like.
+##   godot --headless --path . res://tools/dev/autoplay_stats.tscn -- golgothon 10
 
 var _uses: Dictionary = {}
 
@@ -9,9 +10,16 @@ var _uses: Dictionary = {}
 func _ready() -> void:
 	var results := {}
 	var rounds := 0
+	var args := OS.get_cmdline_user_args()
+	var scene := "res://battle/battle.tscn"
+	if args.has("golgothon"):
+		scene = "res://levels/golgothon/golgothon_battle.tscn"
 	var n := 20
+	for a in args:
+		if a.is_valid_int():
+			n = a.to_int()
 	for i in n:
-		var battle: Battle = load("res://battle/battle.tscn").instantiate()
+		var battle: Battle = load(scene).instantiate()
 		battle.autoplay = true
 		battle.card_seed = i + 1
 		Engine.time_scale = 50.0

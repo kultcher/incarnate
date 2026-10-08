@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/welcoming_dead.png" id="1_1pmb7"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_oq0db"]
+
+[resource]
+script = ExtResource("2_oq0db")
+id = &"drag_you_down"
+display_name = "Drag You Down"
+icon = ExtResource("1_1pmb7")
+description = "While 2 or more Welcoming Dead are next to an Incarnate, it can't walk or shift (teleports still work)."
+tags = Array[StringName]([&"grapple", &"passive"])
+show_on_unit = false

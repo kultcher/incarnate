@@ -48,6 +48,8 @@ var _tray: CardTray
 var _readied: Array[Card] = []
 var _log_label: Label
 var _log: Array[String] = []
+## What the boss will do this turn (Encounter intents).
+var _intent_box: VBoxContainer
 
 
 func _ready() -> void:
@@ -84,10 +86,25 @@ func _ready() -> void:
 	_end_turn.text = "End Turn"
 	_end_turn.tooltip_text = "End your turn (Space)"
 	_end_turn.custom_minimum_size = Vector2(120, 40)
+	_end_turn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	_end_turn.focus_mode = Control.FOCUS_NONE
 	_end_turn.disabled = true
 	_end_turn.pressed.connect(end_turn_pressed.emit)
 	top.add_child(_end_turn)
+
+	_intent_box = VBoxContainer.new()
+	_intent_box.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_intent_box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_intent_box.custom_minimum_size = Vector2(240, 0)
+	_intent_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_intent_box.add_theme_constant_override("separation", 4)
+	var intent_margin := MarginContainer.new()
+	intent_margin.add_theme_constant_override("margin_top", 52)
+	intent_margin.size_flags_horizontal = Control.SIZE_SHRINK_END
+	intent_margin.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	intent_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	intent_margin.add_child(_intent_box)
+	root.add_child(intent_margin)
 
 	var bottom := VBoxContainer.new()
 	bottom.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -141,6 +158,7 @@ func _ready() -> void:
 	EventBus.cards_changed.connect(func(_team: Enums.Team) -> void: _refresh_tray())
 	EventBus.cards_readied.connect(_on_cards_readied)
 	EventBus.strike_shown.connect(_on_strike_shown)
+	EventBus.intents_changed.connect(_on_intents_changed)
 	_clear_unit()
 
 
@@ -259,6 +277,12 @@ func _build_end_screen() -> void:
 	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	again.pressed.connect(restart_pressed.emit)
 	box.add_child(again)
+	var menu := Button.new()
+	menu.text = "Main Menu"
+	menu.custom_minimum_size = Vector2(180, 40)
+	menu.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	menu.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://ui/main_menu.tscn"))
+	box.add_child(menu)
 
 
 func _show_unit(unit: UnitState) -> void:
@@ -408,6 +432,46 @@ func _readied_hint() -> String:
 		names.append(str(card))
 	return "\nReadied: %s. Your next skill uses %s in place of its lowest-tier draws." \
 			% [", ".join(names), "it" if _readied.size() == 1 else "them"]
+
+
+## "Enemy turn: Death's Caress / Grave Smash -> Bloodthane ..."
+func _on_intents_changed(intents: Array[Intent]) -> void:
+	for child in _intent_box.get_children():
+		child.queue_free()
+	if intents.is_empty():
+		return
+	var head := _label(15)
+	head.text = "Enemy turn:"
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_intent_box.add_child(head)
+	for intent in intents:
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_END
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var line := _label(13)
+		line.text = intent.title
+		if intent.target != null:
+			line.text += " -> " + intent.target.def.display_name
+		line.add_theme_color_override("font_color", intent.color.lightened(0.35))
+		line.tooltip_text = intent.text
+		line.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.add_child(line)
+		if intent.icon != null:
+			var icon := TextureRect.new()
+			icon.texture = intent.icon
+			icon.custom_minimum_size = Vector2(20, 20)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			row.add_child(icon)
+		_intent_box.add_child(row)
+		var detail := _label(11)
+		detail.text = intent.text
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.custom_minimum_size = Vector2(240, 0)
+		detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		detail.modulate = Color(1, 1, 1, 0.75)
+		_intent_box.add_child(detail)
 
 
 func _on_strike_shown(attacker: UnitState, target: UnitState, amount: int, text: String) -> void:
