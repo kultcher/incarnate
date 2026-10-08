@@ -19,6 +19,13 @@ extends Resource
 @export_group("")
 ## Skills on the unit's bar, in order (hotkeys 1, 2, 3...).
 @export var skills: Array[SkillDef] = []
+@export_group("Size and traits")
+## Squares per side: 1 for most units, 2 for a Large (2x2) boss. Its cell is
+## the top-left square.
+@export_range(1, 3) var footprint: int = 1
+## Forced movement against it is this many squares shorter (minimum 1).
+@export var sturdy: int = 0
+@export_group("")
 ## Flex points per turn. Incarnates get 1; most monsters get 0, so they can
 ## move and attack but never attack twice.
 @export_range(0, 2) var flex_points: int = 1

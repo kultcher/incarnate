@@ -79,6 +79,12 @@ func after_heal_given(_inst: StatusInstance, _target: UnitState, _amount: int,
 	pass
 
 
+## The owner just died on [param cell] (its statuses are about to be cleared).
+## Must not await (Restless leaves a marker).
+func on_owner_died(_inst: StatusInstance, _cell: Vector2i, _r: ActionResolver) -> void:
+	pass
+
+
 ## Added to the owner's [param stat] (Probability Armor: Evasion per Shadow).
 ## Must not await.
 func stat_bonus(_inst: StatusInstance, _stat: StringName) -> int:

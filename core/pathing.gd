@@ -30,7 +30,9 @@ class Reach:
 		return path
 
 
-## Every cell [param unit] can move to with [param budget] movement.
+## Every cell [param unit] can move to with [param budget] movement. A held
+## unit (Drag You Down) can't walk or shift at all. Large units need room
+## for their whole footprint.
 static func reachable(board: BoardState, unit: UnitState, budget: int,
 		rules: MoveRules = null) -> Reach:
 	if rules == null:
@@ -38,6 +40,8 @@ static func reachable(board: BoardState, unit: UnitState, budget: int,
 	var reach := Reach.new()
 	reach.origin = unit.cell
 	reach.cost[unit.cell] = 0
+	if is_held(board, unit):
+		return reach
 	var frontier: Array[Vector2i] = [unit.cell]
 
 	while not frontier.is_empty():
@@ -47,9 +51,7 @@ static func reachable(board: BoardState, unit: UnitState, budget: int,
 		var current: Vector2i = frontier.pop_front()
 
 		for n in board.neighbors(current):
-			if board.blocks_move(n):
-				continue
-			if not _can_pass(board, unit, n, rules):
+			if not _can_enter(board, unit, n, rules):
 				continue
 			var step := 1 if rules.ignore_terrain_cost else board.move_cost(n)
 			var new_cost := reach.cost[current] + step
@@ -62,9 +64,36 @@ static func reachable(board: BoardState, unit: UnitState, budget: int,
 					frontier.append(n)
 
 	for cell in reach.cost:
-		if cell != unit.cell and not board.is_occupied(cell):
+		if cell != unit.cell and board.can_stand(unit, cell):
 			reach.destinations.append(cell)
 	return reach
+
+
+## Units with the grapple tag (Welcoming Dead) hold a foe in place while at
+## least [constant HOLD_COUNT] of them stand next to it: it can't walk or
+## shift (teleports still work).
+const HOLD_COUNT := 2
+
+
+static func is_held(board: BoardState, unit: UnitState) -> bool:
+	var holders := 0
+	for cell in board.cells_around(unit):
+		var other := board.unit_at(cell)
+		if other != null and other.is_foe(unit) and other.has_status_tag(&"grapple"):
+			holders += 1
+	return holders >= HOLD_COUNT
+
+
+## True if [param unit] may pass through [param anchor] (all of its footprint).
+static func _can_enter(board: BoardState, unit: UnitState, anchor: Vector2i,
+		rules: MoveRules) -> bool:
+	for c in BoardState.footprint_cells(anchor, unit.def.footprint):
+		if board.blocks_move(c):
+			return false
+		var other := board.unit_at(c)
+		if other != null and other != unit and not _can_pass(board, unit, c, rules):
+			return false
+	return true
 
 
 static func _can_pass(board: BoardState, mover: UnitState, cell: Vector2i,

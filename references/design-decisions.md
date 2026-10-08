@@ -11,6 +11,22 @@ Working docs:
 - 2023 Godot prototype: BFTA 4.0 folder on Michael's PC (reference only)
 - New project: C:\Users\kultc\OneDrive\Desktop\Godot\Incarnate (Godot 4.7, gets its own repo)
 
+## 2026-10-08 (Golgothon, milestone 9; Claude's calls, provisional)
+
+Full extraction and every pick: `references/golgothon-reference.md`.
+
+- **Incarnate health is now 40, not 12. This is the big one; your call.** The 2014 boss cards (and the 2014 kits) are written for Incarnates with about 40 health, the booklets' value: Grave Smash is (Si)(Si)(Br) = 8, Death's Caress takes up to 6, and the 2014 sheet still has "+1 Power per 50 health the foe has". Against 12-health Incarnates the boss wiped the party by round 4 every time. At 40, with his card numbers as printed, the fight plays out as the booklet describes: two or three Grasp-then-Caress cycles, Unquenched stacking, about 7 rounds. The alternative is keeping 12 and scaling all boss damage to about a third (Smash 2-3, Caress 2 at most), which leaves little room between hits.
+  - Rules tests keep 12-health fixture units, so their numbers didn't change. Shamblers (8 health, Claw 3) are now trivial for 40-health Incarnates; the test arena stays a sandbox.
+- **Golgothon:** 300 health (booklet 450; first pass from autoplay), Large (2x2), Sturdy 1, Trample, and Resolve 2 (the first application of each debuff is absorbed).
+- **Script:** the booklet's timeline (Grasp on rounds 2, 5, 8; Caress on 3, 6, 9; Unquenched on 4, 7, 10; Grave Smash, Carrion Spew and Welcoming Dead every round, then the minions), with the 2014 cards' numbers.
+- **Targeting:** the booklet's rules (most damage dealt this turn, most health in range, furthest away), not the 2014 random targeting deck. With no damage dealt yet, Grave Smash goes for the nearest Incarnate.
+- **Daze** (from the 2013 debuff list): the unit's next cooldown tick doesn't happen.
+- **Welcoming Dead:** 5 health, strike for 2, +1 move and +1 Power per Unquenched stack. Two adjacent hold an Incarnate in place (no walking or shifting; teleports still work). A slain one leaves a gravestone; Unquenched raises them all and costs Golgothon 1 health each.
+- **Death's Grasp** pulls with our normal forced movement, which stops at units; pulling the nearest first keeps it close to the booklet's "pulled through friends".
+- **Intents:** during your phase the board and a panel under End Turn show what he'll do: the burst, Death's Caress's health loss per square, and each target, updated after every action.
+- **The AI** now steps out of squares that Death's Caress will hit. It still doesn't use most utility skills, so it plays the fight worse than a person.
+- **Main menu:** the game opens on a menu (Golgothon or the test arena); the end screen has a Main Menu button.
+
 ## 2026-10-08 (Kindleborne kit, milestone 8; Claude's calls, provisional)
 
 Source: the Master sheet (newest), with the 2014 cards where the sheet is silent. Alpha-only sheet skills are left out. The squad is now four Incarnates; the Kindleborne starts at (1, 7) in the test arena with a recolored Soulweaver sprite as a placeholder.
@@ -198,3 +214,5 @@ Superseded in M5 by the 2014 kits (see the top entry): Bound in Blood uses the 2
 - Heroic versions: how they trigger, given that not every skill draws cards.
 - What suits do: suit bonuses, and Bound in Blood's Blade trigger (the two-strike stand-in is still in use).
 - Soulstream tuning: the income tiers, whether any card should fill any tier, and whether players should be able to discard or swap held cards.
+- Incarnate health: 40 (2014 scale, provisional since milestone 9) or back to 12 with boss damage scaled down.
+- Golgothon's targeting: the booklet's rules (built) or the 2014 random targeting deck.

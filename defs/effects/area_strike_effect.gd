@@ -18,7 +18,7 @@ func foes_in_area(board: BoardState, caster: UnitState, picks: Array[Vector2i]) 
 	var foes: Array[UnitState] = []
 	for cell in area.cells(board, caster, picks):
 		var unit := board.unit_at(cell)
-		if unit != null and caster.is_foe(unit):
+		if unit != null and caster.is_foe(unit) and not foes.has(unit):
 			foes.append(unit)
 	foes.sort_custom(func(a: UnitState, b: UnitState) -> bool:
 		return BoardState.distance(caster.cell, a.cell) < BoardState.distance(caster.cell, b.cell))

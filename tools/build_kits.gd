@@ -893,7 +893,7 @@ func _kindleborne() -> void:
 		unit = UnitDef.new()
 		unit.id = &"kindleborne"
 		unit.display_name = "Kindleborne"
-		unit.max_hp = 12
+		unit.max_hp = 40
 		unit.move = 4
 		unit.sheet = load("res://art/units/kindleborne.png")
 		unit.sheet_columns = 4

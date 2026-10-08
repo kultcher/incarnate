@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/unquenched.png" id="1_veimc"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="2_2wr7a"]
+
+[resource]
+script = ExtResource("2_2wr7a")
+id = &"unquenched"
+display_name = "Unquenched"
+icon = ExtResource("1_veimc")
+description = "+1 Power per stack. His Welcoming Dead move 1 square and strike +1 per stack."
+stacking = 1
+max_stacks = 99
+stat_mods = Dictionary[StringName, int]({
+&"power": 1
+})

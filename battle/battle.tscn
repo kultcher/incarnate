@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://c5t2ebl2tekcy"]
 
 [ext_resource type="Script" uid="uid://c3doyk6i4mu4g" path="res://battle/battle.gd" id="1_battle"]
-[ext_resource type="PackedScene" path="res://levels/test_arena.tscn" id="2_arena"]
 [ext_resource type="Script" uid="uid://dahdfstakfn67" path="res://core/resolve/action_resolver.gd" id="3_resolver"]
 [ext_resource type="Script" uid="uid://xkplq2qf37b1" path="res://view/presenter.gd" id="4_presenter"]
 [ext_resource type="Script" uid="uid://b2qy1kufh7flq" path="res://battle/player_controller.gd" id="5_controller"]
@@ -11,8 +10,6 @@
 
 [node name="Battle" type="Node2D" unique_id=762165862]
 script = ExtResource("1_battle")
-
-[node name="Arena" parent="." unique_id=1470279414 instance=ExtResource("2_arena")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=386678964]
 

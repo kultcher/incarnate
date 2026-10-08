@@ -133,6 +133,8 @@ static func path_foes(board: BoardState, caster: UnitState,
 static func path_next_cells(board: BoardState, caster: UnitState, skill: SkillDef,
 		picks: Array[Vector2i]) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
+	if Pathing.is_held(board, caster):
+		return result
 	var from := caster.cell if picks.is_empty() else picks[-1]
 	var used := path_cost(board, picks)
 	for next in board.neighbors(from):

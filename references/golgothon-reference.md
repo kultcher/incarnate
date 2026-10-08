@@ -6,7 +6,9 @@ Sources:
 - **Targeting deck** (2014): `Cards/PNG/Target/` holds one card per Incarnate. The cards print a target icon where the booklet prints a targeting rule, so in 2014 the boss's targets were drawn at random.
 - **Daze**, from the 2013 "Buffs Debuffs" doc on Drive: "Prevents a recharge. Recharge clears 1 stack."
 
-Where the two disagree, the numbers come from the cards (they're on our scale) and the rules come from the booklet (the cards leave them out). Each such pick is flagged **Pick**.
+Where the two disagree, the numbers come from the cards and the rules come from the booklet (the cards leave them out). Each such pick is flagged **Pick**.
+
+**Health scale (2026-10-08):** the 2014 cards' numbers assume Incarnates with about 40 health, like the booklets; the 2014 sheet still writes "+1 Power per 50 health the foe has". So the encounter keeps the card damage as printed, and the Incarnates moved from 12 to **40 health** (see the design log). The translated column below uses that scale.
 
 ## 1. Setup
 
@@ -16,9 +18,9 @@ Where the two disagree, the numbers come from the cards (they're on our scale) a
 
 ## 2. Golgothon's stats and traits
 
-| | Booklet (players at 40 health) | Translated (players at 12) |
+| | Booklet (players at 40 health) | Translated (players at 40) |
 |---|---|---|
-| Health | 450 (tuned for 4 players) | **135** (450 × 12/40). **Pick:** first pass; tune by playtest. |
+| Health | 450 (tuned for 4 players) | **300**. **Pick:** first pass from autoplay: at 450 the AI never won; at 300 it wins about 1 in 4, in about 7 rounds, often losing with him under 50. People playing well should do better. |
 | **Resolve 2** | Debuffs don't apply until he has 2 of the same type; he clears 2 at a time. | **Pick:** the first application of each debuff is absorbed; the second one applies, and the count resets. |
 | **Sturdy 1** | Forced movement against him is 1 square shorter (minimum 1). | Same. |
 | **Large** | Takes up a 2×2 space. | Same. Range and adjacency count from his nearest square. |
@@ -61,8 +63,8 @@ The 2014 cards agree: the three scripted skills recharge 3 and share step I; Gra
 
 | | Booklet | Translated |
 |---|---|---|
-| Health | 8 | **3** (8 × 12/40, rounded up). |
-| **Welcoming Arms** (melee) | Move 0 (±1) squares toward the nearest foe, then strike a random adjacent foe for 2 (±1). | Move **1 per Unquenched stack**, then strike a random adjacent foe for **1**, +1 Power per Unquenched stack. |
+| Health | 8 | **5**. **Pick:** card-era strikes are smaller than the booklet's, so 8 would take two hits; 5 keeps them one-hit kills for most attacks. |
+| **Welcoming Arms** (melee) | Move 0 (±1) squares toward the nearest foe, then strike a random adjacent foe for 2 (±1). | Move **1 per Unquenched stack**, then strike a random adjacent foe for **2**, +1 Power per Unquenched stack. |
 | **Restless** (triggered) | When slain, leave a Restless Dead marker on its square. | Same. Markers don't block and can be walked through. |
 | **Drag You Down** (innate) | While 2+ Welcoming Dead are adjacent to a player, that player can't take move actions or use move, shift or fly effects. Teleports and swaps still work, as do other effects of a skill that also moves. | Same. |
 

@@ -81,7 +81,9 @@ func breakdown() -> String:
 	for card in cards:
 		parts.append("%s (held)" % card if card.held else str(card))
 	var text := " + ".join(parts)
-	if bonus != 0:
+	if parts.is_empty():
+		text = str(bonus)
+	elif bonus != 0:
 		text += " %+d" % bonus
 	if power != 0:
 		text += ", %+d Power" % power

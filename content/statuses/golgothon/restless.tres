@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StatusDef" format=3]
+
+[ext_resource type="Texture2D" path="res://art/icons/restless_dead.png" id="1_d8cny"]
+[ext_resource type="Script" path="res://defs/statuses/behaviors/restless.gd" id="2_l74mi"]
+[ext_resource type="Script" path="res://defs/statuses/status_def.gd" id="3_72ixp"]
+
+[sub_resource type="Resource" id="Resource_u1wph"]
+script = ExtResource("2_l74mi")
+mark_icon = ExtResource("1_d8cny")
+
+[resource]
+script = ExtResource("3_72ixp")
+id = &"restless"
+display_name = "Restless"
+icon = ExtResource("1_d8cny")
+description = "When slain, leaves a gravestone. Golgothon's Unquenched raises it again."
+tags = Array[StringName]([&"passive"])
+show_on_unit = false
+behavior = SubResource("Resource_u1wph")

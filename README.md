@@ -6,10 +6,14 @@ Godot 4.7, GDScript, Compatibility renderer.
 - Architecture plan: https://claude.ai/code/artifact/60feca30-fc72-4d76-a80d-f6298d00c19c
 - Design review: https://claude.ai/code/artifact/9c1310fd-512b-44a4-95eb-0c77d3bf29d9
 
-## Status: milestone 8 (the Kindleborne's kit, 2014 version: all four Incarnates)
+## Status: milestone 9 (Golgothon, the first boss)
 
-Run the project (F5) to open the test arena: your four Incarnates against
-three Shamblers.
+Run the project (F5) and pick a battle from the menu:
+
+- **Golgothon the Restless**: the first boss (see below).
+- **Test arena**: your four Incarnates against three Shamblers, a sandbox.
+
+Incarnates have **40 health**, the scale the 2014 cards were written for.
 
 - Left-click one of your units to select it. Blue cells are where it can
   move; hover to preview the path, click to move.
@@ -151,8 +155,29 @@ Ignite this turn) makes your next skill this turn cost no action;
 | Burnout | Free, once | - | The next 3 skills you Ignite this turn can each be used once more for free, ignoring recharge |
 
 **Shamblers:** 8 HP, move 3, Claw for 3 (Silver), one attack per turn.
-They're training dummies: four Incarnates clear them in round 1. The
-Kindleborne's sprite is a recolored Soulweaver for now.
+They're training dummies. The Kindleborne's sprite is a recolored
+Soulweaver for now.
+
+### Golgothon the Restless
+
+A Large (2x2) graveyard elemental with 300 health, from the 2013 encounter
+booklet and the 2014 boss cards (`references/golgothon-reference.md`).
+**During your phase, the panel under End Turn and the board show what he
+will do**, and they update as you act.
+
+| Round | He does |
+| --- | --- |
+| 2, 5, 8... | **Death's Grasp**: strikes everyone within 6 for 2 (Br), then pulls them 5 toward him |
+| 3, 6, 9... | **Death's Caress**: everyone within 6 loses 7 minus their distance (the numbers on the board) |
+| 4, 7, 10... | **Unquenched**: +1 Power; gravestones rise as Welcoming Dead (1 health each from him) |
+| Every round | **Grave Smash** (moves 4 toward whoever hurt him most this turn, tramples, strikes 8 and Dazes; else Spews), **Carrion Spew** (5 to the healthiest in range 6, knocked 1 square), **Welcoming Dead** (3 minions around whoever is furthest) |
+
+**Welcoming Dead:** 5 health, strike for 2. Two next to you hold you in
+place (no walking or shifting; teleports work). Slain ones leave a gravestone.
+Unquenched makes them move and hit harder. **Daze:** your cooldowns don't
+tick next turn. Golgothon has **Resolve 2** (the first of each debuff is
+absorbed), **Sturdy 1** and **Trample**. Killing him wins, even with minions
+left.
 
 Not in yet: Heroic versions, Talents, suit bonuses, Perfect Decoy's
 teleport, and Titan Charge and the other Alpha-only skills. The AI uses
@@ -168,7 +193,7 @@ damage and healing skills but not the utility ones yet.
 | `battle/` | The battle scene, turn loop (`BattleController`), input (`PlayerController`), `EnemyAI`, spawn markers | everything |
 | `view/` | Drawing: board, unit sprites, the Presenter that plays events in order | `core/`, `defs/` |
 | `ui/` | HUD | `core/` via EventBus |
-| `levels/` | Arena scenes | `view/`, `battle/` |
+| `levels/` | Arena scenes; `levels/golgothon/` has the boss arena, battle scene and encounter script | `view/`, `battle/` |
 | `autoload/` | `EventBus`, the only autoload | `core/` |
 | `tests/` | GUT tests: `unit/` for rules, `integration/` for the real scene | everything |
 | `tools/` | Arena and kit builders, script checker, screenshot helper; `tools/dev/` has the autoplay stats scene | everything |
@@ -261,7 +286,12 @@ files are the source of truth after that; edit them in the editor. Re-running
 the builder overwrites them.
 
 For a quick balance check, run `tools/dev/autoplay_stats.tscn` (20 AI-vs-AI
-battles with shuffled decks; prints outcomes and skill use).
+battles with shuffled decks; prints outcomes and skill use). Add
+`-- golgothon` for the boss fight, and a number for how many battles.
+
+The Golgothon encounter is written by `tools/build_golgothon.gd` (statuses,
+units, the arena and its Encounter node). A boss is an `Encounter` node in its
+level: it plays the enemy phase as a script and lists its intents.
 
 ## Conventions
 

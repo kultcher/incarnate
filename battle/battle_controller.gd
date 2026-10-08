@@ -22,6 +22,9 @@ var enemy_driver: TurnDriver
 ## Plays the player's side when autoplay is on (F9 in the battle scene).
 var autoplay_driver: TurnDriver
 var autoplay: bool = false
+## A scripted enemy side (boss fight), if the level has one. It plays the
+## enemy phase and can end the battle early (the boss is down).
+var encounter: Encounter
 
 var round_number: int = 0
 var phase: Enums.Team = Enums.Team.PLAYER
@@ -74,6 +77,8 @@ func _player_phase() -> void:
 	_check_outcome()
 	if is_over():
 		return
+	if encounter != null:
+		await encounter.begin_round(round_number)
 	if autoplay and autoplay_driver != null:
 		await autoplay_driver.take_turn(Enums.Team.PLAYER)
 		return
@@ -92,6 +97,8 @@ func _enemy_phase() -> void:
 	if is_over():
 		return
 	await enemy_driver.take_turn(Enums.Team.ENEMY)
+	if encounter != null:
+		encounter.clear_intents()
 
 
 ## Each Incarnate draws a card into its hand, and the shared row gets one.
@@ -122,5 +129,5 @@ func _check_outcome() -> void:
 			enemies += 1
 	if players == 0:
 		outcome = Enums.Outcome.DEFEAT
-	elif enemies == 0:
+	elif enemies == 0 or (encounter != null and encounter.is_won()):
 		outcome = Enums.Outcome.VICTORY

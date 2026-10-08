@@ -40,11 +40,11 @@ func enemy(i: int = 0) -> UnitState:
 	return fixture.enemies[i]
 
 
-## Gives [param unit] a kit: its skills and passives, applied now.
+## Gives [param unit] a kit: its skills and passives, applied now. The
+## unit keeps the fixture's health (12), so rules tests use small numbers
+## whatever the kits' real health is.
 func equip(unit: UnitState, kit: UnitDef) -> void:
 	unit.def.skills = kit.skills.duplicate()
-	unit.def.max_hp = kit.max_hp
-	unit.hp = kit.max_hp
 	for passive in kit.passives:
 		await resolver.apply_status(unit, passive, unit)
 

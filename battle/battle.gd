@@ -1,10 +1,14 @@
 class_name Battle
 extends Node2D
-## Builds a battle from the arena scene, wires the parts together and starts
+## Builds a battle from a level scene, wires the parts together and starts
 ## the turn loop. Nothing else reaches into this node; parts get references
-## from here.
+## from here. A level with an "Encounter" node (a boss fight) has that node
+## play the enemy side.
 ##   F9   toggle autoplay: the AI plays your side too (for fast playtesting)
 
+## The level to fight on: a BoardView scene with terrain, spawns and,
+## optionally, an Encounter.
+@export var level_scene: PackedScene = preload("res://levels/test_arena.tscn")
 ## Start with the AI playing the player's side (tests, balance runs).
 @export var autoplay: bool = false
 ## Every card is its tier's median instead of drawn from shuffled decks
@@ -13,7 +17,7 @@ extends Node2D
 ## Seed for the Soulstream decks. 0 = a new random seed each battle.
 @export var card_seed: int = 0
 
-@onready var arena: BoardView = $Arena
+var arena: BoardView
 @onready var camera: Camera2D = $Camera2D
 @onready var battle_controller: BattleController = $BattleController
 @onready var resolver: ActionResolver = $ActionResolver
@@ -24,9 +28,15 @@ extends Node2D
 
 var board: BoardState
 var player_decisions: PlayerDecisions
+## The level's scripted enemy side, if it has one.
+var encounter: Encounter
 
 
 func _ready() -> void:
+	arena = level_scene.instantiate() as BoardView
+	arena.name = "Arena"
+	add_child(arena)
+	move_child(arena, 0)
 	board = BoardState.from_layers(arena.ground, arena.obstacles)
 
 	presenter.board_view = arena
@@ -45,6 +55,13 @@ func _ready() -> void:
 	battle_controller.resolver = resolver
 	battle_controller.player_driver = controller
 	battle_controller.enemy_driver = enemy_ai
+	encounter = arena.get_node_or_null("Encounter") as Encounter
+	if encounter != null:
+		encounter.setup(board, resolver)
+		battle_controller.enemy_driver = encounter
+		battle_controller.encounter = encounter
+		resolver.danger = encounter.danger
+		resolver.action_finished.connect(encounter.refresh_intents)
 	battle_controller.autoplay_driver = enemy_ai
 	battle_controller.autoplay = autoplay
 	player_decisions = PlayerDecisions.new()

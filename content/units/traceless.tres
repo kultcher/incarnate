@@ -20,6 +20,7 @@
 script = ExtResource("1_def")
 id = &"traceless"
 display_name = "Traceless"
+max_hp = 40
 skills = Array[ExtResource("3_skill_def")]([ExtResource("6_rmsyw"), ExtResource("7_s2dy7"), ExtResource("8_g52po"), ExtResource("9_4olx6"), ExtResource("10_gov67"), ExtResource("11_jgn22"), ExtResource("12_nv1xr"), ExtResource("13_cx8vf"), ExtResource("14_tk1to"), ExtResource("15_xcyit")])
 passives = Array[ExtResource("1_3cym5")]([ExtResource("2_qgcw2")])
 sheet = ExtResource("2_sheet")

@@ -27,12 +27,16 @@ var _shown_hp: int = 0
 var _icons: Array[Dictionary] = []
 
 const ICON_SIZE := 16.0
+## Centre of the unit's footprint relative to its cell's centre (non-zero for
+## Large units, whose cell is their top-left square).
+var _center := Vector2.ZERO
 
 
 func setup(p_unit: UnitState) -> void:
 	unit = p_unit
 	name = "%s_%d" % [unit.def.id, unit.id]
 	var def := unit.def
+	_center = Vector2.ONE * 32.0 * (def.footprint - 1)
 
 	_sprite = Sprite2D.new()
 	_sprite.texture = def.sheet
@@ -43,8 +47,8 @@ func setup(p_unit: UnitState) -> void:
 	var frame_height := float(def.sheet.get_height()) / def.sheet_rows.size()
 	var s := def.display_height / frame_height
 	_sprite.scale = Vector2(s, s)
-	# Stand the sprite on the lower part of the cell.
-	_sprite.position = Vector2(0, 26.0 - def.display_height / 2.0)
+	# Stand the sprite on the lower part of the cell (of its footprint).
+	_sprite.position = _center + Vector2(0, 26.0 * def.footprint - def.display_height / 2.0)
 	add_child(_sprite)
 	_shown_hp = unit.hp
 	_face(&"down")
@@ -181,7 +185,7 @@ func _float_text(text: String, color: Color, font_size: int) -> void:
 	label.add_theme_constant_override("outline_size", 6)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.size = Vector2(140, 34)
-	label.position = Vector2(-70, -unit.def.display_height - 10)
+	label.position = _center + Vector2(-70, -unit.def.display_height - 10)
 	label.z_index = 30
 	add_child(label)
 	var tween := label.create_tween()
@@ -206,9 +210,11 @@ func _draw() -> void:
 	if _selected:
 		color = Color(1.0, 0.85, 0.3, 0.9)
 	var team_tint := Color(0.3, 0.8, 1.0) if unit != null and unit.is_player() else Color(1.0, 0.4, 0.35)
-	draw_set_transform(Vector2(0, 22), 0.0, Vector2(1.0, 0.45))
-	draw_circle(Vector2.ZERO, RING_RADIUS, Color(team_tint, 0.25))
-	draw_arc(Vector2.ZERO, RING_RADIUS, 0.0, TAU, 32, color, 3.0 if _selected else 1.5)
+	var ring := RING_RADIUS * (unit.def.footprint if unit != null else 1)
+	draw_set_transform(_center + Vector2(0, 22 * (unit.def.footprint if unit != null else 1)),
+			0.0, Vector2(1.0, 0.45))
+	draw_circle(Vector2.ZERO, ring, Color(team_tint, 0.25))
+	draw_arc(Vector2.ZERO, ring, 0.0, TAU, 32, color, 3.0 if _selected else 1.5)
 	_draw_hp_bar(team_tint)
 
 
@@ -216,12 +222,15 @@ func _draw_hp_bar(tint: Color) -> void:
 	if unit == null:
 		return
 	draw_set_transform(Vector2.ZERO)
+	# A boss gets a wider bar.
+	var bar := Vector2(BAR_SIZE.x * (2.5 if unit.def.footprint > 1 else 1.0), BAR_SIZE.y)
 	# Above the head: y-sorting draws lower units later, so a bar under the
 	# feet would be hidden by whoever stands in the cell below.
-	var top_left := Vector2(-BAR_SIZE.x / 2.0, 26.0 - unit.def.display_height - 6.0)
+	var top_left := _center + Vector2(-bar.x / 2.0,
+			26.0 * unit.def.footprint - unit.def.display_height - 6.0)
 	var ratio := clampf(float(_shown_hp) / unit.get_stat(&"max_hp"), 0.0, 1.0)
-	draw_rect(Rect2(top_left - Vector2.ONE, BAR_SIZE + Vector2(2, 2)), Color(0, 0, 0, 0.7))
-	draw_rect(Rect2(top_left, Vector2(BAR_SIZE.x * ratio, BAR_SIZE.y)), tint.lerp(Color.WHITE, 0.2))
+	draw_rect(Rect2(top_left - Vector2.ONE, bar + Vector2(2, 2)), Color(0, 0, 0, 0.7))
+	draw_rect(Rect2(top_left, Vector2(bar.x * ratio, bar.y)), tint.lerp(Color.WHITE, 0.2))
 	_draw_status_icons(top_left.y - ICON_SIZE - 3.0)
 
 
@@ -230,7 +239,7 @@ func _draw_status_icons(y: float) -> void:
 		return
 	var gap := 2.0
 	var width := _icons.size() * ICON_SIZE + (_icons.size() - 1) * gap
-	var x := -width / 2.0
+	var x := _center.x - width / 2.0
 	var font := ThemeDB.fallback_font
 	for entry in _icons:
 		var rect := Rect2(x, y, ICON_SIZE, ICON_SIZE)
